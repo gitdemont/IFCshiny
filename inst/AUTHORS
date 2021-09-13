@@ -1,0 +1,20 @@
+This package has been written by Yohann Demont and is released under
+the GNU General Public License, Version 3 (ie GPL-3). 
+YEAR: 2021
+COPYRIGHT HOLDERS: Yohann Demont, Jean-Pierre Marolleau, Loïc Garçon,
+                   CHU Amiens
+IFCshiny: An R Interactive Shiny Application for the Analysis of Imaging
+          and Conventional Flow Cytometry                               
+Copyright (C) 2021 Yohann Demont
+
+--------------------------------------------------------------------------------
+showLog in IFCshiny/server.R is a variation of showLog in shinyjs authored by 
+Dean Attali under MIT + file LICENSE
+
+--------------------------------------------------------------------------------
+IFCshiny uses muuri javascript library in inst/Apps/IFCshiny/www/js authored by
+Haltu Oy under MIT license
+
+--------------------------------------------------------------------------------
+IFCshiny uses interact javascript library in inst/Apps/IFCshiny/www/js authored
+by Taye Adeyemi under MIT license

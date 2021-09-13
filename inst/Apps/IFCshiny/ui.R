@@ -1,0 +1,338 @@
+################################################################################
+# This file is released under the GNU General Public License, Version 3, GPL-3 #
+# Copyright (C) 2021 Yohann Demont                                             #
+#                                                                              #
+# It is part of IFCshiny package, please cite:                                 #
+#  -IFCshiny: An R Interactive Shiny Application for the Analysis of Imaging   #
+#             and Conventional Flow Cytometry                                  #
+#  -YEAR: 2021                                                                 #
+#  -COPYRIGHT HOLDERS: Yohann Demont, Jean-Pierre Marolleau, Loïc Garçon,      #
+#                      CHU Amiens                                              #
+#                                                                              #
+# DISCLAIMER:                                                                  #
+#  -You are using this package on your own risk!                               #
+#  -We do not guarantee privacy nor confidentiality.                           #
+#  -This program is distributed in the hope that it will be useful, but WITHOUT#
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or        #
+# FITNESS FOR A PARTICULAR PURPOSE. In no event shall the copyright holders or #
+# contributors be liable for any direct, indirect, incidental, special,        #
+# exemplary, or consequential damages (including, but not limited to,          #
+# procurement of substitute goods or services; loss of use, data, or profits;  #
+# or business interruption) however caused and on any theory of liability,     #
+# whether in contract, strict liability, or tort (including negligence or      #
+# otherwise) arising in any way out of the use of this software, even if       #
+# advised of the possibility of such damage.                                   #
+#                                                                              #
+# You should have received a copy of the GNU General Public License            #
+# along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
+################################################################################
+
+# Pay attention to run global.R first, since ui.R rely on variables created in global.R
+if(.rundir == "") {
+  JS = list(tags$head(HTML("<script type='text/javascript' src='js/interact.1.10.0.min.js'></script>")),
+       tags$head(HTML("<script type='text/javascript' src='js/muuri.0.9.3.min.js'></script>")),
+       tags$head(HTML("<script type='text/javascript' src='js/IFCshiny.js'></script>")))
+  CSS = tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "css/IFCshiny.css"))
+} else {
+  JS = lapply(rev(list.files(path = file.path(.rundir, "www", "js"), pattern = "js$", full.names = TRUE)), FUN = function(i) {
+    includeScript(i)
+  })
+  CSS = lapply(rev(list.files(path = file.path(.rundir, "www", "css"), pattern = "css$", full.names = TRUE)), FUN = function(i) {
+    includeCSS(i)
+  })
+}
+
+# compensation is under development
+if(all(file.exists(file.path(.rundir, c("server_compensation.R", "server_navbar_compensation.R"))))) {
+  ui_side_comp = hidden(tags$div(id = "comp_side_inputs",
+                                 tags$div(tags$h4("Upload Compensation")),
+                                 tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Upload compensation file.",
+                                          fileInput(inputId = "file_comp", buttonLabel = "Compensation", label = "Please upload file containing compensation .ctm, .rif, .cif, .txt, .csv, .xlsx",
+                                                    multiple = FALSE, accept = c(".ctm", ".rif", ".cif", ".txt", ".csv", ".xlsx"))
+                                 ),
+                                 tags$hr(),
+                                 # style = "position:absolute; top:80%; left:20px; transform:translateY(-100%);",
+                                 actionButton(inputId="comp_resample", label="Resample", icon = icon("random", lib = "font-awesome")),
+                                 numericInput(inputId="comp_size1", label = "Number of objects in single plot", value = 5000, min = 1, max = 10000),
+                                 numericInput(inputId="comp_size2", label = "Number of objects per pair plot", value = 100, min = 1, max = 1000),
+                                 tags$div(style="display: inline-block",
+                                          shinyjs::hidden(actionButton(inputId="comp_compute", label="Compute")),
+                                          actionButton(inputId="comp_reset", label=NULL, icon = icon("undo", lib = "font-awesome")),
+                                          shinyjs::hidden(actionButton(inputId="comp_type", label="Type", icon = icon("list-alt", lib = "font-awesome"))),
+                                          tags$div(style="display: inline-block",
+                                                   actionButton(inputId="comp_apply", label="Apply")),
+                                          ),
+                                 tags$hr(),
+                                 tags$div(tags$h4("Download Compensation"),
+                                          tags$div("data-toggle"="tooltip", "data-placement"="top", "title"="Download compensation.",
+                                                   radioButtons(inputId = "comp_save_type", label = "download as:", choiceNames = c("ctm", "txt", "csv", "xlsx"), choiceValues = c("ctm", "txt", "csv", "xlsx") , selected = "ctm", inline = TRUE)),
+                                          downloadButton("comp_save_btn", "Save"))))
+  ui_navbar_comp = tabPanel(span("Compensation", title="tweak compensation"),
+                            value="tab9",
+                            DT::DTOutput("comp_table"),
+                            tags$div(plotOutput("comp_graphs", click = clickOpts("comp_graphs_click", clip = TRUE), width = 800, height = 800)))
+} else {
+  ui_side_comp = NULL
+  ui_navbar_comp = tabPanel(span("Compensation", title="tweak compensation"), value="tab9")
+}
+
+ui <- fluidPage(
+  useShinyjs(),
+  useShinyFeedback(),
+  verbatimTextOutput("auth_output"),
+  JS,
+  CSS,
+  titlePanel(title = "IFC shiny app"),
+  sidebarLayout(
+    sidebarPanel(id = "app_dashboard_side",
+                 class = "app_dashboard_panel",
+                 width = 4,
+                 (tags$div(id="general", 
+                          fileInput(inputId = "file", buttonLabel = "Select IFC file(s)",
+                                    label = "Select [rif, cif, daf, cif+daf or fcs] file",
+                                    multiple = TRUE),# accept = c(".fcs", ".rif", ".cif", ".daf")),
+                          tags$div(id = "example",
+                                   style = "display:inline-block;",
+                                   tags$div(style = "display:inline-block; vertical-align:top; width:24%",
+                                            materialSwitch(inputId = "use_example", label = "examples", value = FALSE, status = "primary")),
+                                   tags$div(style = "display:inline-block; vertical-align:top; width:74%",
+                                            checkboxGroupInput(inputId = "example_file", label = "", choices = c("rif","cif","daf"), selected = c("cif", "daf"), inline = TRUE))),
+                          hidden(selectInput(inputId = "population", label = "Population to display", choices = NULL, multiple = FALSE)),
+                          hidden(selectInput(inputId = "pop_clicked", label = "hidden clicked pop", choices = NULL, multiple = FALSE)),
+                 )),
+                 hidden(textOutput(outputId = "msg_app")),
+                 hidden(tags$div(id="plot",
+                                 tags$div(id = "plot_param", 
+                                          selectInput(inputId = "plot_base", label = "Population(s)", choices = c(), selected = NULL, multiple = TRUE),
+                                          tags$div(actionButton(inputId = "plot_siblings", label = "Add siblings", icon(name = "file-download", lib = "font-awesome"))),
+                                          tags$hr(),
+                                          tags$div(selectInput(inputId = "plot_regions", label = "Regions", choices = c(), selected = NULL, multiple = TRUE),
+                                                   tags$div(style = "display:inline-block; vertical-align:baseline; width:78%; text-align:left;",
+                                                            tags$label("Regions settings")),
+                                                   tags$div(style = "display:inline-block; vertical-align:baseline; width:20%; text-align:right;",
+                                                            actionButton(inputId = "reg_edit", label = "", icon = icon("cog", lib = "font-awesome")))),
+                                          tags$hr(),
+                                          selectInput(inputId = "plot_shown", label = "Shown pops", choices = c(), multiple = TRUE, selectize = TRUE),
+                                          tags$div(id = "order_placeholder",
+                                                   tags$p("Order", style="font-weight: 700;"),
+                                                   tags$div(id = "plot_order",
+                                                            style = "border-width: thin; border-style: solid;")),
+                                          radioButtons("plot_type", label = "Representation", choices = c("1D", "2D", "3D"), selected = "1D", inline = TRUE),
+                                          hidden(tags$div(id = "plot_1D_options",
+                                                          radioButtons(inputId = "plot_type_1D_option02", label = "Style", choices = c("bar","smooth"), inline = TRUE),
+                                                          checkboxInput(inputId = "plot_type_1D_option03", label = "Normalize", value = FALSE))),
+                                          hidden(tags$div(id = "plot_2D_options",
+                                                          radioButtons(inputId = "plot_type_2D_option01", label = "Type", choices = c("scatter", "density"), inline = TRUE))),
+                                          tags$div(id = "plot_axes",
+                                                   tags$div(id = "plot_x",
+                                                            tags$div(style = "display:inline-block; vertical-align:top; width:70%",
+                                                                     selectInput(inputId = "plot_x_feature", label = "x-axis", choices = "Object Number", multiple = FALSE)),
+                                                            tags$div(style = "display:inline-block; vertical-align:top; width:28%",
+                                                                     "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Should be 'P' for no transformation or a >0 integer",
+                                                                     textInput(inputId = "plot_x_transform", label = "LinLog", value = "P"))),
+                                                   tags$div(id = "plot_y",
+                                                            tags$div(style = "display:inline-block; vertical-align:top; width:70%",
+                                                                     selectInput(inputId = "plot_y_feature", label = "y-axis", choices = "Object Number", multiple = FALSE)),
+                                                            tags$div(style = "display:inline-block; vertical-align:top; width:28%",
+                                                                     "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Should be 'P' for no transformation or a >0 integer",
+                                                                     textInput(inputId = "plot_y_transform", label = "LinLog", value = "P"))),
+                                                   tags$div(id = "plot_z",
+                                                            tags$div(style = "display:inline-block; vertical-align:top; width:70%",
+                                                                     selectInput(inputId = "plot_z_feature", label = "z-axis", choices = "Object Number", multiple = FALSE)),
+                                                            tags$div(style = "display:inline-block; vertical-align:top; width:28%",
+                                                                     "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Should be 'P' for no transformation or a >0 integer",
+                                                                     textInput(inputId = "plot_z_transform", label = "LinLog", value = "P")))),
+                                 tags$div(tags$hr(),
+                                          tags$p("Tweak parameters", style="font-weight: 700;"),
+                                          tags$div(style="display:inline-block;vertical-align:baseline; width:84%; float:left;",
+                                                   actionButton(inputId = "plot_reset", label = "Reset")),
+                                          tags$div(style="display:inline-block; vertical-align:baseline; width:16%;",
+                                                   tags$div(style="position:relative; vertical-align:sub; display:inline-block", class = "plot_tool",
+                                                            "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="open graph manager",
+                                                            actionButton(inputId = "plot_manager", label = NULL, icon("cog", lib = "font-awesome")))),
+                                          hidden(tags$div(style = "display:inline-block; vertical-align:baseline; width:32%; float:right;text-align:right",
+                                                          prettyToggle(inputId = "plot_unlock", label_on = "unlocked", label_off = "locked", outline = TRUE,
+                                                                       plain = TRUE, fill = FALSE, value = TRUE, 
+                                                                       status_on = NULL, icon_on = icon("unlock-alt"), 
+                                                                       status_off = "info", icon_off = icon("lock")))),
+                                          )))),
+                 ui_side_comp,
+                 source(file.path(.rundir, "ui_side_ML_input.R"), local = TRUE)$value,
+                 source(file.path(.rundir, "ui_side_ML_training.R"), local = TRUE)$value,
+                 hidden(tags$div(id="report_side_inputs",
+                                 tags$div(tags$h3(style = "display:inline-block; vertical-align:baseline; width:79%",
+                                                  "Layout"),
+                                          tags$div(style = "display:inline-block; vertical-align:super; width:19%",
+                                                   "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="click me if report layout has been lost",
+                                                   actionButton(inputId = "report_recover", label = "", icon = icon("briefcase-medical", lib = "font-awesome")))),
+                                 tags$div(id = "grid_ctrl",
+                                          tags$div(id = "layout_rows",
+                                                   tags$div(style = "display:inline-block; vertical-align:baseline; width:16%",
+                                                            actionButton(inputId = "report_row_rm", class = "rm transparent", label = "", icon = icon("minus-circle", lib = "font-awesome"))),
+                                                   tags$p("rows",
+                                                          style = "display:inline-block; vertical-align:baseline; width:64%; text-align:center;"),
+                                                   tags$div(style = "display:inline-block; vertical-align:baseline; width:16%",
+                                                            actionButton(inputId = "report_row_add", class = "add transparent", label = "", icon = icon("plus-circle", lib = "font-awesome")))),
+                                          tags$div(id = "layout_cols",
+                                                   tags$div(style = "display:inline-block; vertical-align:baseline; width:16%",
+                                                            actionButton(inputId = "report_col_rm", class = "rm transparent", label = "", icon = icon("minus-circle", lib = "font-awesome"))),
+                                                   tags$p("columns",
+                                                          style = "display:inline-block; vertical-align:baseline; width:64%; text-align:center;"),
+                                                   tags$div(style = "display:inline-block; vertical-align:baseline; width:16%",
+                                                            actionButton(inputId = "report_col_add", class = "add transparent", label = "", icon = icon("plus-circle", lib = "font-awesome"))))),
+                                 tags$div(sliderInput(inputId = "report_size", label = "size", min = 200, max = 600, step = 20, value = 200)),
+                                 tags$div(id="report_save",
+                                          tags$hr(),
+                                          tags$div(tags$h4("Download Analysis Report")),
+                                          tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
+                                                            radioButtons(inputId = "report_save_type", label = "download as:", choices = c("pdf"), selected = "pdf", inline = TRUE)),
+                                                   tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%", 
+                                                            downloadButton("report_save_btn", label="",icon("download")))),
+                                          verbatimTextOutput(outputId = "report_saved_msg"))
+                 )),
+                 hidden(tags$div(id="stats",
+                                 tags$div(style = "display:inline-block; vertical-align:top; width:70%",
+                                          selectInput(inputId = "stats_feature", label = "Feature", choices = c(), multiple = FALSE)),
+                                 tags$div(style = "display:inline-block; vertical-align:top; width:28%",
+                                          textInput(inputId = "stats_transform", label = "LinLog", value = "P")))
+                 ),
+                 hidden(tags$div(id = "cells", 
+                                 tags$div(id = "sort",
+                                          tags$div(style = "display:inline-block; vertical-align:sub; width:80%",
+                                                   selectInput(inputId = "table_sort_feature", label = "Sort By", choices = c(), multiple = FALSE)),
+                                          tags$div(style = "display:inline-block; vertical-align:text-bottom; left:81%; width:10%",
+                                                   actionButton(inputId = "table_sort_order", label = "", icon = icon(name="sort-amount-down-alt", lib="font-awesome")))),#label = "\u21c5 \u21a7"))),
+                                 numericInput(inputId = "table_page", label = "Page", min = 1, value = 1, step = 1),
+                                 tags$div(style = "display:inline-block; vertical-align:middle;width:80%",
+                                          "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Select the max number of objects to display",
+                                          radioButtons(inputId = "table_length", label = "Length", choices = c(10,25,50), inline = TRUE)),
+                                 tags$div(style = "display:inline-block; vertical-align:middle;",
+                                          "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Enter options to control display/export for each objects",
+                                          actionButton(inputId = "cells_settings", label = NULL, icon = icon(name="adjust", lib="font-awesome")))
+                 )),
+                 hidden(tags$div(id="network_save",
+                                 tags$div(tags$div(style="display:inline-block; width:78%; text-align:left;",
+                                                   tags$b("Create new")),
+                                          tags$div(style="display:inline-block; width:18%; text-align:right;",
+                                                   actionButton(inputId = "pop_create", label = "", icon = icon("plus-circle", lib = "font-awesome")))),
+                                 tags$hr(),
+                                 tags$div(tags$h4("Upload Population")),
+                                 tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"=".csv, .txt and .xlsx only be imported as tagged population, with the other population will be imported as gating strategy.",
+                                          fileInput(inputId = "file_network", buttonLabel = "Network", label = "Please upload file containing gating strategy .ist, .ast, .xml, .daf, .rif, .cif",
+                                                    multiple = FALSE, accept = c(".csv", ".txt", ".xlsx", ".ist", ".ast",".xml", ".daf", ".rif", ".cif")),
+                                          # tags$p(".csv, .xls, .xlsx allow import as tagged population"),
+                                          # tags$p(".ist, .ast, .daf, .rif, .cif and .xml allow import of the whole gating strategy")),
+                                          fileInput(inputId = "file_tagged", buttonLabel = "Tagged", label = "Please upload file containing population indices .csv, .txt, .xlsx",
+                                                    multiple = FALSE, accept = c(".csv", ".txt", ".xlsx"))
+                                 ),
+                                 tags$hr(),
+                                 tags$div(id="pop_indices_save",
+                                          tags$div(tags$h4("Download Population")),
+                                          tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"=".csv, .txt and .xlsx will allow to export population indices, whereas .xml will permit to export gating strategy.",
+                                                   tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
+                                                            radioButtons(inputId = "pop_indices_save_type", label = "download as:", choices = c("txt", "csv", "xlsx", "xml"), selected = "xml", inline = TRUE)),
+                                                   tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%", 
+                                                            downloadButton("pop_indices_save_btn", label="",icon("download")))),
+                                          tags$p("csv, xls, xlsx allow the export of tagged populations"),
+                                          tags$p("xml allow the export of the whole gating strategy"),
+                                          verbatimTextOutput(outputId = "pop_indices_saved_msg")),
+                                 tags$hr(),
+                                 tags$div(tags$h4("Download Network")),
+                                 tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
+                                                   radioButtons(inputId = "network_save_type", label = "download as:", choices = c("html", "txt"), selected = "html", inline = TRUE)),
+                                          tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%", 
+                                                   downloadButton("network_save_btn", label = "", icon("download")))),
+                                 verbatimTextOutput(outputId = "network_saved_msg"))
+                 ),
+                 source(file.path(.rundir, "ui_files_output.R"), local=TRUE)$value
+    ),
+    (mainPanel(id = "app_dashboard_main", class = "app_dashboard_panel",
+      source(file.path(.rundir, "ui_extra_feat.R"), local=TRUE)$value,
+      tabsetPanel(id="navbar",
+                  tabPanel(span("Infos", title="retrieve important information about the file"),
+                           value="tab0",
+                           tags$div(style={"position:relative;"},
+                                    verbatimTextOutput(outputId = "infos"))),
+                  ui_navbar_comp,
+                  tabPanel(span("Images", title="visualize and tweak images\ntips: you can also drag me to manually tag cells"),
+                           value="tab1", 
+                           DT::DTOutput(outputId="table")),
+                  tabPanel(span("Network", title="visualize population hierarchy"),
+                           value="tab2", 
+                           tags$div(visNetworkOutput("network", width = "100%", height = "100%"))),
+                  tabPanel(span("Plot", title="create plot and draw regions"),
+                           value="tab3",
+                           tags$div(
+                             source(file.path(.rundir, "ui_plot_sel_tools.R"), local = TRUE)$value,
+                             source(file.path(.rundir, "ui_main_plot_1or2D.R"), local = TRUE)$value,
+                             source(file.path(.rundir, "ui_main_plot3D.R"), local = TRUE)$value
+                           )),
+                  tabPanel(span("Machine Learning", title="apply supervised and unsupervised machine learning"),
+                           value="tab5",
+                           tabsetPanel(id="navbar_ML",
+                                       tabPanel(span("Pre-processing", title="choose how to pre-process data"),
+                                                id = "ML_inputs",
+                                                value = "ML_inputs",
+                                                tags$div(id = "features_manual",
+                                                         tags$div(textInput("pattern", "Pattern for features selection", value="^.*$"),
+                                                                  p(strong("^(?!.*(_extra|DAPI)).*MC.*$")),
+                                                                  p("example: Not _extra OR Not DAPI with mandatory MC"),
+                                                                  textOutput("features_infos")),
+                                                         tags$div(class = "sel_form", 
+                                                                  tags$div(class = "sel_from", 
+                                                                           selectInput(inputId = "sel_left", label = "In pattern", choices = NULL, selected = NULL,
+                                                                                       multiple = TRUE, selectize = FALSE, size = 20, width = "100%")),
+                                                                  tags$div(class = "sel_btn", 
+                                                                           actionButton(inputId = "moveRight", label = "", class="sel_btnR", icon = icon(name="chevron-circle-right", lib="font-awesome")), 
+                                                                           actionButton(inputId = "moveLeft", label="", class="sel_btnL", icon = icon(name="trash-o", lib="font-awesome"))),
+                                                                  tags$div(class = "sel_to", 
+                                                                           selectInput(inputId = "sel_right", label = "Selected", choices = NULL, selected = NULL,
+                                                                                       multiple = TRUE, selectize = FALSE, size = 20, width = "100%"))))),
+                                       tabPanel(span("Start training", title="start training model"),
+                                                id = "ML_training",
+                                                value = "ML_training",
+                                                verbatimTextOutput("training_summary"),
+                                                hidden(plotOutput("training_plot")),
+                                                plotOutput("training_matrix", width = "100%", height = "500px"),
+                                                verbatimTextOutput("training_features"))
+                                       )),
+                  tabPanel(span("Report", title="create layout for graph report"),
+                           value="tab6",
+                           tags$div(style="position:relative;",
+                                    hidden(tags$div(id = "empty_tile_placeholder",
+                                                    class = "empty_tile")),
+                                    hidden(tags$div(id = "plot_tile_placeholder",
+                                                    class = "plot_tile")),
+                                    tags$div(id = "report_placeholder",
+                                             class = "report_grid"))),
+                  tabPanel(span("Table", title="generate populations stats and export features values"),
+                           value="tab4",
+                           tags$div(style={"position:relative;"},
+                                    verbatimTextOutput(outputId = "stats"))),
+                  tabPanel(span("Batch", title="process files with current analysis strategy"),
+                           value="tab7",
+                           tags$div(style={"position:relative;"},
+                                    verbatimTextOutput(outputId = "Batch"))),
+                  tabPanel(span("Logs", title="access application logs"),
+                           value="tab8",
+                           tags$div(style={"position:relative;"},
+                                    verbatimTextOutput(outputId = "logs")))
+      ),
+      # tags$div(style="position:fixed; top:10px; right:10px;",
+      #          actionButton(inputId = "closeapp", label = NULL, icon = icon("window-close", lib = "font-awesome"), class = "closeapp")),
+      tags$div(style="position:fixed; top:10px; right:10px;",
+               actionButton(inputId = "movetop", label = NULL, icon = icon("chevron-circle-up", lib = "font-awesome"), class = "autoscroll")),
+      tags$div(style="position:fixed; top:10px; right:50px;",
+               actionButton(inputId = "movedown", label = NULL, icon = icon("chevron-circle-down", lib = "font-awesome"), class = "autoscroll"))
+      ))
+  ),
+  source(file.path(.rundir, "ui_managers.R"), local=TRUE)$value,
+  source(file.path(.rundir, "ui_msg.R"), local=TRUE)$value,
+  tags$div(style="position:fixed; top:8px; right:100px; color:black; font-size:20px; display: flex; z-index: 99;", tags$h4(id = "timer")),
+  source(file.path(.rundir, "ui_credits.R"), local=TRUE)$value
+)
+if(.passphrase == "") {
+  ui
+} else {
+  ui <- secure_app(ui, tags_bottom = tags$p(id = "msg_auth", ""), enable_admin = TRUE)
+}

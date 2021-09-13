@@ -1,0 +1,17 @@
+citHeader("To cite 'IFCshiny' in publications, please use:")
+
+
+citEntry(entry = "manual",
+         title = "{IFCshiny}: {A}n {R} {I}nteractive {S}hiny {A}pplication for the {A}nalysis of {I}maging and {C}onventional {F}low {C}ytometry",
+         author = personList(person(given="Yohann", family="Demont"),
+                             person(given="Jean-Pierre", family="Marolleau"),
+                             person(given="Loïc", family = "Garçon")),
+organization = "CHU Amiens",
+address = "Amiens, France",
+note = "version 0.1.2",
+year = "2021",
+url = "http://github.com/gitdemont/IFCshiny",
+textVersion = paste("Demont Y., Marolleau JP., Garçon L. (2021).",
+                    "IFCshiny: An R Interactive Shiny Application for the Analysis of Imaging and Conventional Flow Cytometry",
+                    "CHU Amiens.",
+                    "http://github.com/gitdemont/IFCshiny"))

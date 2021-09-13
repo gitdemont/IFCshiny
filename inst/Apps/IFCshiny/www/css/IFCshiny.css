@@ -1,0 +1,394 @@
+/*
+  This file is released under the GNU General Public License, Version 3, GPL-3
+  Copyright (C) 2021 Yohann Demont                                              
+                                                                                
+  It is part of IFCshiny package, please cite:                                  
+   -IFCshiny: An R Interactive Shiny Application for the Analysis of Imaging    
+              and Conventional Flow Cytometry                                   
+   -YEAR: 2021                                                                  
+   -COPYRIGHT HOLDERS: Yohann Demont, Jean-Pierre Marolleau, Loïc Garçon,       
+                       CHU Amiens                                               
+                                                                                
+  DISCLAIMER:                                                                   
+  -You are using this package on your own risk!                                 
+  -We do not guarantee privacy nor confidentiality.                             
+  -This program is distributed in the hope that it will be useful, but WITHOUT  
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or         
+  FITNESS FOR A PARTICULAR PURPOSE. In no event shall the copyright holders or  
+  contributors be liable for any direct, indirect, incidental, special,         
+  exemplary, or consequential damages (including, but not limited to,           
+  procurement of substitute goods or services; loss of use, data, or profits;   
+  or business interruption) however caused and on any theory of liability,      
+  whether in contract, strict liability, or tort (including negligence or       
+  otherwise) arising in any way out of the use of this software, even if        
+  advised of the possibility of such damage.                                    
+                                                                                
+  You should have received a copy of the GNU General Public License             
+  along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.              
+*/
+
+/* cell manager */
+.cell_checkbox + label > .cell_selection {
+  display: none;
+}
+.cell_checkbox:checked + label > .cell_selection {
+  display: block;
+}
+.cell_checkbox:checked + label > .cell_selection:after {
+  content: ' ';
+  display: block;
+  position: absolute;
+  bottom: 10%;
+  right:10%;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px;
+  border-radius: 5px;
+  border-color: #f5aa22;
+  transition: 100ms;
+}
+.cell_checkbox + label > .cell_tagged:after {
+  content: ' ';
+  display: block;
+  position: absolute;
+  bottom: 10%;
+  left:10%;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px;
+  border-radius: 5px;
+  border-color: #428bca;
+}
+.cell_checkbox + label > .cell_tagged.hidden {
+  display:none;
+}
+.cell_img {
+  position: absolute;
+  left: 0%;
+  right: 0%;
+  top: 0%;
+  bottom: 0%;
+  margin: auto;
+  min-height: 100%;
+  min-width: 100%;
+  object-fit: none;
+}
+
+/* features ML */
+.sel_form {
+  position:relative;
+  height:400px;
+  width:100%;
+  border: 2px solid #337ab7;
+}
+.sel_from {
+  position:absolute;
+  left:0px;
+  top:0px;
+  width: 45%;
+  height:395px;
+}
+.sel_to {
+  position:absolute;
+  right:0px;
+  top:0px;
+  width: 45%;
+  height:395px;
+}
+.sel_btnL {
+  position:absolute;
+  left:45%;
+  top:120px;
+  width: 10%;
+}
+.sel_btnR {
+  position:absolute;
+  left:45%;
+  top:080px;
+  width: 10%;
+}
+
+/* region drawing / edition */
+.draw_shape {
+  stroke:purple;
+  stroke-width:1px;
+  position:absolute;
+  fill:#80808085;
+  pointer-events:none;
+}
+.draw_shape>line {
+  stroke-width:3px;
+}
+.edit_shape {
+  stroke:#337ab7;
+  stroke-width:3px;
+  fill:transparent;
+  position:absolute;
+  pointer-events:none;
+}
+.edit_shape>line {
+  stroke-width:6px;
+} 
+.undo.transparent {
+  background-color: transparent;
+  border-color: transparent;
+}
+.add.transparent {
+  background-color: transparent;
+  border-color: transparent;
+}
+.rm.transparent {
+  background-color: transparent;
+  border-color: transparent;
+}
+.anchor.draggable {
+  r:5px;
+  stroke:#337ab7;
+  stroke-width:3px;
+  fill:#85d086;
+  cursor:move;
+  touch-action:none;
+}
+.shape.draggable {
+  cursor:grab;
+  fill:#ff808085;
+  touch-action: none;
+}
+.label.draggable {
+  font-size: large;
+  font-weight: normal;
+  stroke-width:1px;
+  cursor:grab;
+  fill:#ff808085;
+  touch-action: none;
+}
+.plot_tool.selected {
+  background-color: #77c33d;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #ff5500;
+  border-radius: 6px;
+}
+
+/* hover / click on plot */ 
+.plot3D-hover-img {
+  position:absolute;
+  top:0;
+  left:0;
+  max-width:40px;
+  height:auto;
+}
+.plot2D-hover-img {
+  position:relative;
+  left:10px;
+  display:inline;
+  max-height:40px;
+}
+.click_point {
+  height: 9px;
+  width: 9px;
+  background-color: #77c33d;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #0c7cde;
+  border-radius: 50%;
+  position:absolute;
+  pointer-events:none;
+}
+.hover_point {
+  height: 9px;
+  width: 9px;
+  background-color: #f5aa22;
+  border-radius: 50%;
+  position:absolute;
+  pointer-events:none;
+}
+.click_bar {
+  background-color: #77c33d;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #0c7cde;
+  position:absolute;
+  pointer-events:none;
+}
+
+/* app message */
+#busy_msg {
+  border: transparent;
+  background-color:transparent;
+}
+#msg_app {
+  color: red;
+}
+.toast-top-full-width {
+  width: 70%;
+  left: 0%;
+  margin: auto;
+}
+
+/* report */
+.report_grid {
+  position: relative;
+}
+.report_item {
+  display: block;
+  position: absolute;
+  margin: 5px;
+  z-index: 1;
+  background: #000;
+  color: #000;
+}
+#report_placeholder img {
+  max-width: 100%;
+  max-height: 100%;
+}
+.report_item,.item.muuri-item-dragging {
+  z-index: 3;
+}
+.item.muuri-item-releasing {
+  z-index: 2;
+}
+.item.muuri-item-hidden {
+  z-index: 0;
+}
+.empty_tile {
+  z-index: 0;
+}
+.report_item_msg {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+  background: aliceblue;
+  line-height: 3px;
+  padding: 10px;
+  visibility: hidden;
+}
+.report_item_btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  color: red;
+  visibility: hidden;
+}
+.report_item:hover > .report_item_msg {
+  visibility: visible;
+} 
+.report_item:hover > .report_item_btn {
+  visibility: visible;
+} 
+.resize_grid {
+  pointer-events:none;
+  animation: blink 300ms;
+  animation-iteration-count: 3;
+}
+@keyframes blink {
+  50% { 
+    border: 5px #337ab7 dashed;
+    border-radius: 10px;
+  }
+}
+
+/* general */
+.disabled {
+  opacity:0.4;
+  pointer-events:none;
+  cursor: not-allowed;
+}
+.change_align span {
+  float:right;
+}
+.material-switch .switchme:before {
+  background: #04AA6D;
+}
+.modified:after {
+  content:'  modified';
+  color: red;
+  background:gainsboro;
+  font-size:larger;
+}
+strong {
+  font-weight:bold;
+}
+.clickme {
+  background-color:#04AA6D;
+  color: white;
+  font-weight:bold;
+}
+.clickme:after {
+  content:' >>';
+  //animation: 1s ease-in-out 0.5s infinite running slidetoleft;
+}
+@keyframes slidetoleft { from { margin-left: 0px; } to { margin-left: 20px; }  }
+
+#navbar [data-value='tab1']:hover {
+  background-color:#337ab7;
+  cursor: grab;
+  color: white;
+  animation: 1s ease-in-out 0.5s infinite running slidetotop;
+}
+#navbar [data-value='tab1']:hover:before {
+  content:'\021EF';
+}
+#navbar [data-value='tab1']:hover:after {
+  white-space: pre;
+  content:'\021EF \A ';
+}
+@keyframes slidetotop { from { margin-top: 0px; } to { margin-top: -20px; }  }
+
+.autoscroll {
+  color: blue;
+  font-size:100%;
+}
+.closeapp {
+  color: red;
+  font-size:100%;
+}
+#plot_dens_color + div .item {
+  font-weight:bold;
+  color:#fff;
+  text-shadow:#000 0px 0px 5px;
+  -webkit-font-smoothing:antialiased;
+}
+#reg_def_table tbody {
+  cursor: text;
+}
+
+/* customize */
+/* modal */
+#shiny-modal {
+  transition-duration: 50ms;
+  animation-duration: 50ms;
+}
+/* checkboxInpt */
+.ctrl_channels .shiny-options-group {
+  display: inline-block;
+  margin: 0 20px 20px 0;
+  line-height: 1.3;
+  -webkit-column-count: 5;
+  -moz-column-count: 5;
+  column-count: 5;
+}
+.ctrl_channels .checkbox {
+  margin-top: 0px;
+}
+/* selectInput */
+.single>.selectize-input {
+  height: 20px;
+  font-size: 14px;
+  padding-top: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+/* fab from shinymanager */
+.container-fab {
+  z-index: 98;
+}
+/* for ellipse */
+.fa-circle {
+  tansform: 1.5,1;
+}
