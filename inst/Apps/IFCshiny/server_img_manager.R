@@ -245,6 +245,7 @@ obs_img <- list(
                                       redefine_features_def(foo$features_def,
                                                             foo$description$masks,
                                                             images = obj_react$obj$description$Images,
+                                                            force_default = TRUE,
                                                             new_images_names = foo$description$Images$name))
         # report is reinitialized
         runjs(sprintf("Shiny.setInputValue('report_recover', %i)", ifelse(length(input$report_recover)==0, 0L, input$report_recover + 1L)))
