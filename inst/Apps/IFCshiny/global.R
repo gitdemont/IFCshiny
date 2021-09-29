@@ -231,6 +231,10 @@ applyTrans <- getFromNamespace("applyTrans", "IFC")
 #' @keywords internal
 map_color <- getFromNamespace("map_color", "IFC")
 
+#' @name map_color
+#' @keywords internal
+map_style <- getFromNamespace("map_style", "IFC")
+
 #' @name colConv
 #' @keywords internal
 colConv <- getFromNamespace("colConv", "IFC")
@@ -1323,6 +1327,8 @@ reg_def = function(reg, reg_back, all_names, check = "valid", session = getDefau
 
 # function used in pair plot
 panel_lda = function(x, y, ...) {
+  old_par=par("pty");par("pty"="s")
+  on.exit(par("pty"=old_par))
   points(x, y, ...)
 }
 
