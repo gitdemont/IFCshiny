@@ -96,7 +96,6 @@ observeEvent(input$file, {
   if(obj_react$obj$info$found) {
     showElement(id = "compute_features")
     if(!requireNamespace(package = "IFCip", quietly = TRUE) || (react_dat()$info$XIF_test != 1)) {
-      if(!requireNamespace(package = "IFCip", quietly = TRUE)) mess_global(title = "package required", msg = c("'IFCip' package is required to compute extra features from images", "Features computation module has been disabled"), type = "info")
       if((react_dat()$info$XIF_test != 1))  mess_global(title = "rif file", msg = c("can't compute extra features from images on this type of rif file", "Features computation module has been disabled"), type = "info")
       hideElement(id = "compute_features")
       hideElement(selector = "#navbar [data-value='tab9']")

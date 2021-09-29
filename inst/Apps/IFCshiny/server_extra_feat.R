@@ -27,6 +27,7 @@
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
 
+if(!requireNamespace(package = "IFCip", quietly = TRUE)) mess_global(title = "package required", msg = c("'IFCip' package is required to compute extra features from images", "Features computation module has been disabled"), type = "info")
 # multi-thread is disabled on shinyapps.io
 observeEvent(input$use_parallelization, {
   if(.no_cores <= 1 || Sys.getenv('SHINY_PORT') != "") updateMaterialSwitch(session=session, inputId = "use_parallelization", value = FALSE)
