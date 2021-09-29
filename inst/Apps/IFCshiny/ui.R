@@ -292,7 +292,7 @@ ui <- fluidPage(
                                                 id = "ML_training",
                                                 value = "ML_training",
                                                 verbatimTextOutput("training_summary"),
-                                                hidden(plotOutput("training_plot")),
+                                                hidden(plotOutput("training_plot", width = "400px")),
                                                 plotOutput("training_matrix", width = "100%", height = "500px"),
                                                 verbatimTextOutput("training_features"))
                                        )),

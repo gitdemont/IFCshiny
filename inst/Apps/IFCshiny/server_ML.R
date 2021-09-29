@@ -610,7 +610,17 @@ obs_ML <- list(
           obj_react$obj = data_add_pops(obj_react$obj, pops = pop, session = session)
           for(i in pop) {attr(obj_react$obj$pops[[i$name]], "reserved") <- TRUE}
         })
-        return(sapply(pop, FUN = function(p) p$name))
+        lab = sapply(pop, FUN = function(p) p$name)
+        pch_l = sapply(pop, FUN = function(p) map_style(p$style, toR = TRUE))
+        col_l = sapply(pop, FUN = function(p) map_color(p$lightModeColor, toR = TRUE))
+        vals = sapply(pop, FUN = function(p) p$obj)
+        vals = apply(vals, 1, FUN = function(x) {ans = which(x); if(length(ans)==0) return(NA_integer_); return(ans)})
+        vals = vals[!is.na(vals)]
+        pch = pch_l[vals]
+        col = col_l[vals]
+        return(list(lab = lab, pch_l = pch_l, col_l = col_l, pch = pch, col = col))
+        
+        # return(sapply(pop, FUN = function(p) p$name))
       }
       
       # depending on algorithm choose by user we will try to fit a model
@@ -624,6 +634,7 @@ obs_ML <- list(
       # -model plot, a reactive plot (to clustering) with the projection of the data (whole data or only the subset) in 
       # the dimension reduction computed by the model and the clusters identified
       # - features used
+      runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",600,600))
       switch(input$training_model, 
              "em" = {
                fit = MclustDA(data = train[, -1], 
@@ -675,6 +686,8 @@ obs_ML <- list(
                })
              },
              "lda" = {
+               h = 200*(nlevels(y_train)-1)
+               runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",h,h))
                args_lda = list(x = train[, -1], 
                                method = input$lda_method, tol = input$lda_tol,
                                grouping = y_train)
@@ -684,10 +697,14 @@ obs_ML <- list(
                conf = confusionMatrix(data = pred$class, reference = y_test)
                pch = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
                col = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
-               output$training_plot <- renderPlot({
-                 plot(fit, panel = panel_lda, pch = pch[as.character(y_train)], col = col[as.character(y_train)], oma=c(3,3,3,15))
-                 legend("bottomright", legend = sapply(levels(y_train), center_short), pch=pch, col=col,
-                        xpd=TRUE, horiz=FALSE, bty="n") 
+               if(nlevels(y_train) > 2) output$training_plot <- renderPlot({
+                 old_par=par("pty");par("pty"="s")
+                 on.exit(par("pty"=old_par))
+                 plot(fit, panel = panel_lda, pch = pch[as.character(y_train)], col = col[as.character(y_train)])#, oma=c(0,0,0,unit(50,"px")))
+                 legend("topleft", legend = sapply(levels(y_train), center_short), pch=pch, col=col, 
+                        horiz=FALSE, "xpd"=TRUE, bty="o", inset = isolate(15/h),
+                        cex = 0.6, bg = "#ADADAD99",
+                        pt.cex = 1,  box.lty = 0)
                })
                # remove former lda
                obj_react$obj = suppressWarnings(data_rm_features(obj_react$obj, features = grep("^ML_lda_", names(obj_react$obj$features), value = TRUE, invert = FALSE), list_only = FALSE, session=session))
@@ -766,7 +783,7 @@ obs_ML <- list(
                      } else {
                        clust[idx_train] = do.call(what = FlowSOM::MetaClustering, args = c(list(data = fit$map$codes), meta_args))[fit$map$mapping[, 1]]-1
                      }
-                     pop = rebuild_meta(clust)
+                     pop = rebuild_meta(clust)$lab
                      if(input$MetaClustering_all == "yes") {
                        p = FlowSOM::PlotPies(fsom = proj_som, cellTypes = clust[sub], view = "MST")
                      } else {
@@ -788,27 +805,27 @@ obs_ML <- list(
                col_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
                lab = levels(y_train)
                output$training_plot <- renderPlot({
-                 set.seed(1)
-                 on.exit(set.seed(NULL))
+                 set.seed(1); old_par = par("pty"); par(pty = "s")
+                 on.exit({set.seed(NULL); par("pty" = old_par)})
                  if(length(lab) == 1) {
                    clust = clust_NA
                    if(input$kmeans_all == "yes") {
                      sub = !apply(fit$Y, 1, anyNA)
                      clust[sub1[sub]] = kmeans(x = fit$Y[sub, ], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
                                                nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
-                     col = clust[sub1[sub]]
                      dat = fit$Y[sub, ]
                    } else {
                      clust[sub1 & idx_train] = kmeans(x = fit$Y[idx_train[sub1], ], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
                                                       nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
-                     col = clust[sub1 & idx_train]
                      dat = fit$Y[idx_train[sub1], ]
                    }
                    clust = factor(clust, levels = sort(unique(clust)))
-                   
-                   pch = rep_len(pch_l, length.out = length(col))
-                   col_l = as.integer(levels(as.factor(clust)))
-                   lab = c(lab, rebuild_meta(clust))
+                   meta = rebuild_meta(clust)
+                   lab = c(lab, meta$lab)
+                   col_l = c(col_l,meta$col_l)
+                   pch_l = c(pch_l,meta$pch_l)
+                   pch = meta$pch
+                   col = meta$col
                  } else {
                    dat = fit$Y
                    pch = pch_l[y_train[sub1]]
@@ -822,7 +839,7 @@ obs_ML <- list(
                         xlab = "tSNE_1", ylab = "tSNE_1")
                    legend("topleft", legend = sapply(lab, center_short), pch=pch_l, col=col_l,
                           xpd=TRUE, horiz=FALSE, inset = 0.025, 
-                          cex = 0.8, bg = "#ADADAD99", 
+                          cex = 0.6, bg = "#ADADAD99", 
                           pt.cex = 1, bty = "o", box.lty = 0)
                  } else {
                    plot(x = dat[, 1], y = dat[, 2], 
@@ -832,7 +849,7 @@ obs_ML <- list(
                         xlab = "tSNE_1", ylab = "tSNE_2")
                    legend("topleft", legend = sapply(lab, center_short), pch=pch_l, col=col_l,
                           xpd=TRUE, horiz=FALSE, inset = 0.025, 
-                          cex = 0.8, bg = "#ADADAD99", 
+                          cex = 0.6, bg = "#ADADAD99", 
                           pt.cex = 1, bty = "o", box.lty = 0)
                  }
                })
@@ -857,8 +874,8 @@ obs_ML <- list(
                col_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
                lab = levels(y_train)
                output$training_plot <- renderPlot({
-                 set.seed(1)
-                 on.exit(set.seed(NULL))
+                 set.seed(1); old_par = par("pty"); par(pty = "s")
+                 on.exit({set.seed(NULL); par("pty" = old_par)})
                  if(length(lab) == 1) {
                    clust = clust_NA
                    if(input$kmeans_all == "yes") {
@@ -866,17 +883,18 @@ obs_ML <- list(
                      sub = !apply(dat, 1, anyNA)
                      clust[sub1[sub]] = kmeans(x = dat[sub, ], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
                                                nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
-                     col = clust[sub1]
                    } else {
                      dat = fit$layout
                      clust[idx_train] = kmeans(x = dat, centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
                                                nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
-                     col = clust[idx_train]
                    }
                    clust = factor(clust, levels = sort(unique(clust)))
-                   pch = rep(pch_l, length.out = length(col))
-                   col_l = as.integer(levels(as.factor(clust)))
-                   lab = c(lab, rebuild_meta(clust))
+                   meta = rebuild_meta(clust)
+                   lab = c(lab, meta$lab)
+                   col_l = c(col_l,meta$col_l)
+                   pch_l = c(pch_l,meta$pch_l)
+                   pch = meta$pch
+                   col = meta$col
                  } else {
                    dat = fit$layout
                    pch = pch_l[y_train]
@@ -884,11 +902,11 @@ obs_ML <- list(
                  }
                  plot(x = dat[, 1], y = dat[, 2], 
                       xlim = range(proj_umap[, 1], na.rm = TRUE), ylim = range(proj_umap[, 2], na.rm = TRUE),
-                      pch = pch, col = col, 
+                      pch = pch, col = col,
                       xlab = "umap_1", ylab = "umap_2")
                  legend("topleft", legend = sapply(lab, center_short), pch=pch_l, col=col_l,
                         xpd=TRUE, horiz=FALSE, inset = 0.025, 
-                        cex = 0.8, bg = "#ADADAD99", 
+                        cex = 0.6, bg = "#ADADAD99", 
                         pt.cex = 1, bty = "o", box.lty = 0)
                })
                # remove former umap
@@ -905,8 +923,8 @@ obs_ML <- list(
                col_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
                lab = levels(y_train)
                output$training_plot <- renderPlot({
-                 set.seed(1)
-                 on.exit(set.seed(NULL))
+                 set.seed(1); old_par = par("pty"); par(pty = "s")
+                 on.exit({set.seed(NULL); par("pty" = old_par)})
                  if(length(lab) == 1) {
                    clust = clust_NA
                    if(input$kmeans_all == "yes") {
@@ -914,18 +932,18 @@ obs_ML <- list(
                      sub = !apply(dat, 1, anyNA)
                      clust[sub] = kmeans(x = dat[sub, ], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
                                          nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
-                     col = clust
                    } else {
                      dat = pca_dr$x
                      clust[idx_train] = kmeans(x = dat, centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
                                                nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
-                     col = clust[idx_train] 
                    }
                    clust = factor(clust, levels = sort(unique(clust)))
-                   
-                   pch = rep(pch_l, length.out = length(col))
-                   col_l = as.integer(levels(as.factor(clust)))
-                   lab = c(lab, rebuild_meta(clust))
+                   meta = rebuild_meta(clust)
+                   lab = c(lab, meta$lab)
+                   col_l = c(col_l,meta$col_l)
+                   pch_l = c(pch_l,meta$pch_l)
+                   pch = meta$pch
+                   col = meta$col
                  } else {
                    dat = fit$x
                    pch = pch_l[y_train]
@@ -946,7 +964,7 @@ obs_ML <- list(
                  }
                  legend("topleft", legend = sapply(lab, center_short), pch=pch_l, col=col_l,
                         xpd=TRUE, horiz=FALSE, inset = 0.025, 
-                        cex = 0.8, bg = "#ADADAD99", 
+                        cex = 0.6, bg = "#ADADAD99", 
                         pt.cex = 1, bty = "o", box.lty = 0)
                })
              })
