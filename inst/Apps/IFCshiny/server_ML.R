@@ -422,7 +422,11 @@ obs_ML <- list(
     updateMaterialSwitch(session=session, inputId = "training_param", value = FALSE)
     updateMaterialSwitch(session=session, inputId = "training_meta", value = FALSE)
     updateMaterialSwitch(session=session, inputId = "training_sampling", value = FALSE)
-    toggleElement(id="training_supervised", condition= !(input$training_model %in% c("pca","umap","tsne")))
+    if(input$training_model %in% c("pca","umap","tsne")) {
+      hideElement(id="training_supervised")
+    } else {
+      showElement(id="training_supervised")
+    }
     # model parameters are reset to their default values every time training model selection is changed
     sapply(match_model(), FUN = function(x) reset(id = x))
     # we need to postpone going to training go to ensure that all model parameters havec been cleared
