@@ -32,7 +32,7 @@ runjs("Shiny.setInputValue('license_decline', null)")
 
 observeEvent(input$credits, {
   add_log("credits")
-  runjs(code = "$('.app_dashboard_panel').hide()")
+  if(length(input$license_decline) == 0) runjs(code = "$('.app_dashboard_panel').hide()")
   tryCatch({
     pkgs = c("shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "jsonlite", "visNetwork", "colourpicker", "DT",
              "grDevices", "grid", "gridExtra",
