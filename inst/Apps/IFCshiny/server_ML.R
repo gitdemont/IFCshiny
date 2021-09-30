@@ -642,7 +642,18 @@ obs_ML <- list(
                               class = y_train)
                pred = predict(object = fit, newdata = test[, -1])
                conf = confusionMatrix(data = pred$classification, reference = y_test)
-               output$training_plot <- renderPlot(plot(MclustDR(fit, lambda = 1), dimens = c(1:3), what = "pairs"))
+               h = max(600, 200*(nlevels(y_train)-1))
+               runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",h,h))
+               pch = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
+               col = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
+               output$training_plot <- renderPlot(width =  h, height = h, expr = {
+                 plot.new()
+                 plot(MclustDR(fit, lambda = 1), dimens = c(1:3), what = "pairs")
+                 legend("topleft", legend = sapply(levels(y_train), center_short), pch=pch, col=col, 
+                        horiz=FALSE, "xpd"=TRUE, bty="o", inset = isolate(0.025*h/600),
+                        cex = 0.6, bg = "#ADADAD",
+                        pt.cex = 1,  box.lty = 0)
+               })
              },
              "svm" = {
                svm_args = list(x = train[, -1],
@@ -654,7 +665,7 @@ obs_ML <- list(
                fit = do.call(what = svm, args = svm_args)
                pred = predict(object = fit, newdata = test[, -1])
                conf = confusionMatrix(data = pred, reference = y_test)
-               output$training_plot <- renderPlot(NULL)
+               output$training_plot <- renderPlot(plot.new())
                hideElement("training_plot")
              },
              "xgb" = {
@@ -677,16 +688,19 @@ obs_ML <- list(
                pred = predict(fit, newdata = as.matrix(test[, -1]), reshape = TRUE)
                pred = factor(levels(y_train)[apply(pred, 1, which.max)], levels = levels(model_react$data$clust))
                conf = confusionMatrix(data = pred, reference = y_test)
-               output$training_plot <- renderPlot({
+               h = 600
+               runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",2*h,h))
+               output$training_plot <- renderPlot(width = 2*h, height = h, expr = {
                  nn = xgb.importance(colnames(train[, -1]), model = fit)
                  maxchar = 20
                  toolong = sapply(nn$Feature, FUN = function(x) ifelse(nchar(x) > maxchar, "...", ""))
                  nn$Feature <- paste(substring(nn$Feature, 1, maxchar), toolong, sep = "")
+                 plot.new()
                  xgb.plot.importance(importance_matrix = nn, top_n = min(length(nn$Feature), 10), left_margin = max(nchar(nn$Feature[1:min(length(nn$Feature), 10)])) / 2.5)
                })
              },
              "lda" = {
-               h = 200*(nlevels(y_train)-1)
+               h = max(600, 200*(nlevels(y_train)-1))
                runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",h,h))
                args_lda = list(x = train[, -1], 
                                method = input$lda_method, tol = input$lda_tol,
@@ -697,13 +711,14 @@ obs_ML <- list(
                conf = confusionMatrix(data = pred$class, reference = y_test)
                pch = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
                col = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
-               if(nlevels(y_train) > 2) output$training_plot <- renderPlot({
+               if(nlevels(y_train) > 2) output$training_plot <- renderPlot(width =  h, height = h, expr = {
                  old_par=par("pty");par("pty"="s")
                  on.exit(par("pty"=old_par))
-                 plot(fit, panel = panel_lda, pch = pch[as.character(y_train)], col = col[as.character(y_train)])#, oma=c(0,0,0,unit(50,"px")))
+                 plot.new()
+                 plot(fit, panel = panel_lda, pch = pch[as.character(y_train)], col = col[as.character(y_train)])
                  legend("topleft", legend = sapply(levels(y_train), center_short), pch=pch, col=col, 
-                        horiz=FALSE, "xpd"=TRUE, bty="o", inset = isolate(15/h),
-                        cex = 0.6, bg = "#ADADAD99",
+                        horiz=FALSE, "xpd"=TRUE, bty="o", inset = isolate(0.025*h/600),
+                        cex = 0.6, bg = "#ADADAD",
                         pt.cex = 1,  box.lty = 0)
                })
                # remove former lda
@@ -767,6 +782,7 @@ obs_ML <- list(
                    set.seed(1)
                    on.exit(set.seed(NULL))
                  }
+                 plot.new()
                  p = NULL
                  # the tryCatch is here because some metaClustering methods failed to identify clusters
                  # these method have been removed and only kmeans is used
@@ -804,7 +820,7 @@ obs_ML <- list(
                pch_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
                col_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
                lab = levels(y_train)
-               output$training_plot <- renderPlot({
+               output$training_plot <- renderPlot(width =  600, height = 600, expr = {
                  set.seed(1); old_par = par("pty"); par(pty = "s")
                  on.exit({set.seed(NULL); par("pty" = old_par)})
                  if(length(lab) == 1) {
@@ -873,7 +889,7 @@ obs_ML <- list(
                pch_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
                col_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
                lab = levels(y_train)
-               output$training_plot <- renderPlot({
+               output$training_plot <- renderPlot(width =  600, height = 600, expr = {
                  set.seed(1); old_par = par("pty"); par(pty = "s")
                  on.exit({set.seed(NULL); par("pty" = old_par)})
                  if(length(lab) == 1) {
@@ -900,6 +916,7 @@ obs_ML <- list(
                    pch = pch_l[y_train]
                    col = col_l[y_train]
                  }
+                 plot.new()
                  plot(x = dat[, 1], y = dat[, 2], 
                       xlim = range(proj_umap[, 1], na.rm = TRUE), ylim = range(proj_umap[, 2], na.rm = TRUE),
                       pch = pch, col = col,
@@ -922,7 +939,7 @@ obs_ML <- list(
                pch_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
                col_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
                lab = levels(y_train)
-               output$training_plot <- renderPlot({
+               output$training_plot <- renderPlot(width =  600, height = 600, expr ={
                  set.seed(1); old_par = par("pty"); par(pty = "s")
                  on.exit({set.seed(NULL); par("pty" = old_par)})
                  if(length(lab) == 1) {
@@ -949,6 +966,7 @@ obs_ML <- list(
                    pch = pch_l[y_train]
                    col = col_l[y_train]
                  }
+                 plot.new()
                  if(ncol(fit$x) == 1) {
                    plot(x = dat[, 1], y = dat[, 1], 
                         xlim = range(proj_pca[, 1], na.rm = TRUE), ylim = range(proj_pca[, 1], na.rm = TRUE),
@@ -987,17 +1005,24 @@ obs_ML <- list(
       model_react$name <- input$training_model
       model_react$fit <- fit
       if(length(conf) == 0) {
-        if(any(c(input$training_model == c("tsne", "umap"), nlevels(y_train) == 1))) {
+        if(any(c(input$training_model == c("pca", "tsne", "umap"), nlevels(y_train) == 1))) {
           hideElement("training_matrix")
           output$training_matrix <- isolate(renderPlot(NULL))
         } else {
           showElement("training_matrix")
-          output$training_matrix <- isolate(renderPlot(plot(fit)))
+          output$training_matrix <- isolate(renderPlot(expr = tryCatch(plot(fit),
+          error = function(e) mess_global(title = "confusion matrix", msg = c("problem during plot:", e$message), type = "stop"))))
         }
         output$training_summary <- isolate(renderPrint(summary(fit)))
       } else {
         showElement("training_matrix")
-        output$training_matrix <- isolate(renderPlot(plot_conf(conf, c(table(y_test)))))
+        h = max(600, 200*(nlevels(y_train)-1))
+        runjs(code=sprintf("$('#training_matrix').width('%ipx').height('%ipx')",h,h))
+        output$training_matrix <- isolate(renderPlot(width = h, height = h, expr = tryCatch({
+          old_par=par("pty");par("pty"="s")
+          on.exit(par("pty"=old_par))
+          plot_conf(conf, c(table(y_test)))},
+          error = function(e) mess_global(title = "confusion matrix", msg = c("problem during plot:", e$message), type = "stop"))))
         output$training_summary <- isolate(renderPrint(conf))
       }
       output$training_features <- isolate(renderPrint({
