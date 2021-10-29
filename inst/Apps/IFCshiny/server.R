@@ -717,7 +717,6 @@ server <- function(input, output, session) {
                    disable("plot_sel_ellipse")
                  },
                  "2D" = {
-                   input$plot_type_2D_main_option01
                    disable("plot_sel_line")
                    enable("plot_sel_rectangle")
                    enable("plot_sel_polygon")
@@ -737,7 +736,7 @@ server <- function(input, output, session) {
                         BasePop = lapply(plot_react$order, FUN = function(p) list(name = p, inestyle = "Solid", fill = "true")),
                         ShownPop = list(list()))
           } else {
-            args = list(type = input$plot_type_2D_option01,
+            args = list(type = ifelse(input$plot_type_2D_option01 == "level","density",input$plot_type_2D_option01),
                         f1 = input$plot_x_feature,
                         f2 = input$plot_y_feature,
                         scaletype = 0,
@@ -795,6 +794,9 @@ server <- function(input, output, session) {
           g$ymin = plot_react$ymin
           g$ymax = plot_react$ymax
           g$maxpoints <- as.numeric(input$plot_type_2D_main_option03)/100
+          if(input$plot_type_2D_option01 == "level") g$BasePop[[1]]$densitylevel = paste(ifelse(input$plot_level_fill,"true","false"),
+                                                                                         ifelse(input$plot_level_lines,"true","false"),
+                                                                                         input$plot_level_nlevels,input$plot_level_lowest,sep="|")
           
           if(#ifelse(g$type == "histogram", "1D" %in% input$plot_type, g$type %in% input$plot_type_2D_option01) &&
             (g$order %in% plot_react$g$order) &&

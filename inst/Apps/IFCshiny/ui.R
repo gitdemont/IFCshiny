@@ -122,7 +122,7 @@ ui <- fluidPage(
                                                           radioButtons(inputId = "plot_type_1D_option02", label = "Style", choices = c("bar","smooth"), inline = TRUE),
                                                           checkboxInput(inputId = "plot_type_1D_option03", label = "Normalize", value = FALSE))),
                                           hidden(tags$div(id = "plot_2D_options",
-                                                          radioButtons(inputId = "plot_type_2D_option01", label = "Type", choices = c("scatter", "density"), inline = TRUE))),
+                                                          radioButtons(inputId = "plot_type_2D_option01", label = "Type", choices = c("scatter", "density", "level"), inline = TRUE))),
                                           tags$div(id = "plot_axes",
                                                    tags$div(id = "plot_x",
                                                             tags$div(style = "display:inline-block; vertical-align:top; width:70%",

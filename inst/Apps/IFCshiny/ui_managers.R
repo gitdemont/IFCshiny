@@ -201,7 +201,7 @@ hidden(absolutePanel(id = "graph_manager", class = "panel panel-default", fixed 
                                                 numericInput(inputId = "plot_xmin", label = "min xlim", value = numeric())),
                                        tags$div(style = "display: inline-block; width:50%; float:right; text-align:right",
                                                 numericInput(inputId = "plot_xmax", label = "max xlim", value = numeric()))),
-                              tags$div(class= "plot_density",
+                              tags$div(class= "plot_density plot_density_gradient",
                                        tags$div(style="display:inline-block;vertical-align:sub; width:80%;",
                                                 selectInput(inputId = "plot_dens_color", label = "gradient",
                                                             choices = c("initial","cividis","inferno","magma","mako","plasma","rocket","turbo","viridis",
@@ -221,7 +221,20 @@ hidden(absolutePanel(id = "graph_manager", class = "panel panel-default", fixed 
                                                 numericInput(inputId = "plot_ymin", label = "min ylim", value = numeric())),
                                        tags$div(style = "display: inline-block; width:50%; float:right; text-align:right",
                                                 numericInput(inputId = "plot_ymax", label = "max ylim", value = numeric()))),
-                              tags$div(class= "plot_density",
+                              tags$div(
+                                class= "plot_density plot_density_level",
+                                tags$div(
+                                  tags$div(style = "display: inline-block; width:50%; float:left;",
+                                           numericInput(inputId = "plot_level_nlevels", label = "levels", value = 10, min = 1)),
+                                  tags$div(style = "display: inline-block; width:50%; float:right; text-align:right",
+                                           numericInput(inputId = "plot_level_lowest", label = "lowest", value = 0.1, min = 0, max = 0.95, step = 0.05))),
+                                tags$div(
+                                  tags$div(style = "display: inline-block; width:49%; text-align:right",
+                                           prettyCheckbox(inputId="plot_level_fill", label="Fill", value=TRUE, status="success",shape="curve",outline=TRUE)),
+                                  tags$div(style = "display: inline-block; width:49%; text-align:right", 
+                                           prettyCheckbox(inputId="plot_level_lines", label="lines", value=FALSE, status="success",shape="curve",outline=TRUE)))
+                                ),
+                              tags$div(class= "plot_density plot_density_feature",
                                        tags$div(style="text-align:left;",
                                                 selectInput(inputId = "plot_dens_feature", label = "marker", choices = c("initial","default"), selected = c("initial","default"), multiple = FALSE))),
                               tags$div(id="plot_labels",

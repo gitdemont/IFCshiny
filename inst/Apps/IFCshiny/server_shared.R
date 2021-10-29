@@ -280,7 +280,22 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
     updateTextInput(session=session, inputId="plot_y_transform", value=g$ylogrange)
     plot_react$y_trans = g$ylogrange
     if(g$type == "density") {
-      updateRadioButtons(session=session, inputId="plot_type_2D_option01", selected="density", inline = TRUE)  
+      if((length(g$BasePop[[1]]$densitylevel) != 0) && (g$BasePop[[1]]$densitylevel != "")) {
+        updateRadioButtons(session=session, inputId="plot_type_2D_option01", selected="level", inline = TRUE)
+        args_level = strsplit(g$BasePop[[1]]$densitylevel, split="|", fixed=TRUE)[[1]]
+        if(length(args_level) == 4) {
+          updatePrettyCheckbox(session=session, inputId="plot_level_fill", value=args_level[1]=="true")
+          updatePrettyCheckbox(session=session, inputId="plot_level_lines", value=args_level[2]=="true")
+          nlevels=na.omit(as.integer(args_level[3])); if(length(nlevels)==1) updateNumericInput(session=session, inputId="plot_level_nlevels", value=nlevels)
+          lowest =na.omit(as.numeric(args_level[4])); if(length(lowest)==1) updateNumericInput(session=session, inputId="plot_level_lowest", value=lowest)
+        }
+      } else {
+        updateRadioButtons(session=session, inputId="plot_type_2D_option01", selected="density", inline = TRUE) 
+        updatePrettyCheckbox(session=session, inputId="plot_level_fill", value=TRUE)
+        updatePrettyCheckbox(session=session, inputId="plot_level_lines", value=FALSE)
+        updateNumericInput(session=session, inputId="plot_level_nlevels", value=10)
+        updateNumericInput(session=session, inputId="plot_level_lowest", value=0.1)
+      }
       updateSelectInput(session=session, inputId="plot_shown", selected=NULL)
       runjs(code = sprintf("Shiny.onInputChange('plot_shown', null);"))
       runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', null);"))

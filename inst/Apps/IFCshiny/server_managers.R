@@ -109,8 +109,22 @@ observeEvent(input$graph_manager_visible, {
     trans = parseTrans(plot_react$plot$input$trans_y)
     updateNumericInput(session = session, inputId = "plot_ymin", value = applyTrans(plot_react$plot$input$ylim[1], trans, inverse = TRUE))
     updateNumericInput(session = session, inputId = "plot_ymax", value = applyTrans(plot_react$plot$input$ylim[2], trans, inverse = TRUE))
-    shinyjs::toggleState(id = "plot_lab_y", condition = plot_react$g$type != "histogram")
-    shinyjs::toggleElement(selector = ".plot_density", condition = plot_react$g$type == "density")
+    if(plot_react$g$type == "histogram") {
+      disable(id = "plot_lab_y")
+    } else {
+      enable(id = "plot_lab_y")
+    }
+    if(plot_react$g$type == "density") {
+      showElement(selector = ".plot_density")
+      if(length(plot_react$g$BasePop[[1]]$densitylevel) != 0 && plot_react$g$BasePop[[1]]$densitylevel != "") {
+        hideElement(selector = ".plot_density_feature")
+      } else {
+        hideElement(selector = ".plot_density_level")
+      }
+    } else {
+      hideElement(selector = ".plot_density")
+    }
+    # shinyjs::toggleElement(selector = ".plot_density", condition = (plot_react$g$type == "density" && (length(plot_react$g$densitylevel) == 0 || plot_react$g$densitylevel == "")))
     obs_plot$limits$suspend()
   } else {
     plot_react$g$graphtitlefontsize <- input$plot_font_main
