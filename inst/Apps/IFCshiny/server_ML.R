@@ -339,6 +339,8 @@ obs_ML <- list(
       bar = do.call(what = preprocess, args = c(list(obj = obj_react$obj, pops = model_react$pops), foo))
       for(i in names(bar)) model_react[[i]] = bar[[i]]
       model_react$data$clust = as.factor(model_react$data$clust)
+      max_events = sum(model_react$sub)
+      updateNumericInput(session = session, inputId = "training_sampling_dimred", label = paste0("number of events used for dimension reduction [max=",max_events,"]"), max = max_events, value = min(max_events, 4000))
       click("training_go")
     }, error = function(e) {
       updateTabsetPanel(session = session, "navbar_ML", selected = "ML_inputs")
@@ -406,6 +408,20 @@ obs_ML <- list(
       addClass(selector = "label[for=training_sampling]", class = "switchme")
     }
   }),
+  observeEvent(input$training_sampling_dimred, suspended = TRUE, {
+    if(length(model_react$ratio) == 0) return(NULL)
+    if(length(na.omit(as.integer(input$training_sampling_dimred))) == 0) return(NULL)
+    if(input$training_sampling_dimred > sum(model_react$sub)) {
+      updateNumericInput(session=session, inputId = "training_sampling_dimred", value=sum(model_react$sub))
+      return(NULL)
+    } 
+    if(input$training_sampling_dimred < 1) {
+      updateNumericInput(session=session, inputId = "training_sampling_dimred", value=1)
+      return(NULL)
+    } 
+    if(!(input$training_model %in% c("umap","tsne"))) return(NULL)
+    click("training_go")
+  }),
   # observer to control the visibility of current algorithm hyper-parameter
   observeEvent(input$training_param, suspended = TRUE,{
     sapply(c("pca","tsne","umap","flowsom","em","svm","xgb","lda","bottom"), FUN = function(x) hideElement(id = paste0("training_param_",x)))
@@ -424,8 +440,18 @@ obs_ML <- list(
     updateMaterialSwitch(session=session, inputId = "training_sampling", value = FALSE)
     if(input$training_model %in% c("pca","umap","tsne")) {
       hideElement(id="training_supervised")
+      if(input$training_model == "tsne") {
+        hideElement(id="training_kmeans_meta_all")
+      } else {
+        showElement(id = "training_kmeans_meta_all")
+      }
     } else {
       showElement(id="training_supervised")
+    }
+    if(input$training_model %in% c("umap","tsne")) {
+      showElement(id="training_dimred")
+    } else {
+      hideElement(id="training_dimred")
     }
     # model parameters are reset to their default values every time training model selection is changed
     sapply(match_model(), FUN = function(x) reset(id = x))
@@ -506,7 +532,7 @@ obs_ML <- list(
   # it will also reactualize modelling details, confusion matrix (for supervised),
   # training plot (if available), and features used for modeling
   # training plot will reacts (without recomputing the model) on clustering modification (for unsupervised)
-  # - whatever the model choosen a pca will always be computed 
+  # - whatever the model chose a pca will always be computed 
   # - in addition, tsne will always use pca as input and not the raw data directly
   # for the other algorithms the raw data are always used
   # - finally, ML_ pops and features will be added to obj_react$obj
@@ -524,7 +550,7 @@ obs_ML <- list(
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Fitting data", reset = FALSE)
     obj_back = obj_react$obj
     tryCatch({
-      # we identify the subset as the population where the cells uniquely belongs
+      # we identify the subset as the population where the cells uniquely belongs to one population
       # see pre-processing, as a result model_react$data$clust contains this unique population
       # or NA when the cell belong to more than one population
       idx_train = !is.na(model_react$data$clust)
@@ -534,9 +560,17 @@ obs_ML <- list(
       # this only applies when more than 2 populations where used 
       # in such case we use supervised ML otherwise, if only one pop is given.
       # we override ratio with 1 (meaning that we use the whole data for training only)
+      # except for umap and tsne, that can be long  so we allow subsetting from input population(s)
       ratio = input$training_ratio
-      if(input$training_model %in% c("pca", "tsne", "umap")) ratio = 1
+      if(length(model_react$pops) == 1) {
+        hideElement(id="training_supervised")
+        ratio = 1
+      }
+      if(input$training_model %in% c("pca")) ratio = 1
+      if(input$training_model %in% c("tsne", "umap")) ratio = input$training_sampling_dimred / sum(model_react$sub)
       model_react$ratio = ratio
+      
+      # check flowsom availability
       if(input$training_model == "flowsom") {
         if(!all(c(requireNamespace("FlowSOM", quietly = TRUE), requireNamespace("flowCore", quietly = TRUE)))) {
           mess_global(title = "package required", msg = c("'flowCore' and 'FlowSOM' packages are required to build Self Organizing Map",
@@ -546,19 +580,18 @@ obs_ML <- list(
           updateSelectInput(session = session, inputId = "training_model", label = "model", choices = c("pca","tsne","umap","em","svm","xgb","lda"), selected = "pca")
           return(NULL)
         }
-        if(length(model_react$pops) == 1) ratio = 1
       } 
-      idx = createDataPartition(SUB$clust, p = ratio, list = FALSE)
+      idx = as.vector(createDataPartition(SUB$clust, p = ratio, list = FALSE))
       idx_train[!idx] <- FALSE
       model_react$idx = idx
       
-      train = SUB[idx, ]
+      train = SUB[idx, , drop = FALSE]
       train$clust = factor(train$clust, levels = levels(model_react$data$clust))
       model_react$train = train
       y_train = train$clust
       train = train[, names(train) != "clust"]
       
-      test = SUB[-idx, ]
+      test = SUB[-idx, , drop = FALSE]
       test$clust = factor(test$clust, levels = levels(model_react$data$clust))
       model_react$test = test
       y_test = test$clust
@@ -572,10 +605,10 @@ obs_ML <- list(
       pred = NULL
       
       # a pca is always performed
-      pca_args = list(x = train[, -1], center = FALSE, scale. = FALSE)
+      pca_args = list(x = train[, -1, drop=FALSE], center = FALSE, scale. = FALSE)
       if((input$training_model == "pca") && (length(input$pca_tol) != 0) && !is.na(input$pca_tol)) pca_args = c(pca_args, list(tol = input$pca_tol))
       pca_dr = do.call(what = prcomp, args = pca_args)
-      proj_pca = predict(object = pca_dr, newdata = model_react$data[, names(train[, -1])])
+      proj_pca = predict(object = pca_dr, newdata = model_react$data[, names(train[, -1, drop=FALSE]), drop=FALSE])
       model_react$pca <- pca_dr
       
       # remove former pca
@@ -619,8 +652,6 @@ obs_ML <- list(
         pch = pch_l[vals]
         col = col_l[vals]
         return(list(lab = lab, pch_l = pch_l, col_l = col_l, pch = pch, col = col))
-        
-        # return(sapply(pop, FUN = function(p) p$name))
       }
       
       # depending on algorithm choose by user we will try to fit a model
@@ -637,10 +668,10 @@ obs_ML <- list(
       runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",600,600))
       switch(input$training_model, 
              "em" = {
-               fit = MclustDA(data = train[, -1], 
+               fit = MclustDA(data = train[, -1, drop = FALSE], 
                               modelNames = input$MclustDA_modelNames, modelType = input$MclustDA_modelType, G = input$MclustDA_G,
                               class = y_train)
-               pred = predict(object = fit, newdata = test[, -1])
+               pred = predict(object = fit, newdata = test[, -1, drop = FALSE])
                conf = confusionMatrix(data = pred$classification, reference = y_test)
                h = max(600, 200*(nlevels(y_train)-1))
                runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",h,h))
@@ -656,20 +687,20 @@ obs_ML <- list(
                })
              },
              "svm" = {
-               svm_args = list(x = train[, -1],
+               svm_args = list(x = train[, -1, drop=FALSE],
                                type = input$svm_type, kernel = input$svm_kernel, degree = input$svm_degree,
                                coef0 = input$svm_coef0, cost = input$svm_cost, nu = input$svm_nu,
                                tolerance = input$svm_tolerance, epsilon = input$svm_epsilon,
                                scale = FALSE,  y = y_train)
                if((length(input$svm_gamma) !=0) && !is.na(input$svm_gamma)) svm_args = c(svm_args, list(gamma = input$svm_gamma))
                fit = do.call(what = svm, args = svm_args)
-               pred = predict(object = fit, newdata = test[, -1])
+               pred = predict(object = fit, newdata = test[, -1, drop=FALSE])
                conf = confusionMatrix(data = pred, reference = y_test)
                output$training_plot <- renderPlot(plot.new())
                hideElement("training_plot")
              },
              "xgb" = {
-               fit = xgboost(data = as.matrix(train[, -1]), label = as.integer(y_train)-1,
+               fit = xgboost(data = as.matrix(train[, -1, drop=FALSE]), label = as.integer(y_train)-1,
                              params = list(
                                booster = input$xgb_booster,
                                eta = input$xgb_eta,
@@ -685,13 +716,13 @@ obs_ML <- list(
                              early_stopping_rounds=input$xgb_early_stopping_rounds,
                              verbose=0)
                
-               pred = predict(fit, newdata = as.matrix(test[, -1]), reshape = TRUE)
+               pred = predict(fit, newdata = as.matrix(test[, -1, drop=FALSE]), reshape = TRUE)
                pred = factor(levels(y_train)[apply(pred, 1, which.max)], levels = levels(model_react$data$clust))
                conf = confusionMatrix(data = pred, reference = y_test)
                h = 600
                runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",2*h,h))
                output$training_plot <- renderPlot(width = 2*h, height = h, expr = {
-                 nn = xgb.importance(colnames(train[, -1]), model = fit)
+                 nn = xgb.importance(colnames(train[, -1, drop=FALSE]), model = fit)
                  maxchar = 20
                  toolong = sapply(nn$Feature, FUN = function(x) ifelse(nchar(x) > maxchar, "...", ""))
                  nn$Feature <- paste(substring(nn$Feature, 1, maxchar), toolong, sep = "")
@@ -702,12 +733,12 @@ obs_ML <- list(
              "lda" = {
                h = max(600, 200*(nlevels(y_train)-1))
                runjs(code=sprintf("$('#training_plot').width('%ipx').height('%ipx')",h,h))
-               args_lda = list(x = train[, -1], 
+               args_lda = list(x = train[, -1, drop=FALSE], 
                                method = input$lda_method, tol = input$lda_tol,
                                grouping = y_train)
                if(length(input$lda_nu != 0) && !is.na(input$lda_nu)) args_lda = c(args_lda, input$lda_nu)
                fit = do.call(what = lda, args = args_lda)
-               pred = predict(object = fit, newdata = test[, -1])
+               pred = predict(object = fit, newdata = test[, -1, drop=FALSE])
                conf = confusionMatrix(data = pred$class, reference = y_test)
                pch = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
                col = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
@@ -723,7 +754,7 @@ obs_ML <- list(
                })
                # remove former lda
                obj_react$obj = suppressWarnings(data_rm_features(obj_react$obj, features = grep("^ML_lda_", names(obj_react$obj$features), value = TRUE, invert = FALSE), list_only = FALSE, session=session))
-               proj_lda = predict(object = fit, newdata = model_react$data[, names(train[, -1])])
+               proj_lda = predict(object = fit, newdata = model_react$data[, names(train[, -1, drop=FALSE]), drop=FALSE])
                exported_feat = c(exported_feat, lapply(1:min(99, ncol(proj_lda$x)), FUN = function(i) {
                  buildFeature(name = sprintf("ML_lda_%02i_extra", i), val = proj_lda$x[,i])
                }))
@@ -734,23 +765,23 @@ obs_ML <- list(
                if((length(input$flowsom_seed) !=0) && !is.na(input$flowsom_seed)) seed = input$flowsom_seed
                set.seed(seed)
                on.exit(set.seed(NULL))
-               ff = new(structure("flowFrame", package="flowCore"), exprs = as.matrix(train[, -1]))
+               ff = new(structure("flowFrame", package="flowCore"), exprs = as.matrix(train[, -1, drop=FALSE]))
                SOM = FlowSOM::BuildSOM(FlowSOM::ReadInput(ff, compensate = FALSE, transform = FALSE, scale = FALSE), 
                               silent = TRUE, xdim = min(G, 10), ydim = min(G, 10))
                fit = suppressMessages(FlowSOM::BuildMST(fsom = SOM, silent = TRUE))
                # projects all data in fitted SOM
                col = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
-               ff = as.matrix(model_react$data[, names(train[, -1])])
+               ff = as.matrix(model_react$data[, names(train[, -1]), drop=FALSE])
                sub = !apply(ff, 1, anyNA)
-               ff = new(structure("flowFrame", package="flowCore"), exprs = ff[sub, ])
+               ff = new(structure("flowFrame", package="flowCore"), exprs = ff[sub, ,drop=FALSE])
                proj_som = FlowSOM::NewData(fit, ff, spillover = FALSE, transform = FALSE, scale = FALSE)
-               feat_som = data.frame(proj_som$MST$l[proj_som$map$mapping[,1], ],
+               feat_som = data.frame(proj_som$MST$l[proj_som$map$mapping[,1], , drop=FALSE],
                                      proj_som$MST$size[proj_som$map$mapping[,1]],
                                      model_react$data$clust[sub],
                                      seq_along(proj_som$map$mapping[,1]),
                                      proj_som$map$mapping[,1], stringsAsFactors = FALSE)
                # adds jittering
-               ran = diff(apply(fit$MST$l, 2, range))
+               ran = diff(apply(fit$MST$l, 2, range, finite=TRUE))
                ratio = ran[1]/ran[2]
                feat_som = data.frame(do.call(what = rbind, args = by(feat_som, feat_som[, 6], FUN = function(d) { 
                  cbind(x = rnorm(nrow(d), d[, 1], d[, 3]/25), y = rnorm(nrow(d), d[, 2], d[, 3]/25 / ratio), ids = d[, 5], clust = d[, 4], size = d[, 3])
@@ -762,7 +793,7 @@ obs_ML <- list(
                  buildFeature(name = sprintf("ML_flowsom_%i_extra", i), val = feat_NA)
                }))
                if(nlevels(y_train) > 1) {
-                 ff = new(structure("flowFrame", package="flowCore"), exprs = as.matrix(test[,-1]))
+                 ff = new(structure("flowFrame", package="flowCore"), exprs = as.matrix(test[,-1, drop=FALSE]))
                  proj_test = FlowSOM::NewData(fit, ff, spillover = FALSE, transform = FALSE, scale = FALSE)
                  map = by(fit$map$mapping[, 1], y_train, FUN = function(x) {
                    proj_test$map$mapping[, 1] %in% x
@@ -810,9 +841,9 @@ obs_ML <- list(
                })
              },
              "tsne" = {
-               sub1 = !apply(proj_pca, 1, anyNA)
+               sub1 = !apply(pca_dr$x, 1, anyNA)
                # TODO it would be fine to capture output so as to get progress to shiny
-               fit = Rtsne(proj_pca[sub1, ], dims = 3,
+               fit = Rtsne(pca_dr$x[sub1, ,drop=FALSE], dims = 3,
                            perplexity = input$Rtsne_perplexity, theta = input$Rtsne_theta, max_iter = input$Rtsne_max_iter,
                            eta = input$Rtsne_eta, momentum = input$Rtsne_momentum, final_momentum = input$Rtsne_final_momentum,
                            exaggeration_factor = input$Rtsne_exaggeration_factor,
@@ -820,21 +851,21 @@ obs_ML <- list(
                pch_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
                col_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
                lab = levels(y_train)
+               sub = !apply(fit$Y, 1, anyNA)
                output$training_plot <- renderPlot(width =  600, height = 600, expr = {
                  set.seed(1); old_par = par("pty"); par(pty = "s")
                  on.exit({set.seed(NULL); par("pty" = old_par)})
                  if(length(lab) == 1) {
                    clust = clust_NA
-                   if(input$kmeans_all == "yes") {
-                     sub = !apply(fit$Y, 1, anyNA)
-                     clust[sub1[sub]] = kmeans(x = fit$Y[sub, ], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
-                                               nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
-                     dat = fit$Y[sub, ]
-                   } else {
-                     clust[sub1 & idx_train] = kmeans(x = fit$Y[idx_train[sub1], ], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
-                                                      nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
-                     dat = fit$Y[idx_train[sub1], ]
-                   }
+                   # if(input$kmeans_all == "yes") {
+                   dat = fit$Y[sub, , drop=FALSE]
+                   clust[idx[sub1 & sub]] = kmeans(x = dat, centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
+                                                   nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
+                   # } else {
+                   #   clust[sub1 & idx_train] = kmeans(x = fit$Y[idx_train[sub1], , dropt=FALSE], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
+                   #                                    nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
+                   #   dat = fit$Y[idx_train[sub1], drop=FALSE]
+                   # }
                    clust = factor(clust, levels = sort(unique(clust)))
                    meta = rebuild_meta(clust)
                    lab = c(lab, meta$lab)
@@ -849,7 +880,7 @@ obs_ML <- list(
                  }
                  if(ncol(dat) == 1) {
                    plot(x = dat[, 1], y = dat[, 1],
-                        xlim = range(fit$Y[, 1], na.rm = TRUE), ylim = range(fit$Y[, 1], na.rm = TRUE),
+                        xlim = range(fit$Y[, 1], finite = TRUE), ylim = range(fit$Y[, 1], finite = TRUE),
                         pch = pch,
                         col = col,
                         xlab = "tSNE_1", ylab = "tSNE_1")
@@ -859,7 +890,7 @@ obs_ML <- list(
                           pt.cex = 1, bty = "o", box.lty = 0)
                  } else {
                    plot(x = dat[, 1], y = dat[, 2], 
-                        xlim = range(fit$Y[, 1], na.rm = TRUE), ylim = range(fit$Y[, 2], na.rm = TRUE),
+                        xlim = range(fit$Y[, 1], finite = TRUE), ylim = range(fit$Y[, 2], finite = TRUE),
                         pch = pch,
                         col = col,
                         xlab = "tSNE_1", ylab = "tSNE_2")
@@ -873,19 +904,19 @@ obs_ML <- list(
                obj_react$obj = suppressWarnings(data_rm_features(obj_react$obj, features = grep("^ML_tSNE_", names(obj_react$obj$features), value = TRUE, invert = FALSE), list_only = FALSE, session=session))
                feat_NA = rep_len(NA, length.out = nrow(obj_react$obj$features))
                exported_feat = c(exported_feat, lapply(1:min(3, ncol(fit$Y)), FUN = function(i) {
-                 feat_NA[sub1] <- fit$Y[,i]
+                 feat_NA[idx[sub1 & sub]] <- fit$Y[sub, i]
                  buildFeature(name = paste0("ML_tSNE_", i, "_extra"), val = feat_NA)
                }))
              },
              "umap" = {
-               fit = umap(train[, -1], n_components = 3, method = "naive",
+               fit = umap(train[, -1, drop=FALSE], n_components = 3, method = "naive",
                           n_neighbors = input$umap_n_neighbors, metric = input$umap_metric, n_epochs = input$umap_n_epochs,
                           init = input$umap_init, min_dist = input$umap_min_dist, set_op_mix_ratio = input$umap_set_op_mix_ratio, 
                           local_connectivity = input$umap_local_connectivity, bandwidth = input$umap_bandwidth,
                           alpha = input$umap_alpha, gamma = input$umap_gamma, negative_sample_rate = input$umap_negative_sample_rate,
                           spread = input$umap_spread, knn_repeats = input$umap_knn_repeats, verbose = 2)
-               sub1 = !apply(model_react$data[, names(train[, -1])], 1, anyNA)
-               proj_umap = predict(object = fit, data = model_react$data[sub1, names(train[, -1])])
+               sub1 = !apply(model_react$data[, names(train[, -1]), drop=FALSE], 1, anyNA)
+               proj_umap = predict(object = fit, data = model_react$data[sub1, names(train[, -1, drop=FALSE]), drop=FALSE])
                pch_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$style)
                col_l = sapply(obj_react$obj$pops[levels(y_train)], FUN = function(p) p$lightModeColor)
                lab = levels(y_train)
@@ -897,12 +928,12 @@ obs_ML <- list(
                    if(input$kmeans_all == "yes") {
                      dat = proj_umap
                      sub = !apply(dat, 1, anyNA)
-                     clust[sub1[sub]] = kmeans(x = dat[sub, ], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
+                     clust[sub1[sub]] = kmeans(x = dat[sub, , drop=FALSE], centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
                                                nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
                    } else {
                      dat = fit$layout
-                     clust[idx_train] = kmeans(x = dat, centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
-                                               nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
+                     clust[idx] = kmeans(x = dat, centers = input$kmeans_centers, iter.max = input$kmeans_iter_max,
+                                         nstart = input$kmeans_nstart, algorithm = input$kmeans_algorithm)$cluster-1
                    }
                    clust = factor(clust, levels = sort(unique(clust)))
                    meta = rebuild_meta(clust)
@@ -918,7 +949,7 @@ obs_ML <- list(
                  }
                  plot.new()
                  plot(x = dat[, 1], y = dat[, 2], 
-                      xlim = range(proj_umap[, 1], na.rm = TRUE), ylim = range(proj_umap[, 2], na.rm = TRUE),
+                      xlim = range(proj_umap[, 1], finite = TRUE), ylim = range(proj_umap[, 2], finite = TRUE),
                       pch = pch, col = col,
                       xlab = "umap_1", ylab = "umap_2")
                  legend("topleft", legend = sapply(lab, center_short), pch=pch_l, col=col_l,
@@ -969,13 +1000,13 @@ obs_ML <- list(
                  plot.new()
                  if(ncol(fit$x) == 1) {
                    plot(x = dat[, 1], y = dat[, 1], 
-                        xlim = range(proj_pca[, 1], na.rm = TRUE), ylim = range(proj_pca[, 1], na.rm = TRUE),
+                        xlim = range(proj_pca[, 1], finite = TRUE), ylim = range(proj_pca[, 1], finite = TRUE),
                         pch = pch,
                         col = col,
                         xlab = "pca_1_extra", ylab = "pca_1_extra") 
                  } else {
                    plot(x = dat[, 1], y = dat[, 2], 
-                        xlim = range(proj_pca[, 1], na.rm = TRUE), ylim = range(proj_pca[, 2], na.rm = TRUE),
+                        xlim = range(proj_pca[, 1], finite = TRUE), ylim = range(proj_pca[, 2], finite = TRUE),
                         pch = pch,
                         col = col,
                         xlab = "pca_1_extra", ylab = "pca_2_extra") 
