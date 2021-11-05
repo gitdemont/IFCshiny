@@ -605,7 +605,7 @@ obs_ML <- list(
       pred = NULL
       
       # a pca is always performed
-      pca_args = list(x = train[, -1, drop=FALSE], center = FALSE, scale. = FALSE)
+      pca_args = list(x = train[, -1, drop=FALSE], center = FALSE, scale. = FALSE, rank.=50) # we use the top most 50 components
       if((input$training_model == "pca") && (length(input$pca_tol) != 0) && !is.na(input$pca_tol)) pca_args = c(pca_args, list(tol = input$pca_tol))
       pca_dr = do.call(what = prcomp, args = pca_args)
       proj_pca = predict(object = pca_dr, newdata = model_react$data[, names(train[, -1, drop=FALSE]), drop=FALSE])
