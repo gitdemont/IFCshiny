@@ -284,7 +284,7 @@ ui <- fluidPage(
                                                                                        multiple = TRUE, selectize = FALSE, size = 20, width = "100%")),
                                                                   tags$div(class = "sel_btn", 
                                                                            actionButton(inputId = "moveRight", label = "", class="sel_btnR", icon = icon(name="chevron-circle-right", lib="font-awesome")), 
-                                                                           actionButton(inputId = "moveLeft", label="", class="sel_btnL", icon = icon(name="trash-o", lib="font-awesome"))),
+                                                                           actionButton(inputId = "moveLeft", label="", class="sel_btnL", icon = icon(name="trash-alt", lib="font-awesome"))),
                                                                   tags$div(class = "sel_to", 
                                                                            selectInput(inputId = "sel_right", label = "Selected", choices = NULL, selected = NULL,
                                                                                        multiple = TRUE, selectize = FALSE, size = 20, width = "100%"))))),

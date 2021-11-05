@@ -39,5 +39,5 @@ div(
            style='position: absolute; top: 50%; left: 0; bottom: 0; right: 0; display: block; align-items: center; justify-content: center; text-align: center; margin: auto; vertical-align: middle;',
            tags$h2(id = "msg_busy_txt2", "launching the app"),
            tags$div(style = "display: inline-block; vertical-align: super; color: black;",
-                    icon("fas fa-sync-alt fa-spin fa-3x fa-fw")))
+                    icon("fas fa-sync-alt fa-spin fa-3x fa-fw", verify_fa = FALSE)))
 ))
