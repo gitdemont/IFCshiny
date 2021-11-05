@@ -282,7 +282,6 @@ output$comp_save_btn <- downloadHandler(
                MeanMat = matrix(0, ncol(Mat), nrow(Mat))
                diag(MeanMat) <- 1
                
-               xml_new_node <- getFromNamespace("xml_new_node", "IFC")
                doc = xml_new_node(name = "Matrix", .children= list(
                  xml_new_node(name = "ControlFiles", .children = control_args),
                  xml_new_node(name = "MatrixValues", attrs = list(scatter = c("-1", "0")[1], 
