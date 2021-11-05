@@ -100,7 +100,7 @@ obs_reg <- list(
     regions_react$pre[[what]][input$reg_def_table_cell_edit$row] <- value
     if((regions_react$pre$type == "line") && (what == "y")) {
       regions_react$pre[[what]] <- rep(value, 2)
-      output$reg_def_table <- renderDataTable(data.frame(x = regions_react$pre$x , y = regions_react$pre$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE, 
+      output$reg_def_table <- DT::renderDataTable(data.frame(x = regions_react$pre$x , y = regions_react$pre$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE, 
                                               rownames = FALSE, extensions = 'Buttons',
                                               selection = list(mode = 'none'), #style = "bootstrap",
                                               options = list(pageLength = -1,
@@ -115,7 +115,7 @@ obs_reg <- list(
     regions_react$pre$x <- signif(obj_react$obj$regions[[input$reg_selection]]$x, 3)
     regions_react$pre$y <- signif(obj_react$obj$regions[[input$reg_selection]]$y, 3)
     reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "valid", session = getDefaultReactiveDomain())
-    output$reg_def_table <- renderDataTable(data.frame(x = regions_react$pre$x , y = regions_react$pre$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE, 
+    output$reg_def_table <- DT::renderDataTable(data.frame(x = regions_react$pre$x , y = regions_react$pre$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE, 
                                             rownames = FALSE, extensions = 'Buttons',
                                             selection = list(mode = 'none'), #style = "bootstrap",
                                             options = list(pageLength = -1,
@@ -245,7 +245,7 @@ obs_reg <- list(
       str(list(type = reg[["type"]],
                "LinLog x" = reg[["xlogrange"]], 
                "LinLog y" = reg[["ylogrange"]]))})
-    output$reg_def_table <- renderDataTable(data.frame(x = reg$x, y = reg$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE,
+    output$reg_def_table <- DT::renderDataTable(data.frame(x = reg$x, y = reg$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE,
                                             rownames = FALSE, extensions = 'Buttons',
                                             selection = list(mode = 'none'), #style = "bootstrap",
                                             options = list(pageLength = -1,

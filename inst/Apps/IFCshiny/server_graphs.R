@@ -249,7 +249,7 @@ obs_plot <- list(
         str(list(type = reg[["type"]],
                  "LinLog x" = reg[["xlogrange"]], 
                  "LinLog y" = reg[["ylogrange"]]))})
-      output$reg_def_table <- renderDataTable(data.frame(x = reg$x, y = reg$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE,
+      output$reg_def_table <- DT::renderDataTable(data.frame(x = reg$x, y = reg$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE,
                                               rownames = FALSE, extensions = 'Buttons',
                                               selection = list(mode = 'none'), #style = "bootstrap",
                                               options = list(pageLength = -1,
@@ -1007,7 +1007,7 @@ obs_plot <- list(
           str(list(type = reg[["type"]],
                    "LinLog x" = reg[["xlogrange"]], 
                    "LinLog y" = reg[["ylogrange"]]))})
-        output$reg_def_table <- renderDataTable(data.frame(x = reg$x, y = reg$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE,
+        output$reg_def_table <- DT::renderDataTable(data.frame(x = reg$x, y = reg$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE,
                                                 rownames = FALSE, extensions = 'Buttons',
                                                 selection = list(mode = 'none'), #style = "bootstrap",
                                                 options = list(pageLength = -1,

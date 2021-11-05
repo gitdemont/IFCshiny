@@ -175,7 +175,7 @@ hidden(absolutePanel(id = "reg_manager", class = "panel panel-default", fixed = 
                                                          "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Double click to edit.",
                                                          selectInput(inputId = "reg_def_table_feedback", label = "", choices = c("Coords"), selected = "Coords", multiple = FALSE))),
                                        tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="double click to edit",
-                                                dataTableOutput(outputId = "reg_def_table"))))),
+                                                DT::dataTableOutput(outputId = "reg_def_table"))))),
                      tags$div(class = "reg_btn",
                               style = "display: inline-block; vertical-align: middle;",
                               actionButton(inputId = "reg_remove", label = "Remove"),
