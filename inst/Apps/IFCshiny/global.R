@@ -295,6 +295,10 @@ base_axis_constr <- getFromNamespace("base_axis_constr", "IFC")
 #' @keywords internal
 xml_new_node <- getFromNamespace("xml_new_node", "IFC")
 
+#' @name parseFCSname
+#' @keywords internal
+parseFCSname <- getFromNamespace("parseFCSname", "IFC")
+
 # in dev functions for compensation
 decompensate <- function(comp, spillover) {
   ans = try(round(t(solve(a = solve(spillover), b = t(as.matrix(comp)))),10), silent = TRUE)
