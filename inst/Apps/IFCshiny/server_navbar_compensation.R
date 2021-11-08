@@ -28,8 +28,8 @@
 ################################################################################
 
 # compensation is under development
-if(length(obj_react$obj$features_comp) == 0) { 
-  hideElement("comp_type")
+if(length(obj_react$obj$features_comp) == 0) {
+  hideElement("comp_new")
   if(length(obj_react$obj$description$FCS) == 0) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Preparing compensation", reset = FALSE)
     mess_global(title = "Compensation", 
@@ -118,40 +118,64 @@ if(length(obj_react$obj$features_comp) == 0) {
       mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "", reset = TRUE)
     })
   } else {
-    spillover = obj_react$obj$description$FCS$spillover
     is_intensity = grep("^SS|^FS|^Object Number$|^HDR|Time", names(obj_react$obj$features), ignore.case = TRUE, value = TRUE, invert = TRUE)
-    AHW_intensity = list(A = grep("\\b*-A\\b", is_intensity, perl = FALSE, value = TRUE),
-                         H = grep("\\b*-H\\b", is_intensity, perl = FALSE, value = TRUE),
-                         W = grep("\\b*-W\\b", is_intensity, perl = FALSE, value = TRUE))
-    if(length(spillover) != 0) {
-      is_intensity = AHW_intensity[ncol(spillover) == sapply(AHW_intensity, FUN = length)]
-    }
-    if(length(is_intensity) == 1) {
-      is_intensity = is_intensity[[1]]
+    spillover = obj_react$obj$description$FCS$spillover
+    # try to find -A, -H, -W, in spillover
+    sel_intensity = list(A = grep("\\b*-A\\b", rownames(spillover), perl = FALSE, value = TRUE),
+                         H = grep("\\b*-H\\b", rownames(spillover), perl = FALSE, value = TRUE),
+                         W = grep("\\b*-W\\b", rownames(spillover), perl = FALSE, value = TRUE))
+    sel_intensity = sel_intensity[sapply(sel_intensity, length) != 0]
+    if(length(sel_intensity) != 0) {
+      sel_intensity = sel_intensity[[1]]
     } else {
-      avl_type = c("A","H","W")[sapply(AHW_intensity, length) != 0]
-      showElement("comp_type")
-      showModal(modalDialog(title = "Please select type of intensity to compensate",
-                            radioButtons(inputId = "comp_intensity_type",
-                                         label = "type",
-                                         choices = avl_type,
-                                         selected = avl_type[1],
-                                         inline = TRUE),
+      # try to find -A, -H, -W, in is_intensity
+      sel_intensity = list(A = grep("\\b*-A\\b", is_intensity, perl = FALSE, value = TRUE),
+                           H = grep("\\b*-H\\b", is_intensity, perl = FALSE, value = TRUE),
+                           W = grep("\\b*-W\\b", is_intensity, perl = FALSE, value = TRUE))
+      sel_intensity = sel_intensity[sapply(sel_intensity, length) != 0]
+      if(length(sel_intensity) == 0) {
+        # try to find ^Intensity in spillover
+        sel_intensity = grep("^Intensity_M", rownames(spillover), perl = FALSE, value = TRUE)
+      }
+      if(length(sel_intensity) == 0) {
+        sel_intensity = grep("^Intensity_M", is_intensity, perl = FALSE, value = TRUE)
+      }
+    }
+    showElement("comp_new")
+    showModal(modalDialog(title = "Please select features to compensate",
+                            selectInput(inputId = "comp_intensity_selector",
+                                        label = "features",
+                                        choices = is_intensity,
+                                        selected = sel_intensity[sel_intensity %in% is_intensity],
+                                        multiple = TRUE),
                             size = "s",
                             easyClose = FALSE,
                             footer = list(actionButton(inputId = "comp_modal_proceed",label = "Proceed"))),
                 session = session)
+    tryCatch({
       observeEvent(input$comp_modal_proceed, once = TRUE, ignoreNULL = TRUE, ignoreInit = TRUE, autoDestroy = TRUE, {
-        
-        is_intensity <- AHW_intensity[[input$comp_intensity_type]]
-        spillover = matrix(0, ncol = length(is_intensity), nrow = length(is_intensity))
-        diag(spillover) <- 1
-        colnames(spillover) = gsub("^(.*) <.*>$", "\\1", is_intensity)
+        removeModal(session = session)
+        is_intensity = input$comp_intensity_selector
+        if(length(is_intensity) < 2) {
+          mess_global(title = "Compensation",
+                      msg = c("Select at least 2 features to compensate"),
+                      type = "error", duration = 10)
+          runjs(code = "$('#navbar [data-value=\"tab0\"]').trigger('click');")
+          return(NULL)
+        }
+        intentity_names <- parseFCSname(is_intensity)
+        if(all(is_intensity %in% rownames(spillover))) {
+          spillover = spillover[is_intensity, intentity_names$PnN]
+        } else {
+          spillover = matrix(0, ncol = length(is_intensity), nrow = length(is_intensity))
+          diag(spillover) <- 1
+        }
+        colnames(spillover) = intentity_names$PnN
         rownames(spillover) = is_intensity
         
         obj_react$obj$description$spillover = matrix(0, ncol = ncol(spillover), nrow = nrow(spillover))
         diag(obj_react$obj$description$spillover) <- 1
-        colnames(obj_react$obj$description$spillover) = colnames(spillover) 
+        colnames(obj_react$obj$description$spillover) = colnames(spillover)
         rownames(obj_react$obj$description$spillover) = rownames(spillover)
         
         obj_react$obj$features_comp = obj_react$obj$features[, is_intensity]
@@ -171,9 +195,14 @@ if(length(obj_react$obj$features_comp) == 0) {
         add_log("compensation")
         hideElement("population")
         showElement("comp_side_inputs")
-        removeModal(session = session)
       })
-    }
+    }, error = function(e) {
+      mess_global(title = "Compensation",
+                  msg = c("Can't find features for compensation", "Compensation module has been disabled", e$message),
+                  type = "error", duration = 10)
+      hideElement(selector = "#navbar [data-value='tab9']")
+      runjs(code = "$('#navbar [data-value=\"tab0\"]').trigger('click');")
+    })
   }
 } 
 if(length(obj_react$obj$features_comp) != 0) {
