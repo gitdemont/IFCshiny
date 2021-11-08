@@ -57,7 +57,7 @@ obs_comp <- list(
   observeEvent(comp_react$pre, ignoreNULL = TRUE, suspended = TRUE, {
     toggleClass(id = "comp_apply", condition = !identical(comp_react$last, comp_react$pre), class = "clickme")
   }),
-  observeEvent(input$comp_type, suspended = TRUE, {
+  observeEvent(input$comp_new, suspended = TRUE, {
     lapply(obs_comp, FUN = function(x) x$suspend())
     comp_react$spillover = as.matrix(data.frame())
     comp_react$pre = as.matrix(data.frame())
@@ -178,7 +178,7 @@ output$comp_graphs <- renderPlot({
   panel <- function(x,y, ...) {
     par(new = TRUE)
     plot(x = y, y = x,  ...)
-    try({
+    try(suppressWarnings({
     Xlim = (range(y, na.rm = TRUE))
     Ylim = (range(x, na.rm = TRUE))
     x_ticks = base_axis_constr(lim = Xlim, trans = hyper, nint = 10)
@@ -191,10 +191,10 @@ output$comp_graphs <- renderPlot({
     # text(y = y_axis, x = Xlim[1] - diff(Xlim) * 0.07, labels = y_ticks$labels, 
     #      xpd = TRUE,
     #      adj = c(1, 0.5), las = 1)
-    }, silent = TRUE)
+    }), silent = TRUE)
     box()
   }
-  pairs(df[, -ncol(df)], 
+  try(suppressWarnings(pairs(df[, -ncol(df)], 
         pch = 20, 
         # asp = 1,
         col= sapply(c("lightgrey", "chartreuse4"), FUN = function(x) { 
@@ -205,7 +205,7 @@ output$comp_graphs <- renderPlot({
         gap = 0.2, 
         xaxt = "n",
         yaxt = "n"
-  )
+  )), silent = TRUE)
 })
 output$comp_plot <- renderPlot({
   if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
@@ -248,6 +248,7 @@ output$comp_plot <- renderPlot({
   box()
 })
 output$comp_table <- DT::renderDT({
+  if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
   if(length(comp_react$spillover) == 0) return(NULL)
   foo = comp_react$pre
   colnames(foo) <- gsub("^(.*) <.*>$", "\\1", param_react$param$channels$name)

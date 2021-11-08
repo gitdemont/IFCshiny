@@ -58,7 +58,7 @@ if(all(file.exists(file.path(.rundir, c("server_compensation.R", "server_navbar_
                                  tags$div(style="display: inline-block",
                                           shinyjs::hidden(actionButton(inputId="comp_compute", label="Compute")),
                                           actionButton(inputId="comp_reset", label=NULL, icon = icon("undo", lib = "font-awesome")),
-                                          shinyjs::hidden(actionButton(inputId="comp_type", label="Type", icon = icon("list-alt", lib = "font-awesome"))),
+                                          shinyjs::hidden(actionButton(inputId="comp_new", label="New", icon = icon("list-alt", lib = "font-awesome"))),
                                           tags$div(style="display: inline-block",
                                                    actionButton(inputId="comp_apply", label="Apply")),
                                           ),
