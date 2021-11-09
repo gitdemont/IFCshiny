@@ -333,13 +333,11 @@ output$daf_save_btn <- downloadHandler(
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
                "fcs" = {
-                 ExportToFCS(obj = foo, write_to = tmpfile, overwrite = TRUE, delimiter = "/")
+                 ExportToFCS(obj = foo, write_to = tmpfile, overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(comp_react$spillover))
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
                "zip" = {
-                 # tmpdr = session_react$dir
-                 # short = short_name(react_dat()$fileName)
-                 files = c(ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short,".fcs")), overwrite = TRUE, delimiter = "/"),
+                 files = c(ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short,".fcs")), overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(comp_react$spillover)),
                            writeGatingStrategy(obj = foo, write_to = file.path(tmpdr, paste0(short,".xml")), overwrite = TRUE, display_progress = TRUE, session = session))
                  to_rm = files
                  files = short_path(files, tmpdr)

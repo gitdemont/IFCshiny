@@ -299,6 +299,10 @@ xml_new_node <- getFromNamespace("xml_new_node", "IFC")
 #' @keywords internal
 parseFCSname <- getFromNamespace("parseFCSname", "IFC")
 
+#' @name convert_spillover
+#' @keywords internal
+convert_spillover <- getFromNamespace("convert_spillover", "IFC")
+
 # in dev functions for compensation
 decompensate <- function(comp, spillover) {
   ans = try(round(t(solve(a = solve(spillover), b = t(as.matrix(comp)))),10), silent = TRUE)
