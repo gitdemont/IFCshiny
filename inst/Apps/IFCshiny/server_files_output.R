@@ -191,7 +191,7 @@ output$ML_save_btn <- downloadHandler(
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
                "fcs" = {
-                 ExportToFCS(obj = foo, write_to = tmpfile, overwrite = TRUE, delimiter = "/")
+                 ExportToFCS(obj = foo, write_to = tmpfile, overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(comp_react$spillover))
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
                "zip" = {
@@ -204,7 +204,7 @@ output$ML_save_btn <- downloadHandler(
                                                         fullname = !input$use_example, viewing_pop = "ML_subset", binary = TRUE, 
                                                         display_progress = TRUE, session = session))
                  } else {
-                   files = ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$name,".fcs")), overwrite = TRUE, delimiter = "/")
+                   files = ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$name,".fcs")), overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(comp_react$spillover))
                    files = c(files, writeGatingStrategy(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$name,".xml")), overwrite = TRUE, display_progress = TRUE, session = session))
                  }
                  model = list()
@@ -674,7 +674,7 @@ output$features_save_btn <- downloadHandler(
       switch(input$features_save_type, 
              "csv" = write.csv(x = df, file = tmpfile),
              "xlsx" = write.xlsx(x = df, file = tmpfile),
-             "fcs" = ExportToFCS(obj = foo, write_to = tmpfile, overwrite = TRUE, delimiter = "/")
+             "fcs" = ExportToFCS(obj = foo, write_to = tmpfile, overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(comp_react$spillover))
              )
       if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
     },
