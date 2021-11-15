@@ -166,7 +166,7 @@ observeEvent(input$graph_manager_visible, {
 })
 observeEvent(input$cell_manager_visible, {
   # cell manager can't show up when there is no cell image found
-  if((length(react_dat()$info$found) == 0) || !react_dat()$info$found) {
+  if((length(obj_react$back$info$found) == 0) || !obj_react$back$info$found) {
     runjs("Shiny.onInputChange('cell_manager_visible', false)")
     return(NULL)
   }
@@ -218,7 +218,7 @@ observeEvent(input$reg_manager_visible, {
 })
 observeEvent(input$img_manager_visible, {
   # image manager can't show up when there is no cell image found
-  if((length(react_dat()$info$found) == 0) || !react_dat()$info$found) {
+  if((length(obj_react$back$info$found) == 0) || !obj_react$back$info$found) {
     runjs("Shiny.onInputChange('img_manager_visible', false)")
     return(NULL)
   }

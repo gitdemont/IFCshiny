@@ -60,11 +60,8 @@ reinit_plot_3D <- function(session) {
   updateToggle3D(session = session, inputId = "plot_3D_draw_txt", value = FALSE)
   updateSliderInput(session = session, inputId = "plot_type_3D_option02", value = 2)
   updateSelectInput(session=session, inputId = "plot_3D_mouse_ctrl", selected = "trackball")
-  if(react_dat()$info$found) { 
-    showElement(id = "plot_3D_img_ctrl")
-  } else {
-    hideElement(id = "plot_3D_img_ctrl")
-  }
+  hideElement(id = "plot_3D_img_ctrl")
+  if(any(obj_react$back$info$found)) showElement(id = "plot_3D_img_ctrl")
 }
 
 set_tool <- function(tool = "init", plotId = plot_react$current) {
@@ -511,8 +508,8 @@ obs_plot <- list(
     } else {
       switch(plot_react$tool,
              "init" = {
-               if(length(react_dat()$description$FCS)!=0) return(NULL)
-               if(!react_dat()$info$found) {
+               if(length(obj_react$back$description$FCS)!=0) return(NULL)
+               if(!obj_react$back$info$found) {
                  mess_global(title = "clicking on graph", msg = "tips: provide a .cif file to display cell image", type = "info", duration = 10)
                  return(NULL)
                }
@@ -561,7 +558,7 @@ obs_plot <- list(
                tryCatch({
                  dat = ExportToGallery(param = param_react$param, extract_max = 10,
                                        objects = plot_react$plot$input$data[idx,"Object Number"],
-                                       offsets = react_dat()$offsets, export = "base64", image_type = "img",
+                                       offsets = obj_react$back$offsets, export = "base64", image_type = "img",
                                        add_channels = TRUE, add_ids = 1, display_progress = FALSE)
                  html("plot_image_placeholder", dat)
                }, error = function(e) {
@@ -728,7 +725,7 @@ obs_plot <- list(
                                                                             coord1$coords_css$y - 4),
                                                             tags$div(style="top: -15px; left: 10px; position: absolute; background-color: black; color: white;", tags$p(foo))), 
                where = "beforeEnd", immediate = TRUE, session = session)
-      if(react_dat()$info$found) {
+      if(obj_react$back$info$found) {
         tryCatch({
           info = obj_react$obj$info
           info$Images = param_react$param$channels
@@ -748,7 +745,7 @@ obs_plot <- list(
                               full_range = "full_range" %in% input$chan_force,
                               force_range = "force_range" %in% input$chan_force)
           ifd = getIFD(fileName = param$fileName_image,
-                       offsets = subsetOffsets(offsets = react_dat()$offsets, objects= foo, image_type = "img"),
+                       offsets = subsetOffsets(offsets = obj_react$back$offsets, objects= foo, image_type = "img"),
                        trunc_bytes = 1, force_trunc = TRUE, verbose = FALSE, display_progress = FALSE, bypass = TRUE)
           base64 = objectExtract(ifd = ifd, param = param, verbose = FALSE, bypass = TRUE)[[1]]
           runjs(code = paste0("var ele = document.getElementById('plot_1or2D');
@@ -1044,7 +1041,7 @@ obs_plot <- list(
     removeModal(session=session)
   }),
   observeEvent(input$plot_region_create_ok, suspended = TRUE, {
-    if(length(react_dat()$info$in_use) == 0) return(NULL)
+    if(length(obj_react$back$info$in_use) == 0) return(NULL)
     if(any(input$population=="")) return(NULL)
     if(input$plot_type=="") return(NULL)
     if(input$navbar!="tab3") return(NULL)
@@ -1152,7 +1149,7 @@ obs_plot <- list(
     runjs(code = "Shiny.onInputChange('plot_shown', null)")
     plot_react$allowed_regions = NULL
     runjs(code = "Shiny.onInputChange('plot_regions', null)")
-    updateSelectInput(session=session, inputId="plot_regions", choices=NULL, selected=NULL)
+    updateSelectInput(session=session, inputId="plot_regions", choices=list(), selected=NULL)
     runjs(code = "Shiny.onInputChange('plot_shown_order', null)")
   }),
   observeEvent(input$plot_type, suspended = TRUE, {
@@ -1253,7 +1250,7 @@ obs_plot <- list(
     runjs(code = "Shiny.onInputChange('plot_shown_order', null)")
   }),
   observeEvent(input$plot_type_3D_option03, suspended = TRUE,{
-    if(length(react_dat()$info$in_use) == 0) return(NULL)
+    if(length(obj_react$back$info$in_use) == 0) return(NULL)
     if(any(input$population=="")) return(NULL)
     if(input$plot_type=="") return(NULL)
     if(input$navbar!="tab3") return(NULL)
@@ -1268,7 +1265,7 @@ obs_plot <- list(
     }))
   }),
   observeEvent(input$plot_type_3D_option01,suspended = TRUE, {
-    if(length(react_dat()$info$in_use) == 0) return(NULL)
+    if(length(obj_react$back$info$in_use) == 0) return(NULL)
     if(any(input$population=="")) return(NULL)
     if(input$plot_type=="") return(NULL)
     if(input$navbar!="tab3") return(NULL)
@@ -1288,7 +1285,7 @@ obs_plot <- list(
       foo = as.integer(unlist(input$rgl_3D_hover)[3])
       if(plot_react$closest != foo) {
         plot_react$closest <- foo
-        if(react_dat()$info$found) {
+        if(obj_react$back$info$found) {
           tryCatch({
             info = obj_react$obj$info
             info$Images = param_react$param$channels
@@ -1309,7 +1306,7 @@ obs_plot <- list(
                                 full_range = "full_range" %in% input$chan_force,
                                 force_range = "force_range" %in% input$chan_force)
             ifd = getIFD(fileName = param$fileName_image,
-                         offsets = subsetOffsets(offsets = react_dat()$offsets, objects= foo, image_type = "img"),
+                         offsets = subsetOffsets(offsets = obj_react$back$offsets, objects= foo, image_type = "img"),
                          trunc_bytes = 1, force_trunc = TRUE, verbose = FALSE, display_progress = FALSE, bypass = TRUE)
             base64 = objectExtract(ifd = ifd, param = param, verbose = FALSE, bypass = TRUE)[[1]][[1]]
             runjs(code = paste0("var ele = document.getElementById('plot_3D');
@@ -1327,7 +1324,7 @@ obs_plot <- list(
       if(plot_react$closest != foo) {
         plot_react$closest <- foo
         tryCatch({
-          if(react_dat()$info$found) {
+          if(obj_react$back$info$found) {
             info = obj_react$obj$info
             info$Images = param_react$param$channels
             param = objectParam(info = info,
@@ -1347,7 +1344,7 @@ obs_plot <- list(
                                 full_range = "full_range" %in% input$chan_force,
                                 force_range = "force_range" %in% input$chan_force)
             ifd = getIFD(fileName = param$fileName_image,
-                         offsets = subsetOffsets(offsets = react_dat()$offsets, objects= foo, image_type = "img"),
+                         offsets = subsetOffsets(offsets = obj_react$back$offsets, objects= foo, image_type = "img"),
                          trunc_bytes = 1, force_trunc = TRUE, verbose = FALSE, display_progress = FALSE, bypass = TRUE)
             base64 = objectExtract(ifd = ifd, param = param, verbose = FALSE, bypass = TRUE)[[1]][[1]]
             runjs(code = sprintf("var ele = document.getElementById('plot_3D');

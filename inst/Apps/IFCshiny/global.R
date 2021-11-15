@@ -30,10 +30,10 @@
 ## define cleanup to recover options and environment
 .cleanup = list(ls = setdiff(ls(all.names = TRUE),"..."), env = environment(), options = options())
 shiny::onStop(fun = function() {
-  options(.cleanup$options)
-  if(!("shiny.maxRequestSize" %in% names(.cleanup$options))) options("shiny.maxRequestSize"=NULL)
-  for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$env), envir = .cleanup$env)
-  rm(list = setdiff(ls(all.names = TRUE, envir = .cleanup$env), .cleanup$ls), envir = .cleanup$env)
+  # options(.cleanup$options)
+  # if(!("shiny.maxRequestSize" %in% names(.cleanup$options))) options("shiny.maxRequestSize"=NULL)
+  # for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$env), envir = .cleanup$env)
+  # rm(list = setdiff(ls(all.names = TRUE, envir = .cleanup$env), .cleanup$ls), envir = .cleanup$env)
   return(invisible(NULL))
 })
 
@@ -324,8 +324,9 @@ recompensate <- function(val, spill_dec, spill_comp) {
 
 # function to update all input containing population name
 update_pops <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
-  N = names(obj$pops)
+  N = names(obj$pops); 
   TAGGED = N[sapply(obj$pops, FUN = function(p) p$type == "T")]
+  if(length(N) == 0) N = list()
   if(!init && (length(session$input$population) !=0) && all(session$input$population %in% N)) {
     updateSelectInput(session=session, inputId = "population", choices = N, selected = session$input$population)
   } else {
@@ -358,11 +359,16 @@ update_pops <- function(session = getDefaultReactiveDomain(), obj, init = FALSE,
   } else {
     updateSelectInput(session=session, inputId = "populations_training", choices = N, selected = character())
   }
+  if(!init && (length(session$input$plot_batch_population) !=0) && all(session$input$plot_batch_population %in% N)) {
+    updateSelectInput(session=session, inputId = "plot_batch_population", choices = N, selected = session$input$plot_batch_population)
+  } else {
+    updateSelectInput(session=session, inputId = "plot_batch_population", choices = N, selected = "All")
+  }
 }
 
 # function to update all input containing regions name
 update_regions <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
-  N = names(obj$regions)
+  N = names(obj$regions); if(length(N) == 0) N = list()
   if(!init && (length(session$input$reg_selection) !=0) && all(session$input$reg_selection %in% N)) {
     updateSelectInput(session=session, inputId = "reg_selection", choices = N, selected = session$input$reg_selection)
   } else {
@@ -372,7 +378,7 @@ update_regions <- function(session = getDefaultReactiveDomain(), obj, init = FAL
 
 # function to update all input containing features name
 update_features <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
-  N = names(obj$features)
+  N = names(obj$features); if(length(N) == 0) N = list()
   session$output$features_infos <- renderText({
     paste0(length(N), " features found with this pattern")
   })
@@ -395,6 +401,12 @@ update_features <- function(session = getDefaultReactiveDomain(), obj, init = FA
     updateSelectInput(session=session, inputId = "plot_dens_feature", choices = c("initial","default",N), selected = c("initial", session$input$cell_feature))
   } else {
     updateSelectInput(session=session, inputId = "plot_dens_feature", choices = c("initial","default",N), selected = "initial")
+  }
+  if(!init && (length(session$input$batch_population) !=0) && all(session$input$batch_population %in% N)) {
+    updateSelectInput(session=session, inputId = "plot_batch_feature", choices = N, selected = session$input$batch_population)
+  } else {
+    updateSelectInput(session=session, inputId = "plot_batch_feature", choices = N, selected = "Object Number")
+    updateTextInput(session = session, inputId = "plot_batch_feature_transform", value = "P")
   }
   if(!init && (length(session$input$plot_x_feature) !=0) && all(session$input$plot_x_feature %in% N)) {
     updateSelectInput(session=session, inputId = "plot_x_feature", choices = N, selected = session$input$plot_x_feature)
@@ -1163,6 +1175,204 @@ plotly_obj3D <- function(obj3D, xlab, ylab, zlab, fileName = NULL,
     }")
   }
   suppressWarnings(fig)
+}
+
+batch_stats <- function(batch, pop = "All", feat, method = c("wilcox","t","none")[3]) {
+  if(missing(pop)) pop = "All"
+  if(missing(feat)) feat = names(batch[[1]]$features)
+  L = length(batch)
+  N = names(batch)
+  if(length(N) == 0) {
+    N = as.character(seq_len(L))
+    names(batch) = N
+  }
+  feat_1 = feat
+  if(L > 1) for(i in 2:L) { feat = intersect(feat, names(batch[[i]]$features)) }
+  dat <- lapply(1:L, FUN = function(i_batch) {
+    k = 1 + (length(batch[[i_batch]]$description$FCS) == 0)
+    pat = c("^(?!.*FS|.*SS|.*LOG).*$", "^Intensity|^Bright Detail Intensity|^Uncompensated")
+    fun = c("asinh","smoothLinLog")
+    d = batch[[i_batch]]$features[batch[[i_batch]]$pops[[pop]]$obj, feat, drop = FALSE]
+    if(nrow(d) == 0) return(matrix(NA, nrow=1, ncol=1+length(feat), dimnames = list(NULL, c(feat,""))))
+    int_to_tra = colnames(d)[grepl(pat[k], colnames(d))]
+    if(length(int_to_tra) != 0) d[, int_to_tra] <- sapply(int_to_tra, FUN = function(i_trans) do.call(what = fun[k], args = list(x = d[,i_trans])))
+    cbind(d, rep(i_batch, nrow(d)))
+  })
+  dat2 <- do.call(rbind.data.frame, args = dat)
+  
+  med = apply(dat2, 2, median, na.rm = TRUE)
+  avg = apply(dat2, 2, mean, na.rm = TRUE)
+  std = apply(dat2, 2, sd, na.rm = TRUE)
+  if(ncol(dat2) <= 1) return(matrix(numeric(), nrow=length(N), ncol=0, dimnames=list(N,NULL)))
+  
+  X <- unlist(lapply(dat,FUN = function(d) {
+    sapply(colnames(d)[-ncol(d)], FUN = function(i_col) {
+      mean(d[, i_col], na.rm=TRUE)
+    })
+  }))
+  
+  zscore <- unlist(lapply(dat,FUN = function(d) {
+    sapply(colnames(d)[-ncol(d)], FUN = function(i_col) {
+      (mean(d[, i_col], na.rm=TRUE) - avg[i_col]) / std[i_col]
+    })
+  }))
+  
+  fold_avg <- unlist(lapply(dat,FUN = function(d) {
+    sapply(colnames(d)[-ncol(d)], FUN = function(i_col) {
+      mean(d[, i_col], na.rm=TRUE) / avg[i_col]
+    })
+  }))
+  
+  fold_med <- unlist(lapply(dat,FUN = function(d) {
+    sapply(colnames(d)[-ncol(d)], FUN = function(i_col) {
+      median(d[, i_col], na.rm=TRUE) / med[i_col]
+    })
+  }))
+  
+  p = rep(NA_real_, times=length(feat)*L)
+  if(method != "none") {
+    test = paste0(method,".test")
+    p <- as.vector(t(sapply(1:L, FUN = function(i_batch) {
+      d = dat[[i_batch]]
+      compare = dat2[,ncol(dat2)] != i_batch
+      sapply(colnames(d)[-ncol(d)], FUN = function(i_col) {
+        foo = try(suppressWarnings(do.call(what = test, args = list(x=d[, i_col,drop=TRUE], y=dat2[compare, i_col,drop=TRUE]))$p.value), silent = TRUE)
+        if(inherits(foo, "try-error")) return(NA_real_)
+        foo
+      })
+    })))
+  }
+  return(structure(array(c(X,zscore,fold_avg,fold_med,p),
+                         dim=c(length(feat),L,5),
+                         dimnames=list(feat,N,c("X","zscore","fold_avg","fold_med","p"))),
+                   "method"=method,
+                   "pop"=pop))
+}
+
+# function to create volcano plot with plotly
+# so as to visualize difference best discriminating feature for a single same pop of each members of a batch
+plotly_batch_volcano <- function(a, fold="mean", height=NULL) {
+  Log2 = function(x) {
+    sapply(x, FUN = function(i) {
+      if(is.na(i)) return(i)
+      if(i < 0) return(-1*log2(-i))
+      return(log2(i))
+    })
+  }
+  w = switch(fold,"mean"="fold_avg","median"="fold_med",NA_character_)
+  d = dim(a)
+  dn = dimnames(a)
+  xori = as.vector(a[,,w])
+  yori = as.vector(a[,,"p"])
+  ss = !is.na(xori) & !is.na(yori)
+  xori = xori[ss]
+  yori = yori[ss]
+  xx = Log2(xori)
+  yy = -log10(yori)
+  sp = rep(dn[[2]], times = d[1])[ss]
+  text = rep(dn[[1]], times = d[2])[ss]
+  xran = range(xx, na.rm = TRUE, finite = TRUE)
+  yran = range(c(yy, -log10(0.05)), na.rm = TRUE, finite = TRUE)
+  p <- plotly::plot_ly(x = xx, y = yy, split = sp, text = text, 
+                       customdata = paste0("<br>x:",xori,",<br>y:",yori),
+                       type="scatter", mode="markers", height=height,
+                       marker = list(size = 5, width = 2),
+                       hovertemplate = "<i><b>%{text}</b></i>%{customdata}<extra></extra>")
+  p <- p %>% plotly::layout(title=list(text="Volcano plot",x = 0),
+                            xaxis = list(title = "log2 fold change", type="linear", range = c(c(-1.07,1.07)*max(abs(xran))),zeroline=TRUE),
+                            yaxis = list(title= "-log10 p value", type="linear", range = c(0,1.07*max(yran))),
+                            shapes = list(type = "line", x0 = 0, x1 = 1, xref = "paper", y0 = -log10(0.05), y1 = -log10(0.05),
+                                               line = list(dash="dash"), text="p value = 0.05"),
+                            annotations = list(#list(text="pval = 0.001", xref="paper", x=0.05, y=-log10(0.001), yshift = 10, showarrow=FALSE),
+                                               #list(text="pval = 0.01", xref="paper", x=0.05, y=-log10(0.01), yshift = 10, showarrow=FALSE),
+                                               list(text="pval = 0.05", xref="paper", x=0.05, y=-log10(0.05), yshift = 10, showarrow=FALSE)))
+  spp <- unique(sp) # check for empty category
+  if(length(spp) != length(dn[[2]])) {
+    for(i in 1:length(dn[[2]])) {
+      if(!any(dn[[2]][i] %in% spp)) {
+        p$x$attrs[[p$x$cur_data]]$x = c(p$x$attrs[[p$x$cur_data]]$x, 'null')
+        p$x$attrs[[p$x$cur_data]]$y = c(p$x$attrs[[p$x$cur_data]]$y, 'null')
+        p$x$attrs[[p$x$cur_data]]$text = c(p$x$attrs[[p$x$cur_data]]$text, "")
+        p$x$attrs[[p$x$cur_data]]$customdata = c(p$x$attrs[[p$x$cur_data]]$customdata, "")
+        p$x$attrs[[p$x$cur_data]]$split = c(p$x$attrs[[p$x$cur_data]]$split, dn[[2]][i])
+      }
+    }
+  }
+  p
+}
+
+# function to create heatmap with plotly
+# so as to visualize difference between every (selected) features for a single same pop of each members of a batch
+plotly_batch_heatmap <- function(a, what="zscore", dendro = FALSE, height=NULL, ...) {
+  dots = list(...)
+  dots = dots[!names(dots) %in% c("x", "row_dend_left", "plot_method", "main", "height")]
+  m = a[,,what]
+  if(all(is.na(m))) return(NULL)
+  if((length(m) != 0) && dendro && requireNamespace("heatmaply", quietly = TRUE)) {
+    do.call(what = heatmaply::heatmaply,
+            args = c(dots, list(x=m, height=height,
+                                row_dend_left=TRUE, 
+                                plot_method="plotly",
+                                main="Batch Heatmap")))
+  } else {
+    plotly::plot_ly(x=colnames(m), y=rownames(a), z=m, height=height, type="heatmap") %>% layout(title=list(text="Batch Heatmap",x = 0))
+  }
+}
+
+# function to create violin or ridge plot with plotly
+# so as to visualize difference between one features for a single same pop of each members of a batch
+plotly_batch_violin <- function(batch, pop = "All", feat = "Object Number", trans = "P",
+                              space = 2*length(batch)-1, height = NULL,
+                              type = c("violin", "ridge")[1],
+                              points = c("all","outliers","none")[2]) {
+  if(missing(pop)) pop = "All"
+  if(missing(feat)) feat = "Object Number"
+  L = length(batch)
+  N = names(batch)
+  N = sort(names(batch))
+  if(length(N) == 0) {
+    N = as.character(seq_len(L))
+    names(batch) = N
+  }
+  batch = batch[N]
+  S = seq_len(L)
+  trans_ = parseTrans(trans)
+  dat <- lapply(1:L, FUN = function(i_batch) {
+    V = applyTrans(batch[[i_batch]]$features[batch[[i_batch]]$pops[[pop]]$obj, feat], trans_)
+    V = V[is.finite(V)]
+    cbind.data.frame("V1"=V, "V2"=rep(N[i_batch], length(V)))
+  })
+  is_empty = sapply(dat, FUN = function(d) length(d[, 1])) == 0
+  dat <- as.data.frame(do.call(rbind, dat), stringsAsFactors = FALSE, check.names = FALSE)
+  if(any(is_empty)) dat = rbind(dat, cbind(V1=rep(0, times = sum(is_empty)), V2=N[is_empty]))
+  switch(type,
+         "violin" = {
+           p <- plotly::plot_ly(x = dat[,2], y = dat[, 1], split = dat[,2],
+                                height=height,
+                                points = points,
+                                box = list(visible = TRUE),
+                                meanline = list(visible = TRUE),
+                                type = "violin")
+           p <- p %>% plotly::style(pointpos=0) %>%
+             plotly::layout(title=list(text=feat,x = 0),
+                            yaxis = list(title = "", type="linear", fixedrange =TRUE, autorange = TRUE, zeroline=FALSE),
+                            xaxis = list(type="-", autorange = TRUE, ticktext=S, tickvals=N))
+         }, ridge = {
+           p <- plotly::plot_ly(y = dat[,2], x = dat[, 1], split = dat[,2], height = height, type = "violin")
+           p <- p %>% plotly::style(orientation="h", side="positive", width=space, points=FALSE) %>%
+             plotly::layout(title=list(text=feat,x = 0),
+                            xaxis = list(title = "", type="linear", autorange = TRUE, zeroline=FALSE),
+                            yaxis = list(type="-", fixedrange =TRUE, autorange = TRUE, ticktext=S, tickvals=N))
+         })
+  if(any(is_empty)) { # check for empty category
+    for(i in 1:L) {
+      if(is_empty[i]) {
+        p$x$data[[i]]$visible="legendonly"
+        p$x$data[[i]][[c("x","y")[1 + (type=="violin")]]] = 'null'
+      }
+    }
+  }
+  p
 }
 
 # function to remove starting elements of a path (with extension) of a file

@@ -129,7 +129,7 @@ obs_ML <- list(
       output$features_infos <- renderText({
         "No features with this pattern"
       })
-      updateSelectInput(session, "sel_left", choices="", selected = NULL)
+      updateSelectInput(session, "sel_left", choices=list(), selected = NULL)
       return(NULL)
     } else {
       hideFeedback(session = session, inputId = "pattern")
@@ -138,7 +138,7 @@ obs_ML <- list(
       output$features_infos <- renderText({
         "No features with this pattern"
       })
-      updateSelectInput(session, "sel_left", choices="", selected = NULL)
+      updateSelectInput(session, "sel_left", choices=list(), selected = NULL)
     } else {
       output$features_infos <- renderText({
         paste0(l, " features found with this pattern")
@@ -157,7 +157,8 @@ obs_ML <- list(
   observeEvent(input$moveLeft, suspended = TRUE,{
     if(length(input$sel_right) != 0) {
       feat_react$selected = isolate(sort(setdiff(feat_react$selected, input$sel_right)))
-      updateSelectInput(session = session, inputId = "sel_right", choices=feat_react$selected)
+      N = feat_react$selected; if(length(N) == 0) N = list()
+      updateSelectInput(session = session, inputId = "sel_right", choices=N)
     }
   }),
   # when features are moved from left to right or right to left

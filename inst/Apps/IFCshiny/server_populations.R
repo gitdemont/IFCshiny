@@ -326,7 +326,7 @@ obs_pop <- list(
         pops_react$revert = obj_react$obj$pops[[input$pop_def_name]]
         click("pop_close")
       }
-      if((pops_react$revert$type == "T") && react_dat()$info$found) {
+      if((pops_react$revert$type == "T") && obj_react$back$info$found) {
         nam = pops_react$revert$name
         runjs("Shiny.onInputChange('pop_manager_visible', false)")
         runjs(code = "Shiny.setInputValue('cell_selected', [])")

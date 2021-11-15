@@ -28,7 +28,8 @@
 ################################################################################
 
 reinit_default <- function(fun = reactiveValues, env = environment(), x, not = NULL) {
-  foo = list(obj_react = list(obj = list(haschanged_objects = character())),
+  foo = list(obj_react = list(obj = list(haschanged_objects = character()), back = list(), 
+                              batch = list(), curr = 1, stats = array(numeric(), dim=c(0,0,4))),
              model_react = list(data = data.frame(), 
                                 train = data.frame(), test = data.frame(), 
                                 ratio = numeric(), sub = logical(), idx = logical(), 

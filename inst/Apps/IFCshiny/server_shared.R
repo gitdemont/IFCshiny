@@ -58,7 +58,7 @@ observeEvent(input$pop_alt_click, suspended = FALSE, {
     return(NULL)
   }
   pop = obj_react$obj$pops[[input$pop_alt_click]]
-  if((pop$type == "T") && react_dat()$info$found) {
+  if((pop$type == "T") && obj_react$back$info$found) {
     nam = pop$name
     runjs("Shiny.onInputChange('pop_manager_visible', false)")
     runjs(code = "Shiny.setInputValue('cell_selected', [])")
