@@ -1356,13 +1356,13 @@ plotly_batch_violin <- function(batch, pop = "All", feat = "Object Number", tran
            p <- p %>% plotly::style(pointpos=0) %>%
              plotly::layout(title=list(text=feat,x = 0),
                             yaxis = list(title = "", type="linear", fixedrange =TRUE, autorange = TRUE, zeroline=FALSE),
-                            xaxis = list(type="-", autorange = TRUE, ticktext=S, tickvals=N))
+                            xaxis = list(type="category", autorange = TRUE, ticktext=S, tickvals=N))
          }, ridge = {
            p <- plotly::plot_ly(y = dat[,2], x = dat[, 1], split = dat[,2], height = height, type = "violin")
            p <- p %>% plotly::style(orientation="h", side="positive", width=space, points=FALSE) %>%
              plotly::layout(title=list(text=feat,x = 0),
                             xaxis = list(title = "", type="linear", autorange = TRUE, zeroline=FALSE),
-                            yaxis = list(type="-", fixedrange =TRUE, autorange = TRUE, ticktext=S, tickvals=N))
+                            yaxis = list(type="category", fixedrange =TRUE, autorange = TRUE, ticktext=S, tickvals=N))
          })
   if(any(is_empty)) { # check for empty category
     for(i in 1:L) {
