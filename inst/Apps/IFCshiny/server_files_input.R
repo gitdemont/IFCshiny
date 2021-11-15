@@ -402,7 +402,6 @@ observeEvent(input$file_batch, {
       file_b = c(names(obj_react$batch), file_b)
       obj_react$batch = c(obj_react$batch, batch)
     }
-    obj_react$batch[[2]]$pops[["Focused"]]$obj = rep(FALSE, length(obj_react$batch[[2]]$pops[["Focused"]]$obj))
     
     # set names to obj_react$batch
     names(obj_react$batch) <- file_b
