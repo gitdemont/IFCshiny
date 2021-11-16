@@ -1344,6 +1344,8 @@ plotly_batch_violin <- function(batch, pop = "All", feat = "Object Number", tran
   })
   is_empty = sapply(dat, FUN = function(d) length(d[, 1])) == 0
   dat <- as.data.frame(do.call(rbind, dat), stringsAsFactors = FALSE, check.names = FALSE)
+  vlim = suppressWarnings(range(dat$V1))
+  vaxis = base_axis_constr(vlim, trans = trans)
   if(any(is_empty)) dat = rbind(dat, cbind(V1=rep(0, times = sum(is_empty)), V2=N[is_empty]))
   switch(type,
          "violin" = {
@@ -1355,13 +1357,19 @@ plotly_batch_violin <- function(batch, pop = "All", feat = "Object Number", tran
                                 type = "violin")
            p <- p %>% plotly::style(pointpos=0) %>%
              plotly::layout(title=list(text=feat,x = 0),
-                            yaxis = list(title = "", type="linear", fixedrange =TRUE, autorange = TRUE, zeroline=FALSE),
+                            yaxis = list(title = "", type="linear",
+                                         tickvals = vaxis$at,
+                                         ticktext = vaxis$labels,
+                                         fixedrange =TRUE, autorange = TRUE, zeroline=FALSE),
                             xaxis = list(type="category", autorange = TRUE, ticktext=S, tickvals=N))
          }, ridge = {
            p <- plotly::plot_ly(y = dat[,2], x = dat[, 1], split = dat[,2], height = height, type = "violin")
            p <- p %>% plotly::style(orientation="h", side="positive", width=space, points=FALSE) %>%
              plotly::layout(title=list(text=feat,x = 0),
-                            xaxis = list(title = "", type="linear", autorange = TRUE, zeroline=FALSE),
+                            xaxis = list(title = "", type="linear", 
+                                         tickvals = vaxis$at,
+                                         ticktext = vaxis$labels,
+                                         autorange = TRUE, zeroline=FALSE),
                             yaxis = list(type="category", fixedrange =TRUE, autorange = TRUE, ticktext=S, tickvals=N))
          })
   if(any(is_empty)) { # check for empty category
