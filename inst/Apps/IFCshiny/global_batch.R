@@ -31,7 +31,7 @@
 # function prepare data for plotting 
 plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
                               trans = asinh, bin, viewport = "data",
-                              nticks_x = 10, nticks_y = 10) {
+                              nticks_x = 10, nticks_y = 10, batch_mode = FALSE) {
   
   assert(color_mode, len = 1, alw = c("white", "black"))
   mode = c(2, 1)[c("white", "black") == color_mode]
@@ -92,8 +92,12 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
   displayed_n = setdiff(displayed_n, "Selected Bin")
   displayed_r = rev(displayed_n)
   tmp = displayed_n %in% names(P)
-  if(!all(tmp)) stop(paste0("trying to display a population not found in obj$pops: ",  paste0(displayed_n[!tmp], collapse=", ")))
-  displayed_d = sapply(displayed_n, FUN=function(x) P[[x]]$obj)
+  if(!batch_mode && !all(tmp)) stop(paste0("trying to display a population not found in obj$pops: ",  paste0(displayed_n[!tmp], collapse=", ")))
+  displayed_d = sapply(displayed_n, FUN=function(x) {
+    foo = P[[x]]$obj
+    if(length(foo) == 0) foo = rep(FALSE, times=obj$description$ID$objcount)
+    foo
+  })
   L = length(displayed_n)
   
   base_o = sapply(base_n, FUN=function(x) which(displayed_n%in%x))
@@ -108,7 +112,11 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
   }
   
   # subset data
-  base = as.data.frame(sapply(base_n, FUN=function(x) P[[x]]$obj), stringsAsFactors = FALSE)
+  base = as.data.frame(sapply(base_n, FUN=function(x) {
+    foo = P[[x]]$obj
+    if(length(foo) == 0) foo = rep(FALSE, times=obj$description$ID$objcount)
+    foo
+  }), stringsAsFactors = FALSE)
   data_sub = apply(base, 1, any)
   displayed_o = c(base_o, shown_o)
   D = cbind(D, displayed_d)

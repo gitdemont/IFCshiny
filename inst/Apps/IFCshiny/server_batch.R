@@ -120,6 +120,7 @@ output$stack_plot <- renderPlotly({
   tryCatch({
     plotly_batch_stack(obj_react$batch, 
                        g = plot_react$g,
+                       batch_mode = TRUE,
                        height = input$plot_batch_height)
   }, error = function(e) {
     mess_global(title = "batch 3D stack", msg = e$message, type = "error", duration = 10)
