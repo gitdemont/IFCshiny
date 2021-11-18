@@ -666,15 +666,17 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
   yaxis = base_axis_constr(Ylim, trans = dat[[1]]$scales$trans_y)
   Zlim = c(1,L)+c(-0.1,0.1) # due to jitter z is extended
   Zlim = Zlim + c(-0.07,0.07)*diff(Zlim) # add 0.07
-  p <- p %>% plotly::layout(title=list(text=dat[[1]]$args$main,x = 0, y = 1, xref="paper", yref="paper"),
+  title = dat[[1]]$args$main
+  if(g$type == "density" && (length(dat[[1]]$args$xtop) != 0)) title = paste0(title,"<br><sup>",dat[[1]]$args$xtop,"</sup>")
+  p <- p %>% plotly::layout(title=list(text=title,x = 0, y = 1, xref="paper", yref="paper"),
                             scene=list(camera=list(up=list(x=-0.05, y=-1, z=-0.1),
                                                    eye=list(x=-4/3, y=-1/3, z=2.5)),
-                                       yaxis = list(title = dat[[1]]$axes$y$text,
+                                       yaxis = list(title = center_short(dat[[1]]$axes$y$text, 20),
                                                     range= rev(Ylim), zeroline=FALSE,
                                                     tickmode = "array", type="linear",
                                                     tickvals = yaxis$at,
                                                     ticktext = yaxis$labels),
-                                       xaxis = list(title = dat[[1]]$axes$x$text, 
+                                       xaxis = list(title = center_short(dat[[1]]$axes$x$text, 20), 
                                                     range = rev(Xlim), zeroline=FALSE,
                                                     tickmode = "array", type="linear",
                                                     tickvals = xaxis$at,
@@ -684,6 +686,6 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
                                                     tickmode = "array",
                                                     tickvals = 1:L,
                                                     ticktext = as.character(1:L))),
-                            legend = list(title = N, groupclick = "toggleitem"))
+                            legend = list(title = center_short(N, 20), groupclick = "toggleitem"))
   p
 }
