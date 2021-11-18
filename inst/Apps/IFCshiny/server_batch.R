@@ -33,18 +33,20 @@ output$violin_plot <- renderPlotly({
      (length(obj_react$batch) == 0)) return(NULL)
   runjs("document.getElementById('msg_busy_txt2').innerText = 'updating violin plot';")
   runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
-  p <- try(plotly_batch_violin(obj_react$batch, 
-                      pop = input$plot_batch_population,
-                      feat = input$plot_batch_feature,
-                      trans = input$plot_batch_feature_transform,
-                      type = "violin",
-                      height = input$plot_batch_height,
-                      points = input$violin_points), silent=TRUE)
-  if(inherits(p, "try-error")) {
+  tryCatch({plotly_batch_violin(obj_react$batch, 
+                                pop = input$plot_batch_population,
+                                feat = input$plot_batch_feature,
+                                trans = input$plot_batch_feature_transform,
+                                type = "violin",
+                                height = input$plot_batch_height,
+                                points = input$violin_points)
+  }, error = function(e) {
+    mess_global(title = "batch violin", msg = e$message, type = "error", duration = 10)
     return(NULL)
+  },
+  finally = {
     runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
-  } 
-  p
+  })
 })
 output$ridge_plot <- renderPlotly({
   if((input$navbar != "tab7") ||
@@ -52,19 +54,21 @@ output$ridge_plot <- renderPlotly({
      (length(obj_react$batch) == 0)) return(NULL)
   runjs("document.getElementById('msg_busy_txt2').innerText = 'updating ridge plot';")
   runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
-  p <- try(plotly_batch_violin(obj_react$batch, 
-                               pop = input$plot_batch_population,
-                               feat = input$plot_batch_feature,
-                               trans = input$plot_batch_feature_transform,
-                               type = "ridge",
-                               space = input$ridge_space,
-                               height = input$plot_batch_height,
-                               points = "none"), silent=TRUE)
-  if(inherits(p, "try-error")) {
+  tryCatch({plotly_batch_violin(obj_react$batch, 
+                                pop = input$plot_batch_population,
+                                feat = input$plot_batch_feature,
+                                trans = input$plot_batch_feature_transform,
+                                type = "ridge",
+                                space = input$ridge_space,
+                                height = input$plot_batch_height,
+                                points = "none")
+  }, error = function(e) {
+    mess_global(title = "batch ridge", msg = e$message, type = "error", duration = 10)
     return(NULL)
+  },
+  finally = {
     runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
-  } 
-  p
+  })
 })
 output$volcano_plot <- renderPlotly({
   if((input$navbar != "tab7") ||
@@ -77,12 +81,13 @@ output$volcano_plot <- renderPlotly({
      attr(obj_react$stats, "pop") != input$plot_batch_population) {
     obj_react$stats = batch_stats(obj_react$batch, pop=input$plot_batch_population, method=m)
   }
-  p <- try(plotly_batch_volcano(obj_react$stats, fold = input$volcano_fold, height = input$plot_batch_height), silent=TRUE)
-  if(inherits(p, "try-error")) {
+  tryCatch({plotly_batch_volcano(obj_react$stats, fold = input$volcano_fold, height = input$plot_batch_height)  }, error = function(e) {
+    mess_global(title = "batch volcano", msg = e$message, type = "error", duration = 10)
     return(NULL)
+  },
+  finally = {
     runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
-  } 
-  p
+  })
 })
 output$heatmap_plot <- renderPlotly({
   if((input$navbar != "tab7") ||
@@ -94,15 +99,35 @@ output$heatmap_plot <- renderPlotly({
   if(attr(obj_react$stats, "pop") != input$plot_batch_population) {
     obj_react$stats = batch_stats(obj_react$batch, pop=input$plot_batch_population, method="none")
   }
-  p <- try(plotly_batch_heatmap(obj_react$stats,
-                           height = input$plot_batch_height,
-                           what = w,
-                           dendro = input$heatmap_dendro == "yes"), silent=TRUE)
-  if(inherits(p, "try-error")) {
+  tryCatch({plotly_batch_heatmap(obj_react$stats,
+                                 height = input$plot_batch_height,
+                                 what = w,
+                                 dendro = input$heatmap_dendro == "yes")
+  }, error = function(e) {
+    mess_global(title = "batch heatmap", msg = e$message, type = "error", duration = 10)
     return(NULL)
+  },
+  finally = {
     runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
-  } 
-  p
+  })
+})
+output$stack_plot <- renderPlotly({
+  if((input$navbar != "tab7") ||
+     (input$navbar_batch != "Stack") ||
+     (length(obj_react$batch) == 0)) return(NULL)
+  runjs("document.getElementById('msg_busy_txt2').innerText = 'updating batch 3D stack';")
+  runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
+  tryCatch({
+    plotly_batch_stack(obj_react$batch, 
+                       g = plot_react$g,
+                       height = input$plot_batch_height)
+  }, error = function(e) {
+    mess_global(title = "batch 3D stack", msg = e$message, type = "error", duration = 10)
+    return(NULL)
+  },
+  finally = {
+    runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
+  })
 })
 
 obs_batch = list(
@@ -113,6 +138,7 @@ obs_batch = list(
     hideElement("ridge_controls")
     hideElement("volcano_controls")
     hideElement("heatmap_controls")
+    hideElement("stack_controls")
     switch(input$navbar_batch, 
            "Violin" = {
              showElement("batch_feature")
@@ -127,6 +153,9 @@ obs_batch = list(
            },
            "Heatmap" = {
              showElement("heatmap_controls")
+           },
+           "Stack" = {
+             showElement("stack_controls")
            })
   }),
   observeEvent(input$plot_batch_height, suspended = TRUE, ignoreInit = FALSE, ignoreNULL = TRUE, {

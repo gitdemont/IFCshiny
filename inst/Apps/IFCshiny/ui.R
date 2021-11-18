@@ -229,6 +229,8 @@ ui <- fluidPage(
                                                      radioButtons(inputId = "heatmap_what", "what", choices = c("zscore","mean","median"), selected = "zscore", inline = TRUE),
                                                      radioButtons(inputId = "heatmap_dendro", "dendro", choices = c("yes","no"), selected = "no", inline = TRUE)
                                             )),
+                                            hidden(tags$div(id = "stack_controls"
+                                            )),
                                             tags$div(sliderInput(inputId = "plot_batch_height", label = "height", min = 400, max = 800, step = 20, value = 400))
                                    )
                                  )
@@ -382,6 +384,13 @@ ui <- fluidPage(
                                                 tags$div(id = "heatmap_plot_div",
                                                          class = "obs_plot_invalidate",
                                                          plotlyOutput("heatmap_plot")
+                                                )),
+                                       tabPanel(span("Stack", title="Stack"),
+                                                id = "Stack",
+                                                value = "Stack",
+                                                tags$div(id = "stack_plot_div",
+                                                         class = "obs_plot_invalidate",
+                                                         plotlyOutput("stack_plot")
                                                 ))
                                        )
                            ),

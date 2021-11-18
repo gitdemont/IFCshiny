@@ -75,6 +75,7 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
   disable("plot_sel_zoomin")
   disable("plot_sel_zoomreset")
   disable("plot_sel_add")
+  disable("plot_sel_stack")
   session$sendCustomMessage("getOffset", sprintf("%s",plot_react$current))
   session$resetBrush("plot_brush")
   runjs(code="$('.selected.plot_tool').removeClass('selected')")
@@ -122,6 +123,10 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
                                enable("plot_sel_add")
                                "adding"
                              },
+                             # "batch" = {
+                               # enable("plot_sel_stack")
+                               # "batch"
+                             # },
                              { "drawing" })
   if(plot_react$action %in% c("drawing", "none")) {
     if(plot_react$action == "drawing") {
@@ -142,6 +147,7 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
         # click("plot_sel_init")
       }
     }
+    if(length(obj_react$batch) != 0) enable("plot_sel_stack") 
     if(input$plot_type == "2D") {
       enable("plot_sel_rectangle")
       enable("plot_sel_polygon")
@@ -1515,6 +1521,13 @@ obs_plot <- list(
   }),
   observeEvent(input$plot_sel_zoomreset, suspended = TRUE,{
     plot_react$zoomed = FALSE
+    click("plot_sel_init")
+  }),
+  observeEvent(input$plot_sel_stack, suspended = TRUE,{
+    runjs(code = "$('#navbar [data-value=\"tab7\"]').trigger('click');" )
+    runjs(code = "Shiny.onInputChange('navbar', 'tab7');")
+    runjs(code = "$('#navbar_batch [data-value=\"Stack\"]').trigger('click');" )
+    runjs(code = "Shiny.onInputChange('navbar_batch', 'Stack');")
     click("plot_sel_init")
   }),
   observeEvent(input$plot_sel_add, suspended = TRUE,{

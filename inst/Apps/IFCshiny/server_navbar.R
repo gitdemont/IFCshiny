@@ -62,8 +62,8 @@ observeEvent(input$navbar,{
   lapply(obs_batch, FUN = function(x) x$resume())
   updateTabsetPanel(session = session, "navbar_ML", selected = "ML_inputs")
   runjs(code = "$('#navbar_ML [data-value=\"ML_inputs\"]').trigger('click');")
-  updateTabsetPanel(session = session, "navbar_batch", selected = "Violin")
-  runjs(code = "$('#navbar_batch [data-value=\"Violin\"]').trigger('click');")
+  # updateTabsetPanel(session = session, "navbar_batch", selected = "Violin")
+  # runjs(code = "$('#navbar_batch [data-value=\"Violin\"]').trigger('click');")
   switch(input$navbar,
          "tab0" = {
            add_log("infos")

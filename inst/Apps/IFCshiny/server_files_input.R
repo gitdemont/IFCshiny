@@ -46,7 +46,7 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   rif_file = ext %in% "rif"
   msg = NULL
   if(all(ext == "")) {
-    msg = c(msg, "You should select at least one file")
+    msg = c(msg, "-You should select at least one file")
   }
   if(any(c(sum(daf_file), sum(cif_file), sum(rif_file))>1)) {
     msg = c(msg, "-You should not select more than one [rif, cif, daf, daf+rif, daf+cif]")
@@ -56,6 +56,9 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   }
   if((sum(!(daf_file | rif_file | cif_file)) > 0) && any(c(daf_file, rif_file, cif_file))) {  
     msg = c(msg, "-You should not select fcs and [rif, cif or daf] at the same time")
+  }
+  if(sum(!(daf_file | rif_file | cif_file)) > 1) {
+    msg = c(msg, "-You should not select not select more than one fcs at the same time")
   }
   if(length(msg) != 0) {
     mess_global(title = "file input", msg = msg, type = "error", duration = 10)

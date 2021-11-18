@@ -41,7 +41,7 @@ reinit_default <- function(fun = reactiveValues, env = environment(), x, not = N
                                 success = FALSE, pca = list(), fit = list(),
                                 param = list()),
              pops_react = list(def = character(), new = FALSE, revert = list()),
-             plot_react = list(plot = list(),  g = list(),
+             plot_react = list(plot = list(),  g = buildGraph(type = "histogram"),
                                shown = NULL, order = NULL,
                                uri = NULL, param = list(), shared = NULL,
                                x_feat = "Object Number", y_feat = "Object Number", z_feat = "Object Number",
