@@ -431,6 +431,7 @@ reg_def = function(reg, reg_back, all_names, check = "valid", session = getDefau
 
 # function to update all input containing population name
 update_pops <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
+  if(length(session) != 0) {
   N = names(obj$pops); 
   TAGGED = N[sapply(obj$pops, FUN = function(p) p$type == "T")]
   if(length(N) == 0) N = list()
@@ -472,9 +473,12 @@ update_pops <- function(session = getDefaultReactiveDomain(), obj, init = FALSE,
     updateSelectInput(session=session, inputId = "plot_batch_population", choices = N, selected = "All")
   }
 }
+return(invisible(NULL))
+}
 
 # function to update all input containing regions name
 update_regions <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
+  if(length(session) != 0) {
   N = names(obj$regions); if(length(N) == 0) N = list()
   if(!init && (length(session$input$reg_selection) !=0) && all(session$input$reg_selection %in% N)) {
     updateSelectInput(session=session, inputId = "reg_selection", choices = N, selected = session$input$reg_selection)
@@ -482,9 +486,12 @@ update_regions <- function(session = getDefaultReactiveDomain(), obj, init = FAL
     updateSelectInput(session=session, inputId = "reg_selection", choices = N, selected = character())
   }
 }
+return(invisible(NULL))
+}
 
 # function to update all input containing features name
 update_features <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
+  if(length(session) != 0) {
   N = names(obj$features); if(length(N) == 0) N = list()
   session$output$features_infos <- renderText({
     paste0(length(N), " features found with this pattern")
@@ -533,4 +540,6 @@ update_features <- function(session = getDefaultReactiveDomain(), obj, init = FA
     updateSelectInput(session=session, inputId = "plot_z_feature", choices = N, selected = "Object Number")
     updateTextInput(session = session, inputId = "plot_y_transform", value = "P")
   }
+}
+  return(invisible(NULL))
 }

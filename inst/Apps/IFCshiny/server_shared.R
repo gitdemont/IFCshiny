@@ -58,7 +58,7 @@ observeEvent(input$pop_alt_click, suspended = FALSE, {
     return(NULL)
   }
   pop = obj_react$obj$pops[[input$pop_alt_click]]
-  if((pop$type == "T") && obj_react$back$info$found) {
+  if((pop$type == "T") && any(obj_react$back$info$found)) {
     nam = pop$name
     runjs("Shiny.onInputChange('pop_manager_visible', false)")
     runjs(code = "Shiny.setInputValue('cell_selected', [])")
@@ -73,7 +73,7 @@ observeEvent(input$pop_alt_click, suspended = FALSE, {
     runjs("Shiny.onInputChange('pop_alt_click', null)")
     return(NULL)
   }
-  if(pop$name == "ML_subset") {
+  if(any(pop$name == c("ML_subset"))) {
     lapply(obs_plot, FUN = function(x) x$resume())
     dims = "ML_pca_"
     if("lda" %in% input$training_model) dims = "ML_lda_0"

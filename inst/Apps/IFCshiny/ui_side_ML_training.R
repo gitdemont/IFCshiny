@@ -29,7 +29,7 @@
 
 if(requireNamespace("FlowSOM", quietly = TRUE) && requireNamespace("flowCore", quietly = TRUE)) {
   flowsom_meta = hidden(tags$div(id = "training_flowsom_meta",
-                                 radioButtons(inputId = "MetaClustering_all", label = "Do meta cluster on the projection of 'All' dataset", choices = c("yes", "no"), selected = "no"),
+                                 #radioButtons(inputId = "MetaClustering_all", label = "Do meta cluster on the projection of 'All' dataset", choices = c("yes", "no"), selected = "no"),
                                  numericInput(inputId = "MetaClustering_max", label = "max", value = 20, min = 1, max = 99, step = 1),
                                  selectInput(inputId = "MetaClustering_method", label = "method", 
                                              # choices = c("metaClustering_consensus", "metaClustering_hclust", "metaClustering_kmeans", "metaClustering_som"), 
@@ -179,7 +179,7 @@ list(hidden(tags$div(id="ML_side_training",
                                 tags$div(class = "change_align",
                                          materialSwitch(inputId = "training_meta", "Clustering", value = FALSE, status = "info")),
                                 hidden(tags$div(id = "training_kmeans_meta",
-                                                tags$div(id = "training_kmeans_meta_all", radioButtons(inputId = "kmeans_all", label = "Do meta cluster on the projection of 'All' dataset", choices = c("yes", "no"), selected = "no")),
+                                                hidden(tags$div(id = "training_kmeans_meta_all", radioButtons(inputId = "kmeans_all", label = "Do meta cluster on the projection of 'All' dataset", choices = c("yes", "no"), selected = "no"))),
                                                 numericInput(inputId = "kmeans_centers", label = "centers", value = 10, min = 1, max = 99, step = 1),
                                                 numericInput(inputId = "kmeans_iter_max", label = "iter.max", value = 10, step = 1),
                                                 numericInput(inputId = "kmeans_nstart", label = "nstart", value = 1, step = 1),

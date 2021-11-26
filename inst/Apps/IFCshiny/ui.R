@@ -208,7 +208,8 @@ ui <- fluidPage(
                                  hidden(
                                    tags$div(id="batch_plot_controls",
                                             tags$hr(),
-                                            tags$div(selectInput(inputId = "plot_batch_population", label = "Population to compare", choices = list(), multiple = FALSE)),
+                                            tags$div(id = "batch_population",
+                                                     selectInput(inputId = "plot_batch_population", label = "Population to compare", choices = list(), multiple = FALSE)),
                                             tags$div(id = "batch_feature",
                                                      tags$div(style = "display:inline-block; vertical-align:top; width:70%",
                                                               selectInput(inputId = "plot_batch_feature", label = "feature", choices = "Object Number", multiple = FALSE)),
@@ -337,8 +338,10 @@ ui <- fluidPage(
                                                 id = "ML_training",
                                                 value = "ML_training",
                                                 verbatimTextOutput("training_summary"),
-                                                hidden(plotOutput("training_plot", width = "400px")),
-                                                plotOutput("training_matrix", width = "100%", height = "500px"),
+                                                # hidden(plotOutput("training_plot", width = "400px")),
+                                                hidden(uiOutput(outputId = "training_plot_placeholder")),
+                                                # hidden(plotOutput("training_matrix", width = "100%", height = "500px")),
+                                                hidden(uiOutput(outputId = "training_matrix_placeholder")),
                                                 verbatimTextOutput("training_features"))
                                        )),
                   tabPanel(span("Report", title="create layout for graph report"),

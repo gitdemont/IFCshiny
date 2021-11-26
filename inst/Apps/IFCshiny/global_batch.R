@@ -384,6 +384,10 @@ plotly_batch_heatmap <- function(a, what="zscore", dendro = FALSE, height=NULL, 
   m = a[,,what]
   if(all(is.na(m))) return(NULL)
   if((length(m) != 0) && dendro && requireNamespace("heatmaply", quietly = TRUE)) {
+    # heatmaply does not handle NA/NaN/Inf so we replace them with 0
+    rownames(m) <- center_short(rownames(m), max = 20)
+    foo = which(!is.finite(m),arr.ind = TRUE)
+    apply(foo, 1, FUN = function(x) m[x[1],x[2]] <<- 0)
     do.call(what = heatmaply::heatmaply,
             args = c(dots, list(x=m, height=height,
                                 row_dend_left=TRUE, 
@@ -677,7 +681,8 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
   title = dat[[1]]$args$main
   if(g$type == "density" && (length(dat[[1]]$args$xtop) != 0)) title = paste0(title,"<br><sup>",dat[[1]]$args$xtop,"</sup>")
   p <- p %>% plotly::layout(title=list(text=title,x = 0, y = 1, xref="paper", yref="paper"),
-                            scene=list(camera=list(up=list(x=-0.05, y=-1, z=-0.1),
+                            scene=list(aspectmode="cube",
+                                       camera=list(up=list(x=-0.05, y=-1, z=-0.1),
                                                    eye=list(x=-4/3, y=-1/3, z=2.5)),
                                        yaxis = list(title = center_short(dat[[1]]$axes$y$text, 20),
                                                     range= rev(Ylim), zeroline=FALSE,

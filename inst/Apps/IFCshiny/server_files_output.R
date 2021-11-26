@@ -80,7 +80,7 @@ output$infos_save_btn <- downloadHandler(
   })
 output$ML_save_btn <- downloadHandler(
   filename = function() {
-    ans = paste0(remove_ext(basename(obj_react$back$fileName)), "_", model_react$name, ".", input$ML_save_type)
+    ans = paste0(remove_ext(basename(obj_react$back$fileName)), "_", model_react$method, ".", input$ML_save_type)
     ans = specialr(ans)
     ans
   },
@@ -88,101 +88,23 @@ output$ML_save_btn <- downloadHandler(
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting DAF with model", reset = FALSE)
     tmpfile = file.path(session_react$dir, basename(file))
     tryCatch({
-      if(!model_react$success) stop("please re-run model")
-      
-      # retrieve features used for modeling
-      feat = grep("^Object Number$|^clust$", names(model_react$train), invert = TRUE, value = TRUE)
-      
-      pred = NULL
-      sub1 = !apply(model_react$data[, feat], 1, anyNA)
-      clust = rep_len(NA, length.out = nrow(obj_react$obj$features))
-      switch(model_react$name, 
-             "em" = {
-               pred = clust
-               pred[sub1] = as.character(predict(object = model_react$fit, newdata = model_react$data[sub1, feat])$classification)
-             },
-             "svm" = {
-               pred = clust
-               pred[sub1] = as.character(predict(object = model_react$fit, newdata = model_react$data[sub1, feat]))
-             },
-             "xgb" = {
-               prob = predict(model_react$fit, newdata = as.matrix(model_react$data[sub1, feat]), reshape = TRUE)
-               pred = clust
-               pred[sub1] = as.character(factor(levels(model_react$data$clust)[apply(prob, 1, which.max)], levels = unique(model_react$data$clust)))
-             },
-             "lda" = {
-               proj_lda = predict(object = model_react$fit, newdata = model_react$data[sub1, feat])
-               pred = clust
-               pred[sub1] = as.character(proj_lda$clas)
-             },
-             "flowsom" = {
-               proj_som = FlowSOM::NewData(model_react$fit, new(structure("flowFrame", package="flowCore"), exprs = as.matrix(model_react$data[sub1, feat])),
-                                  spillover = FALSE, transform = FALSE, scale = FALSE)
-               if(nlevels(model_react$train$clust) > 1) {
-                 map = by(model_react$fit$map$mapping[, 1], model_react$train$clust, FUN = function(x) {
-                   proj_som$map$mapping[, 1] %in% x
-                 })
-                 map = sapply(map, FUN = function(x) x)
-                 N = colnames(map)
-                 pred = clust
-                 pred[sub1] = apply(map, 1, FUN = function(x) {
-                   foo = which(x)
-                   if(length(foo) == 1) return(N[foo])
-                   return(NA)
-                 })
-               } 
-             })
-      
-      pops = list(buildPopulation(name = "ML_subset", type = "C",
-                                  definition = paste0(model_react$pops, collapse = "|Or|"),
-                                  color = "White", lightModeColor = "Black"))
-      if(length(pred) != 0) {
-        if(all(setdiff(na.omit(unique(pred)), "") %in% as.character(levels(model_react$train$clust)))) {
-          pops = c(pops, lapply(levels(model_react$train$clust), FUN = function(i_pop) {
-            buildPopulation(name = paste0("ML_", model_react$name, "_", i_pop),
-                            type = "T", 
-                            lightModeColor = obj_react$obj$pops[[i_pop]]$lightModeColor,
-                            color = obj_react$obj$pops[[i_pop]]$color,
-                            obj = !is.na(pred) & pred == i_pop)
-          }),
-          lapply(levels(model_react$train$clust), FUN = function(i_pop) {
-            buildPopulation(name = paste0("ML_train_", model_react$name, "_", i_pop),
-                            type = "T",
-                            lightModeColor = obj_react$obj$pops[[i_pop]]$lightModeColor,
-                            color = obj_react$obj$pops[[i_pop]]$color,
-                            obj = model_react$data[, "Object Number"] %in% model_react$train[model_react$train$clust == i_pop, "Object Number"])
-          }),
-          lapply(levels(model_react$train$clust), FUN = function(i_pop) {
-            buildPopulation(name = paste0("ML_test_", model_react$name, "_", i_pop),
-                            type = "T",
-                            lightModeColor = obj_react$obj$pops[[i_pop]]$lightModeColor,
-                            color = obj_react$obj$pops[[i_pop]]$color,
-                            obj = model_react$data[, "Object Number"] %in% model_react$test[model_react$test$clust == i_pop, "Object Number"])
-          }),
-          lapply(levels(model_react$train$clust), FUN = function(i_pop) {
-            buildPopulation(name = paste0("ML_mismatch_", model_react$name, "_predicted_", i_pop),
-                            type = "T",
-                            lightModeColor = obj_react$obj$pops[[i_pop]]$lightModeColor,
-                            color = obj_react$obj$pops[[i_pop]]$color,
-                            obj = !is.na(pred) & pred == i_pop &
-                              (model_react$data[, "Object Number"] %in% model_react$test[model_react$test$clust != i_pop, "Object Number"]))
-          }))
-        } 
-      }
-      
       # add image values in obj_react (if not already extracted)
       if((length(obj_react$back$description$FCS) == 0) && (getFileExt(obj_react$back$fileName) != "daf") && (length(obj_react$obj$images) == 0)) {
         obj_react$obj$images <- getImagesValues(fileName = obj_react$back$fileName, offsets = obj_react$obj$offsets,
                                                 display_progress = TRUE, fast = TRUE, session = session)
       }
       
-      foo = obj_react$obj
+      # create obj with all the data
+      nv = apply.IFCml(model = reactiveValuesToList(model_react), obj = obj_react$obj, 
+                       newdata = "all", 
+                       session = session, verbose = FALSE)
+      foo = nv$obj
       if(length(param_react$param$channels) !=0) {
         foo$description$Images <- param_react$param$channels
       }
       tryCatch({
         # add temporary ML pops in obj_react
-        foo <- suppressWarnings(data_add_pops(foo, pops, display_progress = TRUE, session = session))
+        # foo <- suppressWarnings(data_add_pops(foo, pops, display_progress = TRUE, session = session))
         sp = comp_react$spillover
         if(nrow(sp) == 0) sp = foo$description$FCS$spillover
         switch(input$ML_save_type, 
@@ -201,18 +123,18 @@ output$ML_save_btn <- downloadHandler(
                  short = short_name(obj_react$back$fileName)
                  if(length(obj_react$back$description$FCS) == 0) {
                    files = suppressWarnings(data_to_DAF(obj = foo, 
-                                                        write_to = file.path(tmpdr, paste0("%s_", model_react$name,".%e")),
+                                                        write_to = file.path(tmpdr, paste0("%s_", model_react$method,".%e")),
                                                         overwrite = TRUE,
                                                         fullname = !input$use_example, viewing_pop = "ML_subset", binary = TRUE, 
                                                         display_progress = TRUE, session = session))
                  } else {
-                   files = ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$name,".fcs")), overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(sp))
-                   files = c(files, writeGatingStrategy(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$name,".xml")), overwrite = TRUE, display_progress = TRUE, session = session))
+                   files = ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$method,".fcs")), overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(sp))
+                   files = c(files, writeGatingStrategy(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$method,".xml")), overwrite = TRUE, display_progress = TRUE, session = session))
                  }
                  model = list()
                  for(i in names(model_react)) model[[i]] = model_react[[i]]
-                 saveRDS(model, file = file.path(tmpdr, paste0(short, "_", model_react$name,".rds")))
-                 files = c(files, file.path(tmpdr, paste0(short, "_", model_react$name,".rds")))
+                 saveRDS(model, file = file.path(tmpdr, paste0(short, "_", model_react$method,".rds")))
+                 files = c(files, file.path(tmpdr, paste0(short, "_", model_react$method,".rds")))
                  to_rm = files
                  files = short_path(files, tmpdr)
                  olddir = getwd()
@@ -385,7 +307,7 @@ output$graph_save_btn <- downloadHandler(
                  trunc_string(input$plot_x_feature,20),
                  ifelse(input$plot_type=="1D","", paste0("]y[",trunc_string(input$plot_y_feature, 20))))
     ans = paste0(ans, ifelse(input$plot_type=="3D",paste0("]z[",trunc_string(input$plot_y_feature, 20),"]"),"]"))
-    if(obj_react$back$info$found) ans = ans = paste0(ans, "(Ch",input$plot_3D_draw_chan,")")
+    if(aby(obj_react$back$info$found)) ans = ans = paste0(ans, "(Ch",input$plot_3D_draw_chan,")")
     ans = specialr(paste0(ans,".",input$graph_save_type))
     ans
   },
@@ -395,7 +317,7 @@ output$graph_save_btn <- downloadHandler(
     if(input$plot_type == "3D") {
       tryCatch({
         imgs = character()
-        if(obj_react$back$info$found) {
+        if(any(obj_react$back$info$found)) {
           fileName = obj_react$back$fileName_image
         } else {
           fileName = NULL

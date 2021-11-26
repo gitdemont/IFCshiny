@@ -30,10 +30,10 @@
 ## define cleanup to recover options and environment
 .cleanup = list(ls = setdiff(ls(all.names = TRUE),"..."), env = environment(), options = options())
 shiny::onStop(fun = function() {
-  options(.cleanup$options)
-  if(!("shiny.maxRequestSize" %in% names(.cleanup$options))) options("shiny.maxRequestSize"=NULL)
-  for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$env), envir = .cleanup$env)
-  rm(list = setdiff(ls(all.names = TRUE, envir = .cleanup$env), .cleanup$ls), envir = .cleanup$env)
+  # options(.cleanup$options)
+  # if(!("shiny.maxRequestSize" %in% names(.cleanup$options))) options("shiny.maxRequestSize"=NULL)
+  # for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$env), envir = .cleanup$env)
+  # rm(list = setdiff(ls(all.names = TRUE, envir = .cleanup$env), .cleanup$ls), envir = .cleanup$env)
   return(invisible(NULL))
 })
 
@@ -362,13 +362,28 @@ short_name = function(file) {
 
 # function to shorten name from the center
 center_short = function(x, max = 12) {
-  delta = floor(max/2)
-  if(nchar(x) > 2 * delta) {
-    a = substr(x, 0, min(delta, nchar(x) - delta + 1))
-    b = substr(x, max(0, nchar(x) - delta + 1), nchar(x))
-    return(paste0(a,"...",b))
+  sapply(x, FUN = function(xx) {
+    delta = floor(max/2)
+    n = nchar(xx)
+    if(n > 2 * delta) {
+      a = substr(xx, 0, min(delta, n - delta + 1))
+      b = substr(xx, max(0, n - delta + 1), n)
+      return(paste0(a,"...",b))
+    }
+    return(xx)
+  })
+}
+
+# function exactly match the begining
+exact_start <- function(pattern, x, value = TRUE) {
+  if(length(pattern) != 1) warning("'pattern' should be of length 1")
+  n = nchar(pattern[1])
+  xx = substr(x, 1, n)
+  if(value) {
+    if(length(x) == 0) return(character())
+    return(x[xx == pattern[1]])
   }
-  return(x)
+  which(xx == pattern)
 }
 
 # function used in pair plot
@@ -382,6 +397,19 @@ panel_lda = function(x, y, ...) {
 match_col <- function(x) {
   alw = unique(unlist(paletteIFC()[,  c("color_R",  "lightModeColor_R")]))
   return(alw[tolower(x) == tolower(alw)])
+}
+
+# function to find the closest style
+closest_style <- function(x) {
+  set1 = c(20, 4, 3, 1, 5, 0, 2,18,15,17)
+  set2 = c( 1, 3, 4,20,18,15,17, 5, 0, 2)
+  N = names(x)
+  structure(sapply(x, FUN = function(xx) {
+    if(is.na(xx)) return(xx)
+    tmp = xx == set1
+    if(any(tmp)) return(set2[tmp])
+    return(xx)
+  }), names = N)
 }
 
 # function to match IFC style (pch)

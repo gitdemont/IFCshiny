@@ -80,6 +80,7 @@ output$volcano_plot <- renderPlotly({
   if(attr(obj_react$stats, "method") != m ||
      attr(obj_react$stats, "pop") != input$plot_batch_population) {
     obj_react$stats = batch_stats(obj_react$batch, pop=input$plot_batch_population, method=m)
+    return(NULL)
   }
   tryCatch({plotly_batch_volcano(obj_react$stats, fold = input$volcano_fold, height = input$plot_batch_height)  }, error = function(e) {
     mess_global(title = "batch volcano", msg = e$message, type = "error", duration = 10)
@@ -98,6 +99,7 @@ output$heatmap_plot <- renderPlotly({
   w = switch(input$heatmap_what,"zscore"="zscore","mean"="fold_avg","median"="fold_med")
   if(attr(obj_react$stats, "pop") != input$plot_batch_population) {
     obj_react$stats = batch_stats(obj_react$batch, pop=input$plot_batch_population, method="none")
+    return(NULL)
   }
   tryCatch({plotly_batch_heatmap(obj_react$stats,
                                  height = input$plot_batch_height,
@@ -140,6 +142,7 @@ obs_batch = list(
     hideElement("volcano_controls")
     hideElement("heatmap_controls")
     hideElement("stack_controls")
+    showElement("batch_population")
     switch(input$navbar_batch, 
            "Violin" = {
              showElement("batch_feature")
@@ -156,10 +159,11 @@ obs_batch = list(
              showElement("heatmap_controls")
            },
            "Stack" = {
+             hideElement("batch_population")
              showElement("stack_controls")
            })
   }),
   observeEvent(input$plot_batch_height, suspended = TRUE, ignoreInit = FALSE, ignoreNULL = TRUE, {
-    runjs(code=sprintf("$('.plot_batch,.plot_batch>.html-widget').height(%i)", input$plot_batch_height))
+    runjs(code=sprintf("$('.obs_plot_invalidate,.obs_plot_invalidate>.html-widget').height(%i)", input$plot_batch_height))
   })
 )

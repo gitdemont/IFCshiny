@@ -515,7 +515,7 @@ obs_plot <- list(
       switch(plot_react$tool,
              "init" = {
                if(length(obj_react$back$description$FCS)!=0) return(NULL)
-               if(!obj_react$back$info$found) {
+               if(!any(obj_react$back$info$found)) {
                  mess_global(title = "clicking on graph", msg = "tips: provide a .cif file to display cell image", type = "info", duration = 10)
                  return(NULL)
                }
@@ -731,7 +731,7 @@ obs_plot <- list(
                                                                             coord1$coords_css$y - 4),
                                                             tags$div(style="top: -15px; left: 10px; position: absolute; background-color: black; color: white;", tags$p(foo))), 
                where = "beforeEnd", immediate = TRUE, session = session)
-      if(obj_react$back$info$found) {
+      if(any(obj_react$back$info$found)) {
         tryCatch({
           info = obj_react$obj$info
           info$Images = param_react$param$channels
@@ -1291,7 +1291,7 @@ obs_plot <- list(
       foo = as.integer(unlist(input$rgl_3D_hover)[3])
       if(plot_react$closest != foo) {
         plot_react$closest <- foo
-        if(obj_react$back$info$found) {
+        if(any(obj_react$back$info$found)) {
           tryCatch({
             info = obj_react$obj$info
             info$Images = param_react$param$channels
@@ -1330,7 +1330,7 @@ obs_plot <- list(
       if(plot_react$closest != foo) {
         plot_react$closest <- foo
         tryCatch({
-          if(obj_react$back$info$found) {
+          if(any(obj_react$back$info$found)) {
             info = obj_react$obj$info
             info$Images = param_react$param$channels
             param = objectParam(info = info,

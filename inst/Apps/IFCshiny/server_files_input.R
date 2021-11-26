@@ -33,7 +33,7 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   unlink(file.path(session_react$dir, "batch_raw"), recursive = TRUE, force = TRUE)
   file_react$input <- files
   if(length(files) == 0) return(NULL)
-  # debugonce(reinit_app)
+  
   fileinfo <- lapply(files, unlist)
   fileName <- file.path(dirname(unlist(fileinfo$datapath)), unlist(fileinfo$name))
   file.rename(from = unlist(fileinfo$datapath), to = fileName)
@@ -148,7 +148,6 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   finally = {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
   })
-  # debugonce(reinit_app)
   obj_react$obj = checkObj(reinit_app(dat))
   obj_react$back = obj_react$obj
 }
@@ -377,18 +376,52 @@ observeEvent(input$file_batch, {
     new_names = file.path(session_react$dir, "batch_raw", file_b)
     # rename input$file_batch
     file.rename(from = input$file_batch$datapath, to = new_names)
+    
     # retrieve current gating strategy
     # TODO extract gs without writing a file
-    gs <- readGatingStrategy(writeGatingStrategy(obj_react$obj, write_to = file.path(session_react$dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE))
-    # read files and apply gating stategy 
-    batch = lapply(1:length(new_names), FUN = function(i_file) {
-      obj <- suppressMessages(suppressWarnings(readIFC(new_names[i_file], extract_features = TRUE, 
-                                                       extract_images = FALSE, extract_stats = TRUE, 
-                                                       extract_offsets = TRUE, recursive = TRUE, 
-                                                       display_progress = TRUE, session = session)))
-      applyGatingStrategy(obj, gating = gs, display_progress = TRUE, session = session)
-    })
-    
+    # read files and apply gating strategy 
+    obj1 = obj_react$obj
+    gs_ML <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_react$dir, "batch_raw", "batch_gating_ML.xml"), overwrite = TRUE)))
+    if(length(model_react$fit) != 0) {       # we need to remove "ML" from current obj because "ML" features may not be present in input files
+      check = grep("^ML_", names(obj1$features), value = TRUE)
+      obj1 = suppressWarnings(data_rm_features(obj = obj1, features = check, list_only = FALSE, session=session))
+      check = grep("^ML_", names(obj1$pops), value = TRUE)
+      obj1 = suppressWarnings(data_rm_pops(obj = obj1, pops = check, list_only = FALSE, session=session))
+      gs <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_react$dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))
+      model_ = reactiveValuesToList(x = model_react)
+      batch = lapply(1:length(new_names), FUN = function(i_file) {
+        obj <- suppressMessages(suppressWarnings(readIFC(new_names[i_file], extract_features = TRUE, 
+                                                         extract_images = FALSE, extract_stats = TRUE, 
+                                                         extract_offsets = TRUE, recursive = TRUE, 
+                                                         display_progress = TRUE, session = session)))
+        to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
+        obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE, session = session)
+        tryCatch({
+          # apply ML in 'mode'="predict_norm"
+          nv = apply.IFCml(model = model_, obj = obj, mode = "predict_norm", 
+                           newdata = "all",
+                           session = session, verbose = FALSE)
+          # force to keep new tagged populations (included new ML_ ones)
+          to_keep = names(nv$obj$pops)[sapply(nv$obj$pops, FUN = function(p) p$type == "T")]
+          # apply the initial gating strategy with eventually ML_ features and pops 
+          obj <- applyGatingStrategy(nv$obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
+        }, error = function(e) {
+          mess_global(title = "file batch", msg = c(paste0("can't apply model on ",basename(obj$fileName)), e$message), type = "error")
+          return(obj)
+        })
+        obj
+      })
+    } else {
+      batch = lapply(1:length(new_names), FUN = function(i_file) {
+        obj <- suppressMessages(suppressWarnings(readIFC(new_names[i_file], extract_features = TRUE, 
+                                                         extract_images = FALSE, extract_stats = TRUE, 
+                                                         extract_offsets = TRUE, recursive = TRUE, 
+                                                         display_progress = TRUE, session = session)))
+        to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
+        obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE, session = session)
+        obj
+      })
+    }
     if(L == 0) {
       # add current obj_react$obj in 1st position of the batch list
       file_b = c(paste0("1-",basename(obj_react$obj$fileName)), file_b)
@@ -396,7 +429,7 @@ observeEvent(input$file_batch, {
       # in this process we remove images from current obj and param_react
       # FIXME maybe it could be interesting to keep images ?
       obj_react$obj <- set_default_info(obj_react$obj)
-      obj_react$back <- obj_react$obj 
+      obj_react$back <- obj_react$obj
       # set current batch # to 1 (i.e, the current obj_react$obj)
       obj_react$curr = 1
       obj_react$batch = c(list(obj_react$obj), batch)
@@ -424,7 +457,8 @@ observeEvent(input$file_main, {
   new_main = as.integer(strsplit(input$file_main, split = "-", fixed = TRUE)[[1]][1])
   add_log(paste0("moving from batch file: '", names(obj_react$batch)[obj_react$curr], "', to: '", input$file_main, "'"))
   obj_react$batch[[obj_react$curr]] <- obj_react$obj
-  obj_react$obj <- reinit_app(obj_react$batch[[new_main]])
+  obj_react$obj <- compare(reinit_app(obj_react$batch[[new_main]]),obj_react$obj, session=session) 
+  obj_react$back <- obj_react$obj
   obj_react$curr = new_main
   # modify current file_react
   file_react$input = list(name = basename(obj_react$obj$fileName),
