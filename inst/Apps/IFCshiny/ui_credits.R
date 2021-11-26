@@ -30,7 +30,7 @@
 list(tags$div(style="bottom: 0; left: 20px; position: fixed; display: block; z-index: 97;",
          tags$div(id = "credits_ctn",
                   tags$p(style="display: inline; vertical-align: super;",
-                         "Version 0.1.2. All rights reserved, Yohann Demont."),
+                         paste0("Version ",packageVersion("IFCshiny"),". All rights reserved, Yohann Demont.")),
                   actionButton(style="display: inline; vertical-align: super; border: 0px; background-color: transparent; text-decoration: underline; color: blue;",
                                inputId = "credits", label = "Copyrights"),
                   hidden(tags$a(id = "get_logs", target="_blank", href="",  download="LOGS.txt", "Get logs"))))
