@@ -418,7 +418,7 @@ observeEvent(input$file_batch, {
                                                          extract_offsets = TRUE, recursive = TRUE, 
                                                          display_progress = TRUE, session = session)))
         to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
-        obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE, session = session)
+        obj <- applyGatingStrategy(obj = obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
         obj
       })
     }
@@ -452,10 +452,11 @@ observeEvent(input$file_batch, {
     return(NULL)
   }, finally = mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE))
 })
+
 observeEvent(input$file_main, {
   if(length(input$file_main) == 0 || input$file_main == "") return(NULL)
   new_main = as.integer(strsplit(input$file_main, split = "-", fixed = TRUE)[[1]][1])
-  add_log(paste0("moving from batch file: '", names(obj_react$batch)[obj_react$curr], "', to: '", input$file_main, "'"))
+  if(names(obj_react$batch)[obj_react$curr] != input$file_main) add_log(paste0("moving from batch file: '", names(obj_react$batch)[obj_react$curr], "', to: '", input$file_main, "'"))
   obj_react$batch[[obj_react$curr]] <- obj_react$obj
   obj_react$obj <- compare(reinit_app(obj_react$batch[[new_main]]),obj_react$obj, session=session) 
   obj_react$back <- obj_react$obj
@@ -467,6 +468,33 @@ observeEvent(input$file_main, {
                           datapath = obj_react$obj$fileName)
   updateTabsetPanel(session = session, "navbar", selected = "tab7")
 })
+
+observeEvent(input$remove_main, {
+  if(length(input$file_main) == 0 || input$file_main == "") return(NULL)
+  add_log(paste0("removing from batch: '", input$file_main))
+  to_rm = input$file_main == names(obj_react$batch)
+  obj_react$batch = obj_react$batch[!to_rm]
+  if(length(obj_react$batch) != 0) {
+    N = names(obj_react$batch)
+    N = sapply(N, FUN = function(x) paste0(strsplit(x, "-", fixed = TRUE)[[1]][-1], collapse = ""))
+    N = paste(1:length(N), N, sep = "-")
+    names(obj_react$batch) = N
+    updateSelectInput(session=session, inputId = "file_main", choices = N, selected = N[1])
+  } else {
+    updateSelectInput(session=session, inputId = "file_main", selected = c(), choices = list())
+    obj_react$stats = array(numeric(), dim=c(0,0,4))
+    hideElement("batch_plot_controls")
+    hideElement("batch_save")
+    obj_react$obj$fileName <- paste0(strsplit(obj_react$obj$fileName, "-", fixed = TRUE)[[1]][-1], collapse = "")
+    obj_react$back$fileName <- obj_react$obj$fileName
+    # modify current file_react
+    file_react$input = list(name = basename(obj_react$obj$fileName),
+                            size = file.size(obj_react$obj$fileName),
+                            type = "",
+                            datapath = obj_react$obj$fileName)
+  }
+})
+
 observeEvent(input$file, ignoreNULL = FALSE, ignoreInit = FALSE, {
   # modify current file_react
   file_react$input <- input$file

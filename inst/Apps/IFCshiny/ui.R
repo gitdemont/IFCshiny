@@ -195,7 +195,11 @@ ui <- fluidPage(
                                  tags$div(fileInput(inputId = "file_batch", buttonLabel = "Select IFC file(s)",
                                                     label = "Select daf or fcs file",
                                                     multiple = TRUE),
-                                          selectInput(inputId = "file_main", label = "Choose main file", selected = c(), choices = list(), multiple = FALSE)
+                                          selectInput(inputId = "file_main", label = "Choose main file", selected = c(), choices = list(), multiple = FALSE),
+                                          tags$div(tags$div(style="display:inline-block; width:78%; text-align:left;",
+                                                            tags$b("Remove current")),
+                                                   tags$div(style="display:inline-block; width:18%; text-align:right;",
+                                                            actionButton(inputId = "remove_main", label = "", icon = icon("minus-circle", lib = "font-awesome"))))
                                  ),
                                  hidden(tags$div(id="batch_save",
                                           tags$hr(),
