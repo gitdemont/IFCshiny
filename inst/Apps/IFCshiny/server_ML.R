@@ -83,7 +83,6 @@ obs_ML <- list(
       disable(selector = "#navbar_ML [data-value='ML_training']")
       removeClass(selector = "#navbar_ML [data-value='ML_training']", class = "clickme") 
     }
-    model_react$pops <- input$populations_training
     chc = c("pca","tsne","umap","flowsom")
     hideElement("training_unsupervised")
     if(length(input$populations_training) == 1) {
@@ -226,8 +225,7 @@ obs_ML <- list(
     obs_ML$retrain_ok$resume()
     obs_ML$retrain_abort$resume()
     tryCatch({
-      model_react$pops = input$populations_training
-      pops = model_react$pops
+      pops = input$populations_training
       # before launching the fitting we check that at least one population is selected
       if((length(pops) == 0) || any(pops == "")) {
         mess_global(title = "data pre-processing", msg = c("Please select population(s)", "- one, for unsupervised ML", "- at least two, for supervised ML"), type = "info")
@@ -283,7 +281,7 @@ obs_ML <- list(
     add_log("pre-processing data")
     
     tryCatch({
-      pops = model_react$pops
+      pops = input$populations_training
       check = grep("ML_subset", names(obj_react$obj$pops), fixed = TRUE, value = TRUE)
       if(length(check) != 0) {
         check = c(check, grep("^ML_meta_|^ML_pred_", names(obj_react$obj$pops), value = TRUE))
@@ -339,7 +337,7 @@ obs_ML <- list(
       if(input$features_used == "manual") foo$features_kep = input$sel_right
       
       # apply pre-processing
-      bar = do.call(what = preprocess, args = c(list(obj = obj_react$obj, pops = model_react$pops), foo))
+      bar = do.call(what = preprocess, args = c(list(obj = obj_react$obj, pops = pops), foo))
       for(i in names(bar)) model_react[[i]] = bar[[i]]
       Q = checknames.IFCml(model_react)
       max_events = sum(!is.na(model_react$data[,Q$is_clust,drop=TRUE]))
@@ -368,7 +366,7 @@ obs_ML <- list(
          input$MetaClustering_go)
   }, suspended = TRUE,{
     if(input$navbar_ML != "ML_training") return(NULL)
-    if(length(model_react$pops) != 0) click("training_go")
+    if(length(model_react$config$pops) != 0) click("training_go")
   }),
   # Control visibility of sampling parameters
   # it will be visible only when supervised ML is used
@@ -458,7 +456,7 @@ obs_ML <- list(
     # model parameters are reset to their default values every time training model selection is changed
     sapply(match_model(), FUN = function(x) reset(id = x))
     # we need to postpone going to training go to ensure that all model parameters havec been cleared
-    if(length(model_react$pops) != 0) onFlushed(once = TRUE, fun = function() {
+    if(length(model_react$config$pops) != 0) onFlushed(once = TRUE, fun = function() {
       click("training_go")
     })
   }),
