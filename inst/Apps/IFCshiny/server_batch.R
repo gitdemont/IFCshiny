@@ -73,7 +73,7 @@ output$ridge_plot <- renderPlotly({
 output$volcano_plot <- renderPlotly({
   if((input$navbar != "tab7") ||
      (input$navbar_batch != "Volcano") ||
-     (length(obj_react$stats) == 0)) return(NULL)
+     (length(obj_react$batch) == 0)) return(NULL)
   runjs("document.getElementById('msg_busy_txt2').innerText = 'updating volcano plot';")
   runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
   m = switch(input$volcano_method,"wilcoxon"="wilcox","t-test"="t")
@@ -93,7 +93,7 @@ output$volcano_plot <- renderPlotly({
 output$heatmap_plot <- renderPlotly({
   if((input$navbar != "tab7") ||
      (input$navbar_batch != "Heatmap") ||
-     (length(obj_react$stats) == 0)) return(NULL)
+     (length(obj_react$batch) == 0)) return(NULL)
   runjs("document.getElementById('msg_busy_txt2').innerText = 'updating heatmap';")
   runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
   w = switch(input$heatmap_what,"zscore"="zscore","mean"="fold_avg","median"="fold_med")
