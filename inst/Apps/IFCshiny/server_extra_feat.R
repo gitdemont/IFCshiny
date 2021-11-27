@@ -6,7 +6,7 @@
 #  -IFCshiny: An R Interactive Shiny Application for the Analysis of Imaging   #
 #             and Conventional Flow Cytometry                                  #
 #  -YEAR: 2021                                                                 #
-#  -COPYRIGHT HOLDERS: Yohann Demont, Jean-Pierre Marolleau, Lo?c Gar?on,      #
+#  -COPYRIGHT HOLDERS: Yohann Demont, Jean-Pierre Marolleau, Loïc Garçon,      #
 #                      CHU Amiens                                              #
 #                                                                              #
 # DISCLAIMER:                                                                  #
