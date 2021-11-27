@@ -472,14 +472,16 @@ observeEvent(input$file_main, {
 observeEvent(input$remove_main, {
   if(length(input$file_main) == 0 || input$file_main == "") return(NULL)
   add_log(paste0("removing from batch: '", input$file_main))
-  to_rm = input$file_main == names(obj_react$batch)
-  obj_react$batch = obj_react$batch[!to_rm]
+  to_rm = !input$file_main == names(obj_react$batch)
+  obj_react$batch = obj_react$batch[to_rm]
   if(length(obj_react$batch) != 0) {
     N = names(obj_react$batch)
     N = sapply(N, FUN = function(x) paste0(strsplit(x, "-", fixed = TRUE)[[1]][-1], collapse = ""))
     N = paste(1:length(N), N, sep = "-")
     names(obj_react$batch) = N
     updateSelectInput(session=session, inputId = "file_main", choices = N, selected = N[1])
+    obj_react$stats = structure(obj_react$stats[,to_rm,,drop=FALSE], "pop" = attr(obj_react$stats, "pop"))
+    dimnames(obj_react$stats)[[2]] = N
   } else {
     updateSelectInput(session=session, inputId = "file_main", selected = c(), choices = list())
     obj_react$stats = array(numeric(), dim=c(0,0,4))
