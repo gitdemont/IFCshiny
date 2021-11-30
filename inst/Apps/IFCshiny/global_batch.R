@@ -380,17 +380,24 @@ plotly_batch_volcano <- function(a, fold="mean", height=NULL) {
 # so as to visualize difference between every (selected) features for a single same pop of each members of a batch
 plotly_batch_heatmap <- function(a, what="zscore", dendro = FALSE, height=NULL, ...) {
   dots = list(...)
-  dots = dots[!names(dots) %in% c("x", "row_dend_left", "plot_method", "main", "height")]
+  dots = dots[!names(dots) %in% c("x", "row_dend_left", "plot_method", "main", "height", "custom_hovertext")]
   m = a[,,what]
   if(all(is.na(m))) return(NULL)
   if((length(m) != 0) && dendro && requireNamespace("heatmaply", quietly = TRUE)) {
     # heatmaply does not handle NA/NaN/Inf so we replace them with 0
-    rownames(m) <- center_short(rownames(m), max = 20)
     foo = which(!is.finite(m),arr.ind = TRUE)
     apply(foo, 1, FUN = function(x) m[x[1],x[2]] <<- 0)
+    # modify rownames and hover
+    n = rownames(m)
+    n = paste(sprintf(paste0("%0",nchar(length(n)),"i"),1:length(n)), n, sep = ": ")
+    rownames(m) <- center_short(n, max = 14)
+    lab = outer( paste0("row: <i>", rownames(m),"<i>"), paste0("col: <b>", colnames(m), "</b>"), FUN = function(X,Y) paste(Y,X,sep="<br>"))
+    lab = matrix(paste(lab, "<br>val: ", m, sep = ""), ncol = ncol(m))
+    # plot it
     do.call(what = heatmaply::heatmaply,
             args = c(dots, list(x=m, height=height,
                                 row_dend_left=TRUE, 
+                                custom_hovertext = lab,
                                 plot_method="plotly",
                                 main="Batch Heatmap")))
   } else {
