@@ -103,7 +103,8 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
       }
     } else {
       # here we use dedicated ExtractFromFCS to read FCS file
-      dat = try(ExtractFromFCS(fileName = fileName, session = session), silent = TRUE)
+      dat = try(ExtractFromFCS(fileName = fileName, 
+                               force_header = TRUE, session = session), silent = TRUE)
       if(("try-error" %in% class(dat))) stop("fcs file does not seem to be well formatted:\n", attr(dat, "condition")$message)
       info = try(stop(""), silent = TRUE)
     }
@@ -217,7 +218,7 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
   plot_react$symbol = sapply(obj$pops["All"], FUN = function(p) p$style)
   lapply(obs_plot, FUN = function(x) x$resume())
   
-  # we reinit plotD
+  # we reinit plot3D
   reinit_plot_3D(session = session)
 
   # reinit parameters link with images
@@ -262,7 +263,9 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
   }
   showElement(selector = "#navbar [data-value='tab8']")
   showElement("infos_save")
-  
+  # update maxpoints values in plots
+  updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value = 1 / nrow(obj$features))
+  updateSliderInput(session=session, inputId = "plot_type_3D_option03", value= 1 / nrow(obj$features))
   # if a file containing images was read we allow some other tabs
   # + we update app input with collected channels
   if(any(obj$info$found)) {

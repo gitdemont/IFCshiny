@@ -60,7 +60,8 @@ obs_batch = list(
           obj <- suppressMessages(suppressWarnings(readIFC(new_names[i_file], extract_features = TRUE, 
                                                            extract_images = FALSE, extract_stats = TRUE, 
                                                            extract_offsets = TRUE, recursive = TRUE, 
-                                                           display_progress = TRUE, session = session)))
+                                                           display_progress = TRUE, 
+                                                           force_header = TRUE, session = session)))
           to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
           obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE, session = session)
           tryCatch({
@@ -83,7 +84,8 @@ obs_batch = list(
           obj <- suppressMessages(suppressWarnings(readIFC(new_names[i_file], extract_features = TRUE, 
                                                            extract_images = FALSE, extract_stats = TRUE, 
                                                            extract_offsets = TRUE, recursive = TRUE, 
-                                                           display_progress = TRUE, session = session)))
+                                                           display_progress = TRUE,
+                                                           force_header = TRUE, session = session)))
           to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
           obj <- applyGatingStrategy(obj = obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
           obj

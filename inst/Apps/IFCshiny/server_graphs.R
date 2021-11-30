@@ -353,8 +353,8 @@ obs_plot <- list(
     if(input$plot_type == "2D") {
       sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
       n_sub = sum(sub) 
-      if(n_sub > 10000) {
-        perc = as.integer(100 * 10000 / n_sub)
+      if(n_sub > 5000) {
+        perc = as.integer(100 * 5000 / n_sub)
       } else {
         perc = 100
       }
