@@ -108,7 +108,6 @@ obs_batch = list(
       
       # set names to obj_react$batch
       names(obj_react$batch) <- file_b
-      obj_react$stats = batch_stats(obj_react$batch,method="none")
       
       # update selector
       updateSelectInput(session = session, inputId = "file_main", choices = file_b, selected = file_b[obj_react$curr])
@@ -140,16 +139,13 @@ obs_batch = list(
     add_log(paste0("removing from batch: '", input$file_main))
     to_rm = !input$file_main == names(obj_react$batch)
     obj_react$batch = obj_react$batch[to_rm]
+    obj_react$stats = array(numeric(), dim=c(0,0,4))
     if(length(obj_react$batch) != 0) {
       N = names(obj_react$batch)
       N = sapply(N, FUN = function(x) paste0(strsplit(x, "-", fixed = TRUE)[[1]][-1], collapse = ""))
       N = paste(1:length(N), N, sep = "-")
       names(obj_react$batch) = N
       updateSelectInput(session=session, inputId = "file_main", choices = N, selected = N[1])
-      obj_react$stats = structure(obj_react$stats[,to_rm,,drop=FALSE],
-                                  "pop" = attr(obj_react$stats, "pop"),
-                                  "method" = attr(obj_react$stats, "method"))
-      dimnames(obj_react$stats)[[2]] = N
     } else {
       updateSelectInput(session=session, inputId = "file_main", selected = c(), choices = list())
       obj_react$stats = array(numeric(), dim=c(0,0,4))
@@ -248,8 +244,8 @@ output$volcano_plot <- renderPlotly({
   runjs("document.getElementById('msg_busy_txt2').innerText = 'updating volcano plot';")
   runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
   m = switch(input$volcano_method,"wilcoxon"="wilcox","t-test"="t")
-  if(attr(obj_react$stats, "method") != m ||
-     attr(obj_react$stats, "pop") != input$plot_batch_population) {
+  if(!any(attr(obj_react$stats, "method") == m) ||
+     !any(attr(obj_react$stats, "pop") == input$plot_batch_population)) {
     obj_react$stats = batch_stats(obj_react$batch, pop=input$plot_batch_population, method=m)
     return(NULL)
   }
@@ -268,7 +264,7 @@ output$heatmap_plot <- renderPlotly({
   runjs("document.getElementById('msg_busy_txt2').innerText = 'updating heatmap';")
   runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
   w = switch(input$heatmap_what,"zscore"="zscore","mean"="fold_avg","median"="fold_med")
-  if(attr(obj_react$stats, "pop") != input$plot_batch_population) {
+  if(!any(attr(obj_react$stats, "pop") == input$plot_batch_population)) {
     obj_react$stats = batch_stats(obj_react$batch, pop=input$plot_batch_population, method="none")
     return(NULL)
   }
