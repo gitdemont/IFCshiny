@@ -2,8 +2,8 @@ Package: IFCshiny
 Encoding: UTF-8
 Type: Package
 Title: Graphical User Interface for Imaging and Conventional Flow Cytometry Through Shiny
-Version: 0.1.3.0003
-Date: 2021-11-18
+Version: 0.1.2.100
+Date: 2021-11-30
 Maintainer: Yohann Demont <git.demont@gmail.com>
 Authors@R: c(person(given = 'Yohann', family = 'Demont', email = 'git.demont@gmail.com', role = c('aut', 'cre')), person(given = 'Jean-Pierre', family = 'Marolleau', role = 'ldr'), person(given = 'Loïc', family = 'Garçon', role = 'ldr'))
 BugReports: http://github.com/gitdemont/IFCshiny/issues
@@ -11,7 +11,7 @@ Copyright: file COPYRIGHTS
 Description: Interactive shiny application for the analysis of imaging and conventional flow cytometry. Allows direct interactions with IFC package with minimal command line knowledge.
 License: GPL-3
 Depends: R (>= 3.4.0)
-Imports: IFC (>= 0.1.2), shiny, shinyjs, shinymanager, shinyFeedback, shinyWidgets, htmlwidgets, visNetwork, colourpicker, DT, grDevices, grid, gridExtra, jsonlite, caret, MASS, mclust, e1071, xgboost, bestNormalize, Rtsne, umap, rmarkdown, rgl, plotly, decido, parallel, doParallel, zip, openxlsx, imager, reticulate, methods
+Imports: IFC (>= 0.1.2.100), shiny, shinyjs, shinymanager, shinyFeedback, shinyWidgets, htmlwidgets, visNetwork, colourpicker, DT, grDevices, grid, gridExtra, jsonlite, caret, MASS, mclust, e1071, xgboost, bestNormalize, Rtsne, umap, rmarkdown, rgl, plotly, decido, parallel, doParallel, zip, openxlsx, imager, reticulate, methods
 Suggests: IFCdata, IFCip, heatmaply, flowCore, FlowSOM
 biocViews:
 Remotes: github::gitdemont/IFCdata, github::gitdemont/IFC, github::gitdemont/IFCip
