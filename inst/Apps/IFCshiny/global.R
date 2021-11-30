@@ -28,11 +28,12 @@
 ################################################################################
 
 ## define cleanup to recover options and environment
-.cleanup = list(ls = setdiff(ls(all.names = TRUE),"..."), env = environment(), options = options())
+.cleanup = list(ls = setdiff(ls(all.names = TRUE),"..."), env = environment(), back_env = new.env(), options = options())
+for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$env), envir = .cleanup$back_env)
 shiny::onStop(fun = function() {
   options(.cleanup$options)
   if(!("shiny.maxRequestSize" %in% names(.cleanup$options))) options("shiny.maxRequestSize"=NULL)
-  for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$env), envir = .cleanup$env)
+  for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$back_env), envir = .cleanup$env)
   rm(list = setdiff(ls(all.names = TRUE, envir = .cleanup$env), .cleanup$ls), envir = .cleanup$env)
   return(invisible(NULL))
 })
