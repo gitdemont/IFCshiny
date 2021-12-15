@@ -152,6 +152,10 @@ assert <- getFromNamespace("assert", "IFC")
 #' @keywords internal
 addText <- getFromNamespace("addText", "IFC")
 
+#' @name densCols
+#' @keywords internal
+densCols <- getFromNamespace("densCols", "IFC")
+
 #' @name plot_base
 #' @keywords internal
 plot_base <- getFromNamespace("plot_base", "IFC")
