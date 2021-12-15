@@ -477,7 +477,7 @@ server <- function(input, output, session) {
                                                               plot_react$id,
                                                               plot_react$plot$input$subset,
                                                               #plot_react$id,
-                                                              sapply(input$plot_regions, FUN = function(r) unlist(obj_react$obj$regions[[r]])),
+                                                              sapply(input$plot_regions, FUN = function(r) unlist(obj_react$obj$regions[[r]]))
                                                               #unlist(plot_react$g[c("title","xlabel","ylabel","axislabelsfontsize","axistickmarklabelsfontsize","graphtitlefontsize","regionlabelsfontsize")]),
                                                               #unlist(plot_react$g$BasePop[[1]]),
                                                               #input$plot_type_2D_option01,
@@ -487,7 +487,7 @@ server <- function(input, output, session) {
                                                               #input$plot_regions,
                                                               #input$plot_unlock
                                                               #plot_react$allowed_regions,
-                                                              # plot_react$zoomed
+                                                              #plot_react$zoomed
                                                               #plot_react$xmin,
                                                               #plot_react$xmax,
                                                               #plot_react$ymin,
