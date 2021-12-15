@@ -33,6 +33,7 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   reinit_app(list())
   unlink(file.path(session_react$dir, "batch_raw"), recursive = TRUE, force = TRUE)
   file_react$input <- files
+  file_react$id = random_name(n = 20)
   if(length(files) == 0) return(NULL)
   
   fileinfo <- lapply(files, unlist)
@@ -264,8 +265,8 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
   showElement(selector = "#navbar [data-value='tab8']")
   showElement("infos_save")
   # update maxpoints values in plots
-  updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value = 1 / nrow(obj$features))
-  updateSliderInput(session=session, inputId = "plot_type_3D_option03", value= 1 / nrow(obj$features))
+  updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value = min(1, 100 * 1000 / nrow(obj$features)))
+  updateSliderInput(session=session, inputId = "plot_type_3D_option03", value= min(1, 100 * 1000 / nrow(obj$features)))
   # if a file containing images was read we allow some other tabs
   # + we update app input with collected channels
   if(any(obj$info$found)) {
@@ -368,6 +369,7 @@ observeEvent(list(input$use_example, input$example_file), ignoreInit = TRUE, {
 observeEvent(input$file, ignoreNULL = FALSE, ignoreInit = FALSE, {
   # modify current file_react
   file_react$input <- input$file
+  file_react$id = random_name(n = 20)
   add_log("file input")
   newfileinput(input$file, session = session)
 })

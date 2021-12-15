@@ -133,6 +133,7 @@ obs_batch = list(
                             size = file.size(obj_react$obj$fileName),
                             type = "",
                             datapath = obj_react$obj$fileName)
+    file_react$id = random_name(n = 20)
     updateTabsetPanel(session = session, "navbar", selected = "tab7")
   }),
   observeEvent(input$remove_main, {
@@ -160,6 +161,7 @@ obs_batch = list(
                               size = file.size(obj_react$obj$fileName),
                               type = "",
                               datapath = obj_react$obj$fileName)
+      file_react$id = random_name(n = 20)
     }
   }),
   observeEvent(input$navbar_batch, suspended = TRUE, ignoreInit = FALSE, {

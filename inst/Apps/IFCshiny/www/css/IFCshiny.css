@@ -109,6 +109,24 @@
   top:080px;
   width: 10%;
 }
+/* plot background image */
+
+#plot_1or2D {
+  position:relative;
+}
+#plot_1or2D>img {
+  position:absolute;
+  z-index:1;
+}
+#plot_1or2D>div {
+  position:absolute;
+  z-index:2;
+}
+#plot_1or2D>svg {
+  position:absolute;
+  z-index:2;
+}
+
 
 /* region drawing / edition */
 .draw_shape {

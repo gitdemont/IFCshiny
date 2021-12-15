@@ -29,13 +29,18 @@
 
 
 # function prepare data for plotting 
-plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
-                              trans = asinh, bin, viewport = "data",
-                              nticks_x = 10, nticks_y = 10, batch_mode = FALSE) {
-  
+plot_prepare_data <- function(obj, graph, color_mode = c("white","black")[1], precision = c("light","full")[1],
+                              trunc_labels = 38L, trans = asinh, bin, viewport = "data",
+                              nticks_x = 10, nticks_y = 10, batch_mode = FALSE,
+                              compute_density = TRUE, ...) {
   assert(color_mode, len = 1, alw = c("white", "black"))
   mode = c(2, 1)[c("white", "black") == color_mode]
   normalize = FALSE
+  
+  P = obj$pops
+  R = obj$regions
+  g = do.call(what=buildGraph, args=graph)
+  
   # prepare nbin
   if(missing(bin)) {
     if(g$type=="histogram") {
@@ -49,10 +54,6 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
   } else {
     nbin = na.omit(as.integer(bin)); assert(nbin, len=1, typ="integer")
   }
-  
-  P = obj$pops
-  R = obj$regions
-  g = do.call(what=buildGraph, args=g)
   
   # prepare trans
   if(missing(trans)) trans = g$BasePop[[1]]$densitytrans 
@@ -98,7 +99,6 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
     if(length(foo) == 0) foo = rep(FALSE, times=obj$description$ID$objcount)
     foo
   })
-  L = length(displayed_n)
   
   base_o = sapply(base_n, FUN=function(x) which(displayed_n%in%x))
   base_n = base_n[order(base_o)]
@@ -120,6 +120,8 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
   data_sub = apply(base, 1, any)
   displayed_o = c(base_o, shown_o)
   D = cbind(D, displayed_d)
+  D = cbind(1:nrow(D), D)
+  data = D
   D = D[data_sub, ]
   
   if(nrow(D) > 0) {
@@ -127,7 +129,7 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
     if(g$maxpoints <= 1) {
       xy_subset[sample(x = nrow(D), size = g$maxpoints * nrow(D), replace = FALSE)] <- TRUE
     } else {
-      xy_subset[sample(x = nrow(D), size = min(g$maxpoints,nrow(D)), replace = FALSE)] <- TRUE
+      xy_subset[sample(x = nrow(D), size = min(g$maxpoints, nrow(D)), replace = FALSE)] <- TRUE
     }
     D = D[xy_subset, ,drop=FALSE]
   } else {
@@ -164,7 +166,12 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
     Xlim = Xlim + c(-0.07,0.07)*diff(Xlim)
     if(Xlim[1] == Xlim[2]) Xlim = Xlim[1] + c(-0.07,0.07)
     if(g$type != "histogram") {
-      Ylim = suppressWarnings(range(c(D[,"x1"], regy), na.rm = TRUE, finite = TRUE))
+      regy = sapply(reg_n, FUN=function(r) {
+        reg = R[[r]] 
+        coords = reg[["y"]]
+        return(c(reg$cy, coords))
+      })
+      Ylim = suppressWarnings(range(c(D[,"y1"], regy), na.rm = TRUE, finite = TRUE))
       Ylim = applyTrans(Ylim, trans_y)
       Ylim = Ylim + c(-0.07,0.07)*diff(Ylim)
       if(Ylim[1] == Ylim[2]) Ylim = Ylim[1] + c(-0.07,0.07)
@@ -174,11 +181,10 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
     if(Xlim[1] == Xlim[2]) Xlim = Xlim[1] + c(-0.07,0.07)
     D[D[,"x2"] < Xlim[1], "x2"] <- Xlim[1] # D = D[(D[,"x2"] >= Xlim[1]) & (D[,"x2"] <= Xlim[2]), ]
     D[D[,"x2"] > Xlim[2], "x2"] <- Xlim[2] #
-    Ylim = Ylim + c(-0.07,0.07)*diff(Ylim)
-    if(Ylim[1] == Ylim[2]) Ylim = Ylim[1] + c(-0.07,0.07)
     if(g$type != "histogram") {
       D[D[,"y2"] < Ylim[1], "y2"] <- Ylim[1] # D = D[(D[,"x2"] >= Xlim[1]) & (D[,"x2"] <= Xlim[2]), ]
       D[D[,"y2"] > Ylim[2], "y2"] <- Ylim[2] #
+      if(Ylim[1] == Ylim[2]) Ylim = Ylim[1] + c(-0.07,0.07)
     }
   }
   
@@ -196,7 +202,7 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
   switch(g$type, 
          "density" = {
            colramp = colorRampPalette(colConv(g$BasePop[[base_o[1]]][c("densitycolorsdarkmode","densitycolorslightmode")][[mode]]))
-           if(nrow(D) > 0) {
+           if(nrow(D) > 0 && compute_density) {
              col = densCols(x=structure(D[,"x2"], features=dens_feat), y=D[,"y2"], colramp=colramp, nbin=nbin, transformation=trans)
            } else{
              col = "transparent"
@@ -235,6 +241,7 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
              return(c(reg$cy, coords))
            })
            Ylim = suppressWarnings(range(c(Ylim, unlist(regy)), na.rm=TRUE, finite = TRUE))
+           Ylim = Ylim + c(-0.07,0.07)*diff(Ylim)
            # }
            col = sapply(displayed_n, FUN=function(p) P[[p]][c("color","lightModeColor")][[mode]])
            fill = sapply(displayed_o, FUN = function(p) g$BasePop[[p]]$fill=="true")
@@ -243,7 +250,7 @@ plot_prepare_data <- function(obj, g, color_mode = c("white","black")[1],
                        fill = fill,
                        lty = lty)
          })
-  return(list(data = D,
+  return(list(data = D[,-1],
               scales = list(trans_x = Xtrans, Xlim=Xlim,
                             trans_y = Ytrans, Ylim=Ylim,
                             nbin=nbin),
@@ -513,7 +520,7 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
   }
   
   dat <- lapply(1:L, FUN = function(i_batch) {
-    do.call(what = plot_prepare_data, args = c(list(obj = batch[[i_batch]], g = g, viewport = viewport), dots))
+    do.call(what = plot_prepare_data, args = c(list(obj = batch[[i_batch]], graph = g, viewport = viewport), dots))
   })
   
   dat2 <- as.data.frame(do.call(rbind, args = lapply(dat, FUN = function(d) d$data)), stringsAsFactors = FALSE, check.names = FALSE)

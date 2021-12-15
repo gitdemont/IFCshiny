@@ -121,12 +121,11 @@ IFCshiny = {
     Shiny.onInputChange("report_close", event.target.parentNode.parentNode.firstElementChild.getAttribute('data-id'));
     return null;
   },
-  
-// @param { string } message - elementId
-getOffset : function(message) {
+  // @param { string } message - elementId
+  getOffset : function(message) {
 	var offset = $(message).position();
 	if(offset == null) return null;
-	return Shiny.onInputChange('IFCshiny_getOffset_ret', { ele: message, top: offset.top, left: offset.left, width:  $(message).outerWidth(), height:  $(message).outerHeight() });
+	return Shiny.onInputChange('IFCshiny_getOffset_ret', { ele: message, top: offset.top, left: offset.left, width: $(message).outerWidth(), height: $(message).outerHeight(), ratio: Math.round(window.devicePixelRatio * 100) / 100 });
 },
 
 // @param { string } message - elementId to refresh
@@ -267,7 +266,7 @@ init_grid : function(message) {
   // we also modify opacity of empty item during drag action so that they can be easily identified
   IFCshiny.grid.on('dragInit', function (item, event) {
     var ele = item.getElement();
-    emtpy_img = ele.parentElement.querySelectorAll('.empty_tile>img');
+    var emtpy_img = ele.parentElement.querySelectorAll('.empty_tile>img');
     emtpy_img.forEach(x => x.style.opacity = 0.9);
     // TODO tweak on drag to allow grid expansion on grid leave
     /*var W = $('.report_grid').width();
@@ -285,7 +284,7 @@ init_grid : function(message) {
   });
   IFCshiny.grid.on('dragEnd', function (item, event) {
     var ele = item.getElement();
-    emtpy_img = ele.parentElement.querySelectorAll('.empty_tile>img');
+    var emtpy_img = ele.parentElement.querySelectorAll('.empty_tile>img');
     emtpy_img.forEach(x => x.style.opacity = 1);
     //$('.report_grid').off('mouseleave');
   });
@@ -544,19 +543,19 @@ draw_shape : function(event) {
   if(bkg == null) return null;
   var shape = bkg.firstElementChild;
   if(shape == null) return null;
+  var bbox = bkg.getBoundingClientRect();
   
-  var bbox = event.target.getBoundingClientRect();
   var ratiox = shape.getAttribute('data_ratiox');
   var ratioy = shape.getAttribute('data_ratioy');
-  var xlim1 = parseInt(shape.getAttribute('data_left') / ratiox);
-  var xlim2 = parseInt(shape.getAttribute('data_right') / ratiox);
-  var ylim1 = parseInt(shape.getAttribute('data_top') / ratioy);
-  var ylim2 = parseInt(shape.getAttribute('data_bottom') / ratioy);
-  var x1 = parseInt(shape.getAttribute('data_x'));
-  var y1 = parseInt(shape.getAttribute('data_y'));
+  var xlim1 = parseFloat(shape.getAttribute('data_left')  / ratiox);
+  var xlim2 = parseFloat(shape.getAttribute('data_right') / ratiox);
+  var ylim1 = parseFloat(shape.getAttribute('data_top')   / ratioy);
+  var ylim2 = parseFloat(shape.getAttribute('data_bottom')/ ratioy);
+  var x1 = parseFloat(shape.getAttribute('data_x'));
+  var y1 = parseFloat(shape.getAttribute('data_y'));
   
   var x = Math.max(Math.min(xlim2, event.clientX - bbox.left), xlim1);
-  var y = Math.max(Math.min(ylim2, event.clientY - bbox.top), ylim1);
+  var y = Math.max(Math.min(ylim2, event.clientY - bbox.top ), ylim1);
   
   switch(shape.tagName) {
     case 'rect':
@@ -585,8 +584,8 @@ draw_shape : function(event) {
     break;
     
     case 'polygon':
-      var lastx = parseInt(shape.getAttribute('data_lastx'));
-      var lasty = parseInt(shape.getAttribute('data_lasty'));
+      var lastx = parseFloat(shape.getAttribute('data_lastx'));
+      var lasty = parseFloat(shape.getAttribute('data_lasty'));
       if(((x - lastx) * (x - lastx) + (y - lasty) * (y - lasty)) > 225) {
         shape.setAttribute('data_lastx', x);
         shape.setAttribute('data_lasty', y);
@@ -605,14 +604,14 @@ draw_path : function(event) {
   if(bkg == null) return null;
   var shape = bkg.firstElementChild;
   if(shape == null) return null;
+  var bbox = bkg.getBoundingClientRect();
   
-  var bbox = event.target.getBoundingClientRect();
   var ratiox = shape.getAttribute('data_ratiox');
   var ratioy = shape.getAttribute('data_ratioy');
-  var xlim1 = parseInt(shape.getAttribute('data_left') / ratiox);
-  var xlim2 = parseInt(shape.getAttribute('data_right') / ratiox);
-  var ylim1 = parseInt(shape.getAttribute('data_top') / ratioy);
-  var ylim2 = parseInt(shape.getAttribute('data_bottom') / ratioy);
+  var xlim1 = parseFloat(shape.getAttribute('data_left')  / ratiox);
+  var xlim2 = parseFloat(shape.getAttribute('data_right') / ratiox);
+  var ylim1 = parseFloat(shape.getAttribute('data_top')   / ratioy);
+  var ylim2 = parseFloat(shape.getAttribute('data_bottom')/ ratioy);
   
   var x = Math.max(Math.min(xlim2, event.clientX - bbox.left), xlim1);
   var y = Math.max(Math.min(ylim2, event.clientY - bbox.top), ylim1);

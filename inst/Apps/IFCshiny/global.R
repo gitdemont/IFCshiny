@@ -152,9 +152,13 @@ assert <- getFromNamespace("assert", "IFC")
 #' @keywords internal
 addText <- getFromNamespace("addText", "IFC")
 
-#' @name convert_to_baseplot
+#' @name plot_base
 #' @keywords internal
-convert_to_baseplot <- getFromNamespace("convert_to_baseplot", "IFC")
+plot_base <- getFromNamespace("plot_base", "IFC")
+
+#' @name plot_raster
+#' @keywords internal
+plot_raster <- getFromNamespace("plot_raster", "IFC")
 
 #' @name specialr
 #' @keywords internal
@@ -220,6 +224,10 @@ computeGamma <- getFromNamespace("computeGamma", "IFC")
 #' @keywords internal
 trunc_string <- getFromNamespace("trunc_string", "IFC")
 
+#' @name random_name
+#' @keywords internal
+random_name <- getFromNamespace("random_name", "IFC")
+
 #' @name parseTrans
 #' @keywords internal
 parseTrans <- getFromNamespace("parseTrans", "IFC")
@@ -235,10 +243,6 @@ map_color <- getFromNamespace("map_color", "IFC")
 #' @name map_style
 #' @keywords internal
 map_style <- getFromNamespace("map_style", "IFC")
-
-#' @name densCols
-#' @keywords internal
-densCols <- getFromNamespace("densCols", "IFC")
 
 #' @name colConv
 #' @keywords internal
@@ -315,6 +319,10 @@ parseFCSname <- getFromNamespace("parseFCSname", "IFC")
 #' @name convert_spillover
 #' @keywords internal
 convert_spillover <- getFromNamespace("convert_spillover", "IFC")
+
+#' @name base64_encode
+#' @keywords internal
+base64_encode <- getFromNamespace("base64_encode", "IFC")
 
 #### controls for app capabilities
 # create shiny variable to handle user connection
@@ -437,10 +445,10 @@ map_coord_to_css <- function(coord = c(x = 0, y = 0), map) {
   height = diff(ran_img_height)
   tmp_x = (coord[1]-ran_x[1]) / dx * width
   tmp_y = (coord[2]-ran_y[1]) / dy * height
-  return(list(coords_css = list(x = as.integer((tmp_x + ran_img_width[1]) / map$img_css_ratio$x),
-                                y = as.integer((ran_img_height[2] - tmp_y) / map$img_css_ratio$y)),
-              coords_img = list(x = as.integer(tmp_x + ran_img_width[1]),
-                                y = as.integer(ran_img_height[2] - tmp_y))))
+  return(list(coords_css = list(x = as.numeric((tmp_x + ran_img_width[1]) / map$img_css_ratio$x),
+                                y = as.numeric((ran_img_height[2] - tmp_y) / map$img_css_ratio$y)),
+              coords_img = list(x = as.numeric(tmp_x + ran_img_width[1]),
+                                y = as.numeric(ran_img_height[2] - tmp_y))))
 }
 
 # function to map px to plot coordinates

@@ -50,7 +50,7 @@ reinit_default <- function(fun = reactiveValues, env = environment(), x, not = N
                                density = 100, subset = NULL, symbol = NULL, color = NULL, click = NULL,
                                current = "#plot_1or2D", tool = "init", action = "none", hover = "init",
                                xmin = -1, xmax = 1, ymin = 0, ymax = 1,
-                               zoomed = FALSE, closest = -1,
+                               zoomed = FALSE, closest = -1, id = 1000*as.numeric(Sys.time()),
                                param_ready = FALSE, densitytrans = NULL, densitycolorslightmode = "-16776961|-13447886|-256|-23296|-65536|",
                                densitytrans_selected = "initial", densitycolorslightmode_selected = "initial",
                                allowed_regions = NULL, allowed_siblings = NULL,
@@ -67,7 +67,7 @@ reinit_default <- function(fun = reactiveValues, env = environment(), x, not = N
                                last = as.matrix(data.frame()),
                                sub1 = integer(),
                                sub2 = integer()),
-             file_react = list(input = list()))
+             file_react = list(input = list(), id = character()))
   if(missing(x)) {
     lapply(setdiff(names(foo), not), FUN = function(i) {
       assign(x = i, value = do.call(what = fun, args = foo[[i]]), envir = env)

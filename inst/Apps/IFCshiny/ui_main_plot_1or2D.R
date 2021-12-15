@@ -32,7 +32,7 @@ list(hidden(tags$div(id = "plot_2D_options_main",
                      tags$div(style = "position:relative; display: inline-block; vertical-align: baseline; width:100px;",
                               actionButton(inputId = "plot_type_2D_main_option01", label = "Resample")),
                      tags$div(style = "position:relative; display: inline-block; vertical-align: middle; width:200px;",
-                              sliderInput(inputId = "plot_type_2D_main_option03", label = "Density %", min = 0, max = 100, value = 100)))),
+                              sliderInput(inputId = "plot_type_2D_main_option03", label = "Density %", min = 1, max = 100, value = 100)))),
      uiOutput(outputId = "plot_1or2D_placeholder", style = "width:600px; height:600px;"),
      tags$div(id = "plot_stats_placeholder", verbatimTextOutput(outputId = "plot_stats")),
      hidden(tags$div(id = "plot_image_placeholder"))

@@ -126,7 +126,8 @@ obs_report <- list(
                 obj_react$obj$graphs[[i_graph]]$ysize <- input$report_size
                 obj_react$obj$graphs[[i_graph]]$ylocation <- (i_row - 1) * input$report_size
                 obj_react$obj$graphs[[i_graph]]$xlocation <- (i_col - 1) * input$report_size
-                convert_to_baseplot(plotGraph(obj = obj_react$obj, graph = obj_react$obj$graphs[[i_graph]], draw = FALSE, stats_print = FALSE, viewport = "ideas", precision = "full"))
+                plot_raster(plotGraph(obj = obj_react$obj, graph = obj_react$obj$graphs[[i_graph]], draw = FALSE, stats_print = FALSE,
+                                    viewport = "ideas", precision = "full"))
               }
             }, error = function(e) {
               print(e$message)
