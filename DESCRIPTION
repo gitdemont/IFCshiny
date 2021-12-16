@@ -11,7 +11,7 @@ Copyright: file COPYRIGHTS
 Description: Interactive shiny application for the analysis of imaging and conventional flow cytometry. Allows direct interactions with IFC package with minimal command line knowledge.
 License: GPL-3
 Depends: R (>= 3.4.0)
-Imports: IFC (>= 0.1.2.100), shiny, shinyjs, shinymanager, shinyFeedback, shinyWidgets, htmlwidgets, visNetwork, colourpicker, DT, grDevices, grid, gridExtra, png, jsonlite, caret, MASS, mclust, e1071, xgboost, bestNormalize, Rtsne, umap, rmarkdown, rgl, plotly, decido, parallel, doParallel, zip, openxlsx, imager, reticulate, methods
+Imports: IFC (>= 0.1.2.103), shiny, shinyjs, shinymanager, shinyFeedback, shinyWidgets, htmlwidgets, visNetwork, colourpicker, DT, grDevices, grid, gridExtra, png, jsonlite, caret, MASS, mclust, e1071, xgboost, bestNormalize, Rtsne, umap, rmarkdown, rgl, plotly, decido, parallel, doParallel, zip, openxlsx, imager, reticulate, methods
 Suggests: IFCdata, IFCip, heatmaply, flowCore, FlowSOM
 biocViews:
 Remotes: github::gitdemont/IFCdata, github::gitdemont/IFC, github::gitdemont/IFCip
