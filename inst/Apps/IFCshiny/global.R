@@ -156,13 +156,14 @@ addText <- getFromNamespace("addText", "IFC")
 #' @keywords internal
 densCols <- getFromNamespace("densCols", "IFC")
 
+#' @name plot_raster
+#' @keywords internal
+plot_raster <- getFromNamespace("plot_raster", "IFC")
+
 #' @name plot_base
 #' @keywords internal
 plot_base <- getFromNamespace("plot_base", "IFC")
 
-#' @name plot_raster
-#' @keywords internal
-plot_raster <- getFromNamespace("plot_raster", "IFC")
 
 #' @name specialr
 #' @keywords internal
