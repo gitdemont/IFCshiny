@@ -28,19 +28,21 @@
 ################################################################################
 
 reinit_default <- function(fun = reactiveValues, env = environment(), x, not = NULL) {
-  foo = list(obj_react = list(obj = list(haschanged_objects = character())),
-             model_react = list(data = data.frame(), 
-                                train = data.frame(), test = data.frame(), 
-                                ratio = numeric(), sub = logical(), idx = logical(), 
-                                pops = character(), name = "pca",
-                                cen = numeric(), cem = mean,
-                                scl = numeric(), scm = sd,
-                                int = character(), inm = character(),
-                                har = character(), ham = character(),
-                                success = FALSE, pca = list(), fit = list(),
-                                param = list()),
+  foo = list(obj_react = list(obj = list(haschanged_objects = character()), back = list(), 
+                              batch = list(), curr = 1, stats = array(numeric(), dim=c(0,0,4))),
+             model_react =   list(data = data.frame(), 
+                                  cen = numeric(),cem = mean,
+                                  scl = numeric(),scm = sd,
+                                  int = character(),inm = character(),
+                                  har = character(),ham = character(),
+                                  config = list(),
+                                  ratio = numeric(), idx = logical(), method = "pca",
+                                  pca = list(), proj_pca = matrix(numeric()),
+                                  fit = list(), param = list(), sub = logical(),
+                                  pred = factor(), proj = matrix(numeric()), feat = list(),
+                                  clust = factor(), meta_args = list(), meta_fun = "kmeans"),
              pops_react = list(def = character(), new = FALSE, revert = list()),
-             plot_react = list(plot = list(),  g = list(),
+             plot_react = list(plot = list(),  g = buildGraph(type = "histogram"),
                                shown = NULL, order = NULL,
                                uri = NULL, param = list(), shared = NULL,
                                x_feat = "Object Number", y_feat = "Object Number", z_feat = "Object Number",
@@ -48,7 +50,7 @@ reinit_default <- function(fun = reactiveValues, env = environment(), x, not = N
                                density = 100, subset = NULL, symbol = NULL, color = NULL, click = NULL,
                                current = "#plot_1or2D", tool = "init", action = "none", hover = "init",
                                xmin = -1, xmax = 1, ymin = 0, ymax = 1,
-                               zoomed = FALSE, closest = -1,
+                               zoomed = FALSE, closest = -1, id = 1000*as.numeric(Sys.time()),
                                param_ready = FALSE, densitytrans = NULL, densitycolorslightmode = "-16776961|-13447886|-256|-23296|-65536|",
                                densitytrans_selected = "initial", densitycolorslightmode_selected = "initial",
                                allowed_regions = NULL, allowed_siblings = NULL,
@@ -65,7 +67,7 @@ reinit_default <- function(fun = reactiveValues, env = environment(), x, not = N
                                last = as.matrix(data.frame()),
                                sub1 = integer(),
                                sub2 = integer()),
-             file_react = list(input = list()))
+             file_react = list(input = list(), id = character()))
   if(missing(x)) {
     lapply(setdiff(names(foo), not), FUN = function(i) {
       assign(x = i, value = do.call(what = fun, args = foo[[i]]), envir = env)

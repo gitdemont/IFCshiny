@@ -58,7 +58,7 @@ observeEvent(input$pop_alt_click, suspended = FALSE, {
     return(NULL)
   }
   pop = obj_react$obj$pops[[input$pop_alt_click]]
-  if((pop$type == "T") && react_dat()$info$found) {
+  if((pop$type == "T") && any(obj_react$back$info$found)) {
     nam = pop$name
     runjs("Shiny.onInputChange('pop_manager_visible', false)")
     runjs(code = "Shiny.setInputValue('cell_selected', [])")
@@ -73,7 +73,7 @@ observeEvent(input$pop_alt_click, suspended = FALSE, {
     runjs("Shiny.onInputChange('pop_alt_click', null)")
     return(NULL)
   }
-  if(pop$name == "ML_subset") {
+  if(any(pop$name == c("ML_subset"))) {
     lapply(obs_plot, FUN = function(x) x$resume())
     dims = "ML_pca_"
     if("lda" %in% input$training_model) dims = "ML_lda_0"
@@ -249,7 +249,6 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
   plot_react$ymin <- g$ymin
   plot_react$ymax <- g$ymax
   updatePrettySwitch(session=session, inputId="plot_unlock", value=FALSE)
-  plot_react$param_ready = FALSE
   
   updateSelectInput(session=session, inputId="plot_x_feature", selected=g$f1)
   maxpoints = isolate(plot_react$g$maxpoints)
@@ -260,19 +259,28 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
   plot_react$x_feat = g$f1
   updateTextInput(session=session, inputId="plot_x_transform", value=g$xlogrange)
   plot_react$x_trans = g$xlogrange
+  updateSelectInput(session=session, inputId="plot_base", selected=sapply(g$BasePop, FUN = function(p) p$name))
   
   if(g$type=="histogram") {
     updateRadioButtons(session=session, inputId="plot_type", selected="1D", inline = TRUE)
     updateRadioButtons(session=session, inputId="plot_type_1D_option02", selected=ifelse(g$histogramsmoothingfactor==0,"bar","smooth"), inline = TRUE)
     updateCheckboxInput(session=session, inputId="plot_type_1D_option03", value=g$freq=="T")
-    plot_react$order = unique(splitn(definition = g$order, all_names = names(obj_react$obj$pops)))
-    plot_react$shown = (plot_react$order)
-    updateSelectInput(session=session, inputId="plot_shown", selected=(plot_react$order))
-    if(length(plot_react$order) > 1) {
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", plot_react$order))
+    v = unique(splitn(definition = g$order, all_names = names(obj_react$obj$pops)))
+    plot_react$order = v
+    plot_react$shown = v
+    updateSelectInput(session=session, inputId="plot_shown", selected=v)
+    if(length(v) > 1) {
+      runjs(code = sprintf("Shiny.onInputChange('plot_shown', { '%s' });", v))
     } else {
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", plot_react$order))
+      runjs(code = sprintf("Shiny.onInputChange('plot_shown', '%s');", v))
     }
+    onFlushed(once = TRUE, fun = function() {
+      if(length(v) > 1) {
+        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", v))
+      } else {
+        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", v))
+      }
+    }) 
   } else {
     updateRadioButtons(session=session, inputId="plot_type", selected="2D", inline = TRUE)
     updateSelectInput(session=session, inputId="plot_y_feature", selected=g$f2)
@@ -282,6 +290,7 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
     if(g$type == "density") {
       if((length(g$BasePop[[1]]$densitylevel) != 0) && (g$BasePop[[1]]$densitylevel != "")) {
         updateRadioButtons(session=session, inputId="plot_type_2D_option01", selected="level", inline = TRUE)
+        runjs(code = "Shiny.onInputChange('plot_type_2D_option01', 'level');")
         args_level = strsplit(g$BasePop[[1]]$densitylevel, split="|", fixed=TRUE)[[1]]
         if(length(args_level) == 4) {
           updatePrettyCheckbox(session=session, inputId="plot_level_fill", value=args_level[1]=="true")
@@ -291,6 +300,7 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
         }
       } else {
         updateRadioButtons(session=session, inputId="plot_type_2D_option01", selected="density", inline = TRUE) 
+        runjs(code = "Shiny.onInputChange('plot_type_2D_option01', 'density');")
         updatePrettyCheckbox(session=session, inputId="plot_level_fill", value=TRUE)
         updatePrettyCheckbox(session=session, inputId="plot_level_lines", value=FALSE)
         updateNumericInput(session=session, inputId="plot_level_nlevels", value=10)
@@ -301,14 +311,23 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
       runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', null);"))
     } else {
       updateRadioButtons(session=session, inputId="plot_type_2D_option01", selected="scatter", inline = TRUE) 
-      plot_react$order = unique(splitn(definition = g$order, all_names = names(obj_react$obj$pops)))
-      plot_react$shown = (plot_react$order)
-      updateSelectInput(session=session, inputId="plot_shown", selected=(plot_react$order))
-      if(length(plot_react$order) > 1) {
-        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", plot_react$order))
+      runjs(code = "Shiny.onInputChange('plot_type_2D_option01', 'scatter');")
+      v = unique(splitn(definition = g$order, all_names = names(obj_react$obj$pops)))
+      plot_react$order = v
+      plot_react$shown = v
+      updateSelectInput(session=session, inputId="plot_shown", selected=v)
+      if(length(v) > 1) {
+        runjs(code = sprintf("Shiny.onInputChange('plot_shown', { '%s' });", v))
       } else {
-        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", plot_react$order))
+        runjs(code = sprintf("Shiny.onInputChange('plot_shown', '%s');", v))
       }
+      onFlushed(once = TRUE, fun = function() {
+        if(length(v) > 1) {
+          runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", v))
+        } else {
+          runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", v))
+        }
+      }) 
     }
   }
   

@@ -27,11 +27,21 @@
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
 
-list(tags$div(style="bottom: 0; left: 20px; position: fixed; display: block; z-index: 97;",
-         tags$div(id = "credits_ctn",
-                  tags$p(style="display: inline; vertical-align: super;",
-                         paste0("Version ",packageVersion("IFCshiny"),". All rights reserved, Yohann Demont.")),
-                  actionButton(style="display: inline; vertical-align: super; border: 0px; background-color: transparent; text-decoration: underline; color: blue;",
-                               inputId = "credits", label = "Copyrights"),
-                  hidden(tags$a(id = "get_logs", target="_blank", href="",  download="LOGS.txt", "Get logs"))))
-)
+# in dev functions for compensation
+decompensate <- function(comp, spillover) {
+  ans = try(round(t(solve(a = solve(spillover), b = t(as.matrix(comp)))),10), silent = TRUE)
+  try({colnames(ans) <- colnames(comp)}, silent = TRUE)
+  return(ans)
+}
+
+compensate <- function(raw, spillover) {
+  ans = try(round(as.matrix(raw) %*% solve(t(spillover)),10), silent = TRUE)
+  try({colnames(ans) <- colnames(raw)}, silent = TRUE)
+  return(ans)
+}
+
+recompensate <- function(val, spill_dec, spill_comp) {
+  ans = try(round(compensate(as.matrix(val), solve(spill_dec, spill_comp)),10), silent = TRUE)
+  try({colnames(ans) <- colnames(val)}, silent = TRUE)
+  return(ans)
+}

@@ -415,7 +415,7 @@ obs_cell <- list(
     
     # we set styling of html components
     # color of the <p> object number
-    col = ifelse(as.integer(input$chan_sel) %in% which(react_dat()$info$brightfield$channel), "black", "white")
+    col = ifelse(as.integer(input$chan_sel) %in% which(obj_react$back$info$brightfield$channel), "black", "white")
     # style of the images, this style will be included directly in <img> returned by objectExtract()
     base64_att = sprintf("class='cell_img' style='object-position:center center; object-fit:none; transform: scale(%s) rotate(%ideg);' )", 2^input$cell_zoom, input$cell_rotate)
     
@@ -444,7 +444,7 @@ obs_cell <- list(
                             add_noise = TRUE,
                             full_range = "full_range" %in% input$chan_force,
                             force_range = "force_range" %in% input$chan_force)
-        objectExtract(ifd = getIFD(react_dat()$fileName_image, offsets = subsetOffsets(react_dat()$offsets, sel[[i]], "img"),
+        objectExtract(ifd = getIFD(obj_react$back$fileName_image, offsets = subsetOffsets(obj_react$back$offsets, sel[[i]], "img"),
                                    trunc_bytes = 1, force_trunc = TRUE, verbose = FALSE, verbosity = 1, bypass = TRUE, display_progress = FALSE),
                       param = param, bypass = TRUE)
       })

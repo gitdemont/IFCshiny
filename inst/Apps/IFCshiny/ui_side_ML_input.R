@@ -29,7 +29,7 @@
 
 list(hidden(tags$div(id="ML_side_inputs",
                 tags$div("data-toggle"="tooltip", "data-placement"="top", "title"="Select only one population for unsupervised or multiple for supervised training",
-                         selectInput(inputId = "populations_training", label = "Populations for training", choices = NULL, multiple = TRUE, selectize = TRUE)),
+                         selectInput(inputId = "populations_training", label = "Populations for training", choices = list(), multiple = TRUE, selectize = TRUE)),
                 tags$div('data-toggle'="tooltip", 'data-placement'="auto", title="Select whether to determine best feature automatically or to use manual selection",
                          radioButtons(inputId = "features_used", label = "Features used for training", choices = c("auto", "manual"), selected = "auto", inline = TRUE)),
                 hidden(tags$div(id = "features_best_length_ctn", "data-toggle"="tooltip", "data-placement"="top", "title"="Max number of features that best discriminate (by Rd Fisher ratio) each couple of input training populations to use fo the model. 0 means to take all remaining features after the filtering below.",

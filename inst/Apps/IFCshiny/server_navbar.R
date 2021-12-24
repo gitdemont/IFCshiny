@@ -49,6 +49,7 @@ observeEvent(input$navbar,{
   hideElement("stats_save")
   hideElement("features_save")
   hideElement("report_side_inputs")
+  hideElement("batch_side_inputs")
   # compensation is under development
   if(all(file.exists(file.path(.rundir, c("server_compensation.R", "server_navbar_compensation.R"))))) {
     hideElement("comp_side_inputs")
@@ -58,8 +59,11 @@ observeEvent(input$navbar,{
   lapply(obs_report, FUN = function(x) x$suspend())
   lapply(obs_cells, FUN = function(x) x$suspend())
   lapply(obs_ML, FUN = function(x) x$suspend())
+  lapply(obs_batch, FUN = function(x) x$resume())
   updateTabsetPanel(session = session, "navbar_ML", selected = "ML_inputs")
   runjs(code = "$('#navbar_ML [data-value=\"ML_inputs\"]').trigger('click');")
+  # updateTabsetPanel(session = session, "navbar_batch", selected = "Violin")
+  # runjs(code = "$('#navbar_batch [data-value=\"Violin\"]').trigger('click');")
   switch(input$navbar,
          "tab0" = {
            add_log("infos")
@@ -69,7 +73,7 @@ observeEvent(input$navbar,{
            showElement("file")
            showElement("example")
            hideElement("population")
-           if(length(react_dat()$info$in_use) != 0) showElement("infos_save")
+           if(length(obj_react$back$info$in_use) != 0) showElement("infos_save")
          } ,"tab1" = {
            add_log("cells")
            lapply(obs_cells, FUN = function(x) x$resume())
@@ -109,6 +113,20 @@ observeEvent(input$navbar,{
            runjs(sprintf("Shiny.onInputChange('report_draw', %i)", input$report_draw + 1L))
          }, "tab7" = {
            add_log("batch")
+           lapply(obs_batch, FUN = function(x) x$resume())
+           N = names(obj_react$batch)
+           if(length(N) == 0) N = list()
+           sel = input$file_main;
+           if((length(N) == 0) || !any(N %in% input$file_main)) {
+             sel = NULL
+             hideElement("batch_save")
+             hideElement("batch_plot_controls")
+           } else {
+             showElement("batch_save")
+             showElement("batch_plot_controls")
+           }
+           showElement("batch_side_inputs")
+           updateSelectInput(session = session, inputId = "file_main", choices = N, selected = sel)
          }, "tab8" = {
            showElement("logs_save")
          }, "tab9" = {

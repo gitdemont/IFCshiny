@@ -90,23 +90,30 @@ observeEvent(input$graph_manager_visible, {
     runjs("$('#graph_manager').animate($('#general').position());")
     shinyjs::showElement("graph_manager")
     session$sendCustomMessage("reach", "graph_manager")
-    updateSelectInput(session = session, inputId = "plot_font_main", selected = plot_react$g$graphtitlefontsize)
-    updateSelectInput(session = session, inputId = "plot_font_axis_lab", selected = plot_react$g$axislabelsfontsize)
-    updateSelectInput(session = session, inputId = "plot_font_tick_lab", selected = plot_react$g$axistickmarklabelsfontsize)
-    updateSelectInput(session = session, inputId = "plot_font_region", selected = plot_react$g$regionlabelsfontsize)
-    updateSelectInput(session = session, inputId = "plot_lab_main", selected = plot_react$g$title)
-    updateSelectInput(session = session, inputId = "plot_lab_x", selected = plot_react$g$xlabel)
-    updateSelectInput(session = session, inputId = "plot_lab_y", selected = plot_react$g$ylabel)
+    updateSelectInput(session = session, inputId = "plot_font_main", selected = plot_react$graphtitlefontsize)
+    updateSelectInput(session = session, inputId = "plot_font_axis_lab", selected = plot_react$axislabelsfontsize)
+    updateSelectInput(session = session, inputId = "plot_font_tick_lab", selected = plot_react$axistickmarklabelsfontsize)
+    updateSelectInput(session = session, inputId = "plot_font_region", selected = plot_react$regionlabelsfontsize)
+    updateSelectInput(session = session, inputId = "plot_lab_main", selected = plot_react$title)
+    updateSelectInput(session = session, inputId = "plot_lab_x", selected = plot_react$xlabel)
+    updateSelectInput(session = session, inputId = "plot_lab_y", selected = plot_react$ylabel)
     if(plot_react$g$type == "density") {
       updateSelectInput(session = session, inputId = "plot_dens_color", selected = plot_react$densitycolorslightmode_selected)
       updateSelectInput(session = session, inputId = "plot_dens_feature", selected = ifelse(plot_react$g$BasePop[[1]]$densitytrans %in% names(obj_react$obj$features), plot_react$g$BasePop[[1]]$densitytrans, "initial"))
       col = colConv(plot_react$g$BasePop[[1]]$densitycolorslightmode)
       runjs(code = sprintf("$('#plot_dens_color').parent().find('.selectize-input').css({background:'linear-gradient(to right, %s)'});", paste0(col,collapse=",")))
+      # args_level = strsplit(plot_react$g$BasePop[[1]]$densitylevel, split="|", fixed=TRUE)[[1]]
+      # if(length(args_level) == 4) {
+      #   updatePrettyCheckbox(session=session, inputId="plot_level_fill", value=args_level[1]=="true")
+      #   updatePrettyCheckbox(session=session, inputId="plot_level_lines", value=args_level[2]=="true")
+      #   nlevels=na.omit(as.integer(args_level[3])); if(length(nlevels)==1) updateNumericInput(session=session, inputId="plot_level_nlevels", value=nlevels)
+      #   lowest =na.omit(as.numeric(args_level[4])); if(length(lowest)==1) updateNumericInput(session=session, inputId="plot_level_lowest", value=lowest)
+      # }
     }
-    trans = parseTrans(plot_react$plot$input$trans_x)
+    trans = parseTrans(plot_react$x_trans)
     updateNumericInput(session = session, inputId = "plot_xmin", value = applyTrans(plot_react$plot$input$xlim[1], trans, inverse = TRUE))
     updateNumericInput(session = session, inputId = "plot_xmax", value = applyTrans(plot_react$plot$input$xlim[2], trans, inverse = TRUE))
-    trans = parseTrans(plot_react$plot$input$trans_y)
+    trans = parseTrans(plot_react$y_trans)
     updateNumericInput(session = session, inputId = "plot_ymin", value = applyTrans(plot_react$plot$input$ylim[1], trans, inverse = TRUE))
     updateNumericInput(session = session, inputId = "plot_ymax", value = applyTrans(plot_react$plot$input$ylim[2], trans, inverse = TRUE))
     if(plot_react$g$type == "histogram") {
@@ -127,13 +134,13 @@ observeEvent(input$graph_manager_visible, {
     # shinyjs::toggleElement(selector = ".plot_density", condition = (plot_react$g$type == "density" && (length(plot_react$g$densitylevel) == 0 || plot_react$g$densitylevel == "")))
     obs_plot$limits$suspend()
   } else {
-    plot_react$g$graphtitlefontsize <- input$plot_font_main
-    plot_react$g$axislabelsfontsize <- input$plot_font_axis_lab
-    plot_react$g$axistickmarklabelsfontsize <- input$plot_font_tick_lab
-    plot_react$g$regionlabelsfontsize <- input$plot_font_region
-    plot_react$g$title <- input$plot_lab_main
-    plot_react$g$xlabel <- input$plot_lab_x
-    plot_react$g$ylabel <- input$plot_lab_y
+    plot_react$graphtitlefontsize <- input$plot_font_main
+    plot_react$axislabelsfontsize <- input$plot_font_axis_lab
+    plot_react$axistickmarklabelsfontsize <- input$plot_font_tick_lab
+    plot_react$regionlabelsfontsize <- input$plot_font_region
+    plot_react$title <- input$plot_lab_main
+    plot_react$xlabel <- input$plot_lab_x
+    plot_react$ylabel <- input$plot_lab_y
     if("density" %in% plot_react$g$type) {
       if("initial" %in% input$plot_dens_feature) {
         plot_react$g$BasePop[[1]]$densitytrans <- plot_react$densitytrans
@@ -157,16 +164,18 @@ observeEvent(input$graph_manager_visible, {
       plot_react$g$BasePop[[1]]$densitycolorslightmode <- inv_colConv(col)
       plot_react$densitycolorslightmode_selected <- input$plot_dens_color
       plot_react$densitytrans_selected <- input$plot_dens_feature
+      # if(input$plot_type_2D_option01 == "level") plot_react$g$BasePop[[1]]$densitylevel = paste(ifelse(input$plot_level_fill,"true","false"),
+      #                                                                                     ifelse(input$plot_level_lines,"true","false"),
+      #                                                                                     input$plot_level_nlevels,input$plot_level_lowest,sep="|")
     }
     check_finite <- function(x) { length(x[is.finite(x)]) != 0 }
     obs_plot$limits$resume()
-    # updatePrettySwitch(session=session, inputId="plot_unlock", value=FALSE)
     shinyjs::hideElement("graph_manager")
   }
 })
 observeEvent(input$cell_manager_visible, {
   # cell manager can't show up when there is no cell image found
-  if((length(react_dat()$info$found) == 0) || !react_dat()$info$found) {
+  if(!any(obj_react$back$info$found)) {
     runjs("Shiny.onInputChange('cell_manager_visible', false)")
     return(NULL)
   }
@@ -218,7 +227,7 @@ observeEvent(input$reg_manager_visible, {
 })
 observeEvent(input$img_manager_visible, {
   # image manager can't show up when there is no cell image found
-  if((length(react_dat()$info$found) == 0) || !react_dat()$info$found) {
+  if(!any(obj_react$back$info$found)) {
     runjs("Shiny.onInputChange('img_manager_visible', false)")
     return(NULL)
   }

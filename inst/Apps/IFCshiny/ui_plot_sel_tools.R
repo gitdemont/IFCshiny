@@ -74,5 +74,10 @@ list(tags$div(class = "plot_sel_tools",
                        style="position:relative; vertical-align:sub; display:inline-block",
                        tags$div(style="position:relative; vertical-align:sub; display:inline-block", class = "plot_tool",
                                 "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="add to report",
-                                actionButton(inputId = "plot_sel_add", label = NULL, icon("share-square", lib = "font-awesome")))))
+                                actionButton(inputId = "plot_sel_add", label = NULL, icon("share-square", lib = "font-awesome")))),
+              tags$div(class = "plot_sel_stack",
+                       style="position:relative; vertical-align:sub; display:inline-block",
+                       tags$div(style="position:relative; vertical-align:sub; display:inline-block", class = "plot_tool",
+                                "data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="view in batch",
+                                actionButton(inputId = "plot_sel_stack", label = NULL, icon("layer-group", lib = "font-awesome")))))
 )

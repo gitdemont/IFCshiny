@@ -27,19 +27,6 @@
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
 
-# we set up an on resize function to translate plot region or click selection  
-runjs("$(window).resize(function() {
-          var ele = $('#plot_1or2D');
-	        if(ele.length === 0) return;
-	        var offset = ele.position();
-	        Shiny.onInputChange('IFCshiny_getOffset_ret', { ele: '#plot_1or2D', top: offset.top, left: offset.left, width: ele.outerWidth(), height: ele.outerHeight() });
-          var svg = ele.find('.ifcshiny_region_svg');
-          var div = ele.find('.ifcshiny_click_div,.ifcshiny_hover_div');
-          if(svg.length !== 0) svg.css({top: offset.top, left: offset.left, width: ele.outerWidth(), height: ele.outerHeight()});
-          if(div.length !== 0) div.css({top:offset.top, left:offset.left });
-          //$('#plot_sel_init').trigger('click')
-        })")
-
 # small trick so that fontawesome circle looks like an ellipse
 runjs(code = "$('#plot_sel_ellipse>.fa.fa-circle').addClass('far').removeClass('fa').css('transform', 'rotate(-25deg) scale(1.5,1)');")
 
@@ -60,11 +47,8 @@ reinit_plot_3D <- function(session) {
   updateToggle3D(session = session, inputId = "plot_3D_draw_txt", value = FALSE)
   updateSliderInput(session = session, inputId = "plot_type_3D_option02", value = 2)
   updateSelectInput(session=session, inputId = "plot_3D_mouse_ctrl", selected = "trackball")
-  if(react_dat()$info$found) { 
-    showElement(id = "plot_3D_img_ctrl")
-  } else {
-    hideElement(id = "plot_3D_img_ctrl")
-  }
+  hideElement(id = "plot_3D_img_ctrl")
+  if(any(obj_react$back$info$found)) showElement(id = "plot_3D_img_ctrl")
 }
 
 set_tool <- function(tool = "init", plotId = plot_react$current) {
@@ -78,6 +62,7 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
   disable("plot_sel_zoomin")
   disable("plot_sel_zoomreset")
   disable("plot_sel_add")
+  disable("plot_sel_stack")
   session$sendCustomMessage("getOffset", sprintf("%s",plot_react$current))
   session$resetBrush("plot_brush")
   runjs(code="$('.selected.plot_tool').removeClass('selected')")
@@ -125,6 +110,10 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
                                enable("plot_sel_add")
                                "adding"
                              },
+                             # "batch" = {
+                               # enable("plot_sel_stack")
+                               # "batch"
+                             # },
                              { "drawing" })
   if(plot_react$action %in% c("drawing", "none")) {
     if(plot_react$action == "drawing") {
@@ -145,6 +134,7 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
         # click("plot_sel_init")
       }
     }
+    if(length(obj_react$batch) != 0) enable("plot_sel_stack") 
     if(input$plot_type == "2D") {
       enable("plot_sel_rectangle")
       enable("plot_sel_polygon")
@@ -350,8 +340,8 @@ obs_plot <- list(
     if(input$plot_type == "2D") {
       sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
       n_sub = sum(sub) 
-      if(n_sub > 10000) {
-        perc = as.integer(100 * 10000 / n_sub)
+      if(n_sub > 5000) {
+        perc = as.integer(100 * 5000 / n_sub)
       } else {
         perc = 100
       }
@@ -501,9 +491,7 @@ obs_plot <- list(
       runjs(code = sprintf("Shiny.onInputChange('shape_param', { tool:'%s', init:false } );", plot_react$tool))
       insertUI(selector = plot_react$current,
                ui = tags$svg(class = "draw_shape ifcshiny_region_svg",
-                             style = sprintf("top: %spx; left: %spx; width: %spx; height: %spx;",
-                                             input$IFCshiny_getOffset_ret$top,
-                                             input$IFCshiny_getOffset_ret$left,
+                             style = sprintf("top: 0px; left: 0px; width: %spx; height: %spx;",
                                              input$IFCshiny_getOffset_ret$width,
                                              input$IFCshiny_getOffset_ret$height),
                              do.call(what = tags[[shape_args[[1]]]], args = c(args, shape_args[-1]))),
@@ -511,18 +499,14 @@ obs_plot <- list(
     } else {
       switch(plot_react$tool,
              "init" = {
-               if(length(react_dat()$description$FCS)!=0) return(NULL)
-               if(!react_dat()$info$found) {
-                 mess_global(title = "clicking on graph", msg = "tips: provide a .cif file to display cell image", type = "info", duration = 10)
-                 return(NULL)
-               }
                plot_hover <- "init"
+               D = plot_react$plot$input$data
                if(plot_react$plot$input$type %in% c("count", "percent")) {
                  br = do.breaks(plot_react$plot$input$xlim, plot_react$plot$input$bin)
-                 interval = findInterval(plot_react$plot$input$data$x2, br)
+                 interval = findInterval(D$x2, br)
                  dx = diff(plot_react$plot$input$xlim)
                  dy = diff(plot_react$plot$input$ylim)
-                 idx = which.min(((plot_react$plot$input$data$x2 - input$plot_click$x)/dx)^2)
+                 idx = which.min(((D$x2 - input$plot_click$x)/dx)^2)
                  if((length(plot_react$click) != 0) && (plot_react$click == idx)) return(NULL)
                  plot_react$click = idx
                  idx = interval[idx]
@@ -532,36 +516,37 @@ obs_plot <- list(
                  height = (coord2$coords_css$y -  coord1$coords_css$y)
                  removeUI(selector = sprintf("%s>.click_bar", plot_react$current), immediate = TRUE)
                  insertUI(selector = plot_react$current, ui = tags$div(class = "click_bar ifcshiny_click_div", 
-                                                                       style = sprintf("top: %spx; left: %spx; height: %spx; width: %spx; transform: translate(%spx, %spx);",
-                                                                                       input$IFCshiny_getOffset_ret$top, 
-                                                                                       input$IFCshiny_getOffset_ret$left,
-                                                                                       height,
-                                                                                       width,
+                                                                       style = sprintf("top: %spx; left: %spx; height: %spx; width: %spx;",
+                                                                                       coord1$coords_css$y,
                                                                                        coord2$coords_css$x - width / 2,
-                                                                                       coord1$coords_css$y)), 
+                                                                                       height,
+                                                                                       width)),
                           where = "beforeEnd", immediate = TRUE, session = session)
                  idx = interval == idx
                } else {
+                 D = D[plot_react$plot$input$subset, , drop = FALSE]
                  dx = diff(plot_react$plot$input$xlim)
                  dy = diff(plot_react$plot$input$ylim)
-                 idx = which.min(((plot_react$plot$input$data$x2 - input$plot_click$x)/dx)^2 +
-                                   ((plot_react$plot$input$data$y2 - input$plot_click$y)/dy)^2)
+                 idx = which.min(((D$x2-input$plot_click$x)/dx)^2 + ((D$y2-input$plot_click$y)/dy)^2)
                  if((length(plot_react$click) != 0) && (plot_react$click == idx)) return(NULL)
                  plot_react$click = idx
-                 coord1 = map_coord_to_css(coord = c(plot_react$plot$input$data[idx,"x2"], plot_react$plot$input$data[idx,"y2"]), map = input$plot_click) #, trans_x = plot_react$plot$input$trans_x, trans_y = plot_react$plot$input$trans_y)
+                 coord1 = map_coord_to_css(coord = c(D[idx,"x2"], D[idx,"y2"]), map = input$plot_click)
                  removeUI(selector = sprintf("%s>.click_point", plot_react$current), immediate = TRUE)
                  insertUI(selector = plot_react$current, ui = tags$div(class = "click_point ifcshiny_click_div", 
-                                                                       style = sprintf("top: %spx; left: %spx; transform: translate(%spx, %spx);",
-                                                                                       input$IFCshiny_getOffset_ret$top,
-                                                                                       input$IFCshiny_getOffset_ret$left,
-                                                                                       coord1$coords_css$x - 4, 
-                                                                                       coord1$coords_css$y - 4)), 
+                                                                       style = sprintf("top: %spx; left: %spx;",
+                                                                                       coord1$coords_css$y - 4, 
+                                                                                       coord1$coords_css$x - 4)), 
                           where = "beforeEnd", immediate = TRUE, session = session)
+               }
+               if(length(obj_react$back$description$FCS)!=0) return(NULL)
+               if(!any(obj_react$back$info$found)) {
+                 mess_global(title = "clicking on graph", msg = "tips: provide a .cif file to display cell image", type = "info", duration = 10)
+                 return(NULL)
                }
                tryCatch({
                  dat = ExportToGallery(param = param_react$param, extract_max = 10,
-                                       objects = plot_react$plot$input$data[idx,"Object Number"],
-                                       offsets = react_dat()$offsets, export = "base64", image_type = "img",
+                                       objects = D[idx,"Object Number"],
+                                       offsets = obj_react$back$offsets, export = "base64", image_type = "img",
                                        add_channels = TRUE, add_ids = 1, display_progress = FALSE)
                  html("plot_image_placeholder", dat)
                }, error = function(e) {
@@ -623,9 +608,7 @@ obs_plot <- list(
                                                                                  id = paste0("anchor_", i_row)) })
                    removeUI(selector = sprintf("%s>.edit_shape", plot_react$current), immediate = TRUE)
                    insertUI(selector = plot_react$current, ui = tags$svg(class = "edit_shape ifcshiny_region_svg",
-                                                                         style = sprintf("top: %spx; left: %spx; width: %spx; height: %spx;",
-                                                                                         input$IFCshiny_getOffset_ret$top,
-                                                                                         input$IFCshiny_getOffset_ret$left,
+                                                                         style = sprintf("top: 0px; left: 0px; width: %spx; height: %spx;",
                                                                                          input$IFCshiny_getOffset_ret$width,
                                                                                          input$IFCshiny_getOffset_ret$height),
                                                                          viewBox = sprintf('0 0 %i %i',
@@ -633,8 +616,8 @@ obs_plot <- list(
                                                                                            input$IFCshiny_getOffset_ret$height),
                                                                          tags$g(class = "shapes_layer", style = "pointer-events: all;",
                                                                                 tags$clipPath(tags$rect(class = "shapes_clippath", style = "visibility:hidden; cursor:crosshair;",
-                                                                                                        x = input$plot_click$range$left / input$plot_click$img_css_ratio$y,
-                                                                                                        y = input$plot_click$range$top / input$plot_click$img_css_ratio$x,
+                                                                                                        x = input$plot_click$range$left / input$plot_click$img_css_ratio$x,
+                                                                                                        y = input$plot_click$range$top / input$plot_click$img_css_ratio$y,
                                                                                                         width = (input$plot_click$range$right - input$plot_click$range$left) / input$plot_click$img_css_ratio$x,
                                                                                                         height = (ifelse(plot_react$plot$input$type %in% c("count","percent"), 
                                                                                                                          map_coord_to_css(c(x = 0, y = 0), map = input$plot_click)$coords_css$y,
@@ -683,6 +666,7 @@ obs_plot <- list(
              }
              plot_react$zoomed = TRUE
            })
+    click("plot_sel_init")
   }),
   
   # plot_hover observer is aimed to allow selection of a region already drawn in a plot
@@ -708,27 +692,34 @@ obs_plot <- list(
       if(!any(c("scatter","density") %in% plot_react$plot$input$type)) return(NULL)
       dx = diff(plot_react$plot$input$xlim)
       dy = diff(plot_react$plot$input$ylim)
-      idx = which.min(((plot_react$plot$input$data$x2 - input$plot_hover$x)/dx)^2 +
-                        ((plot_react$plot$input$data$y2 - input$plot_hover$y)/dy)^2)
+      
+      # FIXME clip region is not working
+      if((input$plot_hover$x <= input$plot_hover$domain$left) |
+         (input$plot_hover$x >= input$plot_hover$domain$right) |
+         (input$plot_hover$y <= input$plot_hover$domain$bottom) |
+         (input$plot_hover$y >= input$plot_hover$domain$top)) return(NULL)
+      
+      #D = plot_react$plot$input$data[plot_react$plot$input$subset, , drop = FALSE]
+      idx = which.min(((plot_react$plot$input$data[plot_react$plot$input$subset,"x2"]-input$plot_hover$x)/dx)^2 +
+                        ((plot_react$plot$input$data[plot_react$plot$input$subset,"y2"]-input$plot_hover$y)/dy)^2)
       if(length(idx) != 0) {
-        foo = plot_react$plot$input$data[idx, "Object Number"]
+        foo = plot_react$plot$input$data[plot_react$plot$input$subset,c("x2","y2","Object Number"),drop=FALSE][idx,]
       } else {
         return(NULL)
       }
-      if((length(plot_react$closest) != 0) && (plot_react$closest == foo)) return(NULL)
-      plot_react$closest = foo
-      coord1 = map_coord_to_css(coord = c(plot_react$plot$input$data[idx,"x2"], plot_react$plot$input$data[idx,"y2"]), map = input$plot_hover)
+      if((length(plot_react$closest) != 0) && (plot_react$closest == foo[[3]])) return(NULL)
+      plot_react$closest = foo[[3]]
+      coord1 = map_coord_to_css(coord = c(foo[[1]], foo[[2]]), map = input$plot_hover)
       
       removeUI(selector = sprintf("%s>.hover_point", plot_react$current), immediate = TRUE)
       insertUI(selector = plot_react$current, ui = tags$div(class = "hover_point ifcshiny_hover_div", 
-                                                            style = sprintf("top: %spx; left: %spx; transform: translate(%spx, %spx); display:flex;",
-                                                                            input$IFCshiny_getOffset_ret$top,
-                                                                            input$IFCshiny_getOffset_ret$left,
-                                                                            coord1$coords_css$x - 4, 
-                                                                            coord1$coords_css$y - 4),
-                                                            tags$div(style="top: -15px; left: 10px; position: absolute; background-color: black; color: white;", tags$p(foo))), 
+                                                            style = sprintf("top: %spx; left: %spx;display:flex;",
+                                                                            coord1$coords_css$y - 4,
+                                                                            coord1$coords_css$x - 4
+                                                                            ),
+                                                            tags$div(style="top: -15px; left: 10px; position: absolute; background-color: black; color: white;", tags$p(foo[[3]]))), 
                where = "beforeEnd", immediate = TRUE, session = session)
-      if(react_dat()$info$found) {
+      if(any(obj_react$back$info$found)) {
         tryCatch({
           info = obj_react$obj$info
           info$Images = param_react$param$channels
@@ -748,7 +739,7 @@ obs_plot <- list(
                               full_range = "full_range" %in% input$chan_force,
                               force_range = "force_range" %in% input$chan_force)
           ifd = getIFD(fileName = param$fileName_image,
-                       offsets = subsetOffsets(offsets = react_dat()$offsets, objects= foo, image_type = "img"),
+                       offsets = subsetOffsets(offsets = obj_react$back$offsets, objects= foo[[3]], image_type = "img"),
                        trunc_bytes = 1, force_trunc = TRUE, verbose = FALSE, display_progress = FALSE, bypass = TRUE)
           base64 = objectExtract(ifd = ifd, param = param, verbose = FALSE, bypass = TRUE)[[1]]
           runjs(code = paste0("var ele = document.getElementById('plot_1or2D');
@@ -893,9 +884,7 @@ obs_plot <- list(
                                         id = "anchor_1")))
     removeUI(selector = sprintf("%s>.edit_shape", plot_react$current), immediate = TRUE)
     insertUI(selector = plot_react$current, ui = tags$svg(class = "edit_shape ifcshiny_region_svg", 
-                                                          style = sprintf("top: %spx; left: %spx; width: %spx; height: %spx;",
-                                                                          input$IFCshiny_getOffset_ret$top,
-                                                                          input$IFCshiny_getOffset_ret$left,
+                                                          style = sprintf("top: 0px; left: 0px; width: %spx; height: %spx;",
                                                                           input$IFCshiny_getOffset_ret$width,
                                                                           input$IFCshiny_getOffset_ret$height),
                                                           viewBox = sprintf('0 0 %i %i',
@@ -1044,7 +1033,7 @@ obs_plot <- list(
     removeModal(session=session)
   }),
   observeEvent(input$plot_region_create_ok, suspended = TRUE, {
-    if(length(react_dat()$info$in_use) == 0) return(NULL)
+    if(length(obj_react$back$info$in_use) == 0) return(NULL)
     if(any(input$population=="")) return(NULL)
     if(input$plot_type=="") return(NULL)
     if(input$navbar!="tab3") return(NULL)
@@ -1152,7 +1141,7 @@ obs_plot <- list(
     runjs(code = "Shiny.onInputChange('plot_shown', null)")
     plot_react$allowed_regions = NULL
     runjs(code = "Shiny.onInputChange('plot_regions', null)")
-    updateSelectInput(session=session, inputId="plot_regions", choices=NULL, selected=NULL)
+    updateSelectInput(session=session, inputId="plot_regions", choices=list(), selected=NULL)
     runjs(code = "Shiny.onInputChange('plot_shown_order', null)")
   }),
   observeEvent(input$plot_type, suspended = TRUE, {
@@ -1169,7 +1158,7 @@ obs_plot <- list(
     hideElement(id = "plot_stats_placeholder")
     
     output$plot_1or2D_placeholder <- renderUI({
-      args = list(outputId = "plot_1or2D", width = "100%", height = "600px",
+      args = list(outputId = "plot_1or2D", width = "600px", height = "600px",
                   brush = brushOpts(
                     id = "plot_brush",
                     fill = input$plot_region_color,
@@ -1184,10 +1173,10 @@ obs_plot <- list(
                                             clip = TRUE),
                           dblclick = "plot_dblclick",
                           hover = hoverOpts(id = "plot_hover",
-                                            delay = 100,
+                                            delay = 50,
                                             delayType = "throttle",
                                             clip = TRUE,
-                                            nullOutside = FALSE)))
+                                            nullOutside = TRUE)))
       do.call(what = "plotOutput", args = args)
     })
     disable("plot_manager")
@@ -1203,6 +1192,7 @@ obs_plot <- list(
              showElement(id = "plot_stats_placeholder")
              updateRadioButtons(session = session, inputId = "graph_save_type", choices = "pdf", selected = "pdf", inline = TRUE)
              plot_react$current = "#plot_1or2D"
+             session$sendCustomMessage("getOffset", sprintf("%s",plot_react$current))
              set_tool(tool = "init")
            },
            "2D" = {
@@ -1223,6 +1213,7 @@ obs_plot <- list(
              showElement(id = "plot_stats_placeholder")
              updateRadioButtons(session = session, inputId = "graph_save_type", choices = "pdf", selected = "pdf", inline = TRUE)
              plot_react$current = "#plot_1or2D"
+             session$sendCustomMessage("getOffset", sprintf("%s",plot_react$current))
              set_tool(tool = "init")
            },
            "3D" = {
@@ -1253,7 +1244,7 @@ obs_plot <- list(
     runjs(code = "Shiny.onInputChange('plot_shown_order', null)")
   }),
   observeEvent(input$plot_type_3D_option03, suspended = TRUE,{
-    if(length(react_dat()$info$in_use) == 0) return(NULL)
+    if(length(obj_react$back$info$in_use) == 0) return(NULL)
     if(any(input$population=="")) return(NULL)
     if(input$plot_type=="") return(NULL)
     if(input$navbar!="tab3") return(NULL)
@@ -1268,7 +1259,7 @@ obs_plot <- list(
     }))
   }),
   observeEvent(input$plot_type_3D_option01,suspended = TRUE, {
-    if(length(react_dat()$info$in_use) == 0) return(NULL)
+    if(length(obj_react$back$info$in_use) == 0) return(NULL)
     if(any(input$population=="")) return(NULL)
     if(input$plot_type=="") return(NULL)
     if(input$navbar!="tab3") return(NULL)
@@ -1288,7 +1279,7 @@ obs_plot <- list(
       foo = as.integer(unlist(input$rgl_3D_hover)[3])
       if(plot_react$closest != foo) {
         plot_react$closest <- foo
-        if(react_dat()$info$found) {
+        if(any(obj_react$back$info$found)) {
           tryCatch({
             info = obj_react$obj$info
             info$Images = param_react$param$channels
@@ -1309,7 +1300,7 @@ obs_plot <- list(
                                 full_range = "full_range" %in% input$chan_force,
                                 force_range = "force_range" %in% input$chan_force)
             ifd = getIFD(fileName = param$fileName_image,
-                         offsets = subsetOffsets(offsets = react_dat()$offsets, objects= foo, image_type = "img"),
+                         offsets = subsetOffsets(offsets = obj_react$back$offsets, objects= foo, image_type = "img"),
                          trunc_bytes = 1, force_trunc = TRUE, verbose = FALSE, display_progress = FALSE, bypass = TRUE)
             base64 = objectExtract(ifd = ifd, param = param, verbose = FALSE, bypass = TRUE)[[1]][[1]]
             runjs(code = paste0("var ele = document.getElementById('plot_3D');
@@ -1327,7 +1318,7 @@ obs_plot <- list(
       if(plot_react$closest != foo) {
         plot_react$closest <- foo
         tryCatch({
-          if(react_dat()$info$found) {
+          if(any(obj_react$back$info$found)) {
             info = obj_react$obj$info
             info$Images = param_react$param$channels
             param = objectParam(info = info,
@@ -1347,7 +1338,7 @@ obs_plot <- list(
                                 full_range = "full_range" %in% input$chan_force,
                                 force_range = "force_range" %in% input$chan_force)
             ifd = getIFD(fileName = param$fileName_image,
-                         offsets = subsetOffsets(offsets = react_dat()$offsets, objects= foo, image_type = "img"),
+                         offsets = subsetOffsets(offsets = obj_react$back$offsets, objects= foo, image_type = "img"),
                          trunc_bytes = 1, force_trunc = TRUE, verbose = FALSE, display_progress = FALSE, bypass = TRUE)
             base64 = objectExtract(ifd = ifd, param = param, verbose = FALSE, bypass = TRUE)[[1]][[1]]
             runjs(code = sprintf("var ele = document.getElementById('plot_3D');
@@ -1430,6 +1421,201 @@ obs_plot <- list(
   observeEvent(input$graph_close, suspended = TRUE,{
     runjs("Shiny.onInputChange('graph_manager_visible', false)")
   }),
+  observe(#list(input$plot_type,
+                    # plot_react$x_feat,
+                    # plot_react$x_trans,
+                    # plot_react$y_feat,
+                    # plot_react$y_trans,
+                    # plot_react$order,
+                    # input$plot_type_2D_option01,
+                    # input$plot_type_1D_option01,
+                    # input$plot_type_1D_option02,
+                    # input$plot_type_1D_option03,
+                    # input$plot_regions,
+                    # plot_react$allowed_regions,
+                    # plot_react$xmin,
+                    # plot_react$xmax,
+                    # plot_react$ymin,
+                    # plot_react$ymax),
+  suspended = TRUE,
+               {
+                 plot_react$param_ready = FALSE
+                 if(input$navbar!="tab3") return(NULL)
+                 if(input$plot_type == "3D") return(NULL)
+                 if(length(input$plot_base) < 1) return(NULL)
+                 if(any(input$plot_base=="")) return(NULL)
+                 if(input$plot_x_feature != plot_react$x_feat) return(NULL)
+                 if(input$plot_y_feature != plot_react$y_feat) return(NULL)
+                 if(input$plot_x_transform != plot_react$x_trans) return(NULL)
+                 if(input$plot_y_transform != plot_react$y_trans) return(NULL)
+                 if(input$plot_type_2D_main_option03 == 0) return(NULL)
+                 
+                 if(input$plot_type == "1D") {
+                   hideElement("plot_shown")
+                   showElement("order_placeholder")
+                   if(!all(input$plot_shown %in% input$plot_base) || !all(input$plot_base %in% input$plot_shown)) {
+                     updateSelectInput(session=session, inputId="plot_shown", selected = input$plot_base)
+                     return(NULL)
+                   }
+                 } else {
+                   if(!all(input$plot_base %in% input$plot_shown)) {
+                     if(input$plot_type_2D_option01 == "scatter") {
+                       showElement("plot_shown")
+                       showElement("order_placeholder")
+                       updateSelectInput(session=session, inputId="plot_shown", selected = input$plot_base)
+                       return(NULL)
+                     } else {
+                       hideElement("plot_shown")
+                       hideElement("order_placeholder")
+                       updateSelectInput(session=session, inputId="plot_shown", selected = input$plot_base[1])
+                       if(length(input$plot_base) != 1) {
+                         updateSelectInput(session=session, inputId="plot_base", selected = input$plot_base[1])
+                         mess_global(title = paste0("plot_", input$plot_type), msg = "Density graphs can only display one BasePop population", type = "warning", duration = 10)
+                         return(NULL)
+                       }
+                     }
+                   }
+                 }
+                 allowed_regions = lapply(obj_react$obj$pops, FUN = function(p) {
+                   if(p$type != "G") return(NULL)
+                   r = obj_react$obj$regions[[p$region]]
+                   if(input$plot_type == "1D") {
+                     if(r$type != "line") return(NULL)
+                     if((p$fx == plot_react$x_feat) &&
+                        (r$xlogrange == plot_react$x_trans)) return(r$label)
+                   } else {
+                     if(length(p$fy) == 0) return(NULL)
+                     if((p$fx == plot_react$x_feat) &&
+                        (r$xlogrange == plot_react$x_trans) &&
+                        (p$fy == plot_react$y_feat) &&
+                        (r$ylogrange == plot_react$y_trans)) return(r$label)
+                   }
+                 })
+                 allowed_regions = sort(unname(unique(unlist(allowed_regions)), force = TRUE))
+                 if(!identical(allowed_regions, plot_react$allowed_regions)) {
+                   plot_react$allowed_regions <- allowed_regions
+                   N = allowed_regions; if(length(N) == 0) N = list()
+                   updateSelectInput(session=session, inputId="plot_regions", choices = N, selected = NULL)
+                   return(NULL)
+                 }
+                 
+                 if(input$plot_type == "1D") {
+                   args = list(type = "histogram",
+                               f1 = plot_react$x_feat,
+                               f2 = "Object Number",
+                               scaletype = 0,
+                               xlogrange = plot_react$x_trans,
+                               ylogrange = "P",
+                               histogramsmoothingfactor = input$plot_type_1D_option02 == "smooth",
+                               freq = ifelse((length(input$plot_type_1D_option03) != 0) && input$plot_type_1D_option03, "T", "F"),
+                               BasePop = lapply(plot_react$order, FUN = function(p) list(name = p, inestyle = "Solid", fill = "true")),
+                               ShownPop = list(list()))
+                 }
+                 if(input$plot_type == "2D") {
+                   args = list(type = ifelse(input$plot_type_2D_option01 == "level","density",input$plot_type_2D_option01),
+                               f1 = plot_react$x_feat,
+                               f2 = plot_react$y_feat,
+                               scaletype = 0,
+                               xlogrange = plot_react$x_trans,
+                               ylogrange = plot_react$y_trans,
+                               BasePop = lapply(input$plot_base, FUN = function(p) list(name = p, inestyle = "Solid", fill = "true")))
+                   if(input$plot_type_2D_option01 == "scatter") {
+                     args = c(args,list(ShownPop = lapply(plot_react$order[plot_react$order %in% names(obj_react$obj$pops)], FUN = function(x) list("name" = x))))
+                   } else {
+                     args = c(args,list(ShownPop = list(list())))
+                   }
+                 }
+                 g = do.call(what = buildGraph, args = args)
+                 # level/density
+                 if(input$plot_type_2D_option01 == "level") {
+                   g$BasePop[[1]]$densitylevel = paste(ifelse(input$plot_level_fill,"true","false"),
+                                                       ifelse(input$plot_level_lines,"true","false"),
+                                                       input$plot_level_nlevels,input$plot_level_lowest,sep="|")
+                 }
+                 if(g$type == "density") {
+                   # if(!plot_react$param_ready) {
+                   if(length(plot_react$g$BasePop[[1]]$densitycolorslightmode) == 0) {
+                     plot_react$g$BasePop[[1]]$densitycolorslightmode <- "-16776961|-13447886|-256|-23296|-65536|"
+                   }
+                   plot_react$densitycolorslightmode <- plot_react$g$BasePop[[1]]$densitycolorslightmode
+                   plot_react$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
+                   plot_react$densitycolorslightmode_selected = "initial"
+                   plot_react$densitytrans_selected = "initial"
+                   if(input$plot_dens_order %% 2) click("plot_dens_order")
+                   # }
+                   g$BasePop[[1]]$densitycolorslightmode <- plot_react$g$BasePop[[1]]$densitycolorslightmode
+                   if(input$plot_type_2D_option01 != "level") g$BasePop[[1]]$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
+                 }
+                 # treat region
+                 g$GraphRegion = list()
+                 R = obj_react$obj$regions[input$plot_regions[input$plot_regions %in% allowed_regions]]
+                 if(length(R) > 0) g$GraphRegion = list(list("name" = R[[1]]$label, def = c(R[[1]]$def, names(R)[1])))
+                 if(length(R) > 1) for(i_reg in 2:length(R)) {
+                   defined = sapply(g$GraphRegion, FUN = function(r) r$name) %in% R[[i_reg]]$label
+                   if(any(defined)) {
+                     g$GraphRegion[[defined]] = list("name" = R[[i_reg]]$label, def = c(g$GraphRegion[[defined]]$def, names(R)[i_reg]))
+                   } else {
+                     g$GraphRegion = c(g$GraphRegion, list(list("name" = R[[i_reg]]$label, def = names(R)[i_reg])))
+                   }
+                 }
+                 if(length(g$GraphRegion) > 0) {
+                   tocheck = expand.grid(base = input$plot_base, region = input$plot_regions[input$plot_regions %in% allowed_regions], stringsAsFactors = FALSE)
+                   alreadyexist = apply(tocheck, 1, FUN = function(x) any(sapply(obj_react$obj$pops, FUN = function(p) { p$base == x["base"] && p$region == x["region"] })))
+                   tocreate = tocheck[!alreadyexist, ]
+                   if(nrow(tocreate) > 0) {
+                     pop = lapply(1:nrow(tocreate), FUN = function(i_row) {
+                       args = list(name = paste(tocreate[i_row, "base"], tocreate[i_row, "region"], sep=" & "),
+                                   base = tocreate[i_row, "base"], type = "G",
+                                   color = obj_react$obj$regions[[tocreate[i_row, "region"]]]$color,
+                                   lightModeColor = obj_react$obj$regions[[tocreate[i_row, "region"]]]$lightcolor,
+                                   region = tocreate[i_row, "region"], fx = plot_react$x_feat)
+                       if(input$plot_type == "2D") args = c(args, list(fy = plot_react$y_feat))
+                       do.call(what = buildPopulation, args = args)
+                     })
+                     tryCatch({
+                       obj_react$obj = data_add_pops(obj = obj_react$obj, pops = pop, display_progress = FALSE, session=session)
+                       mess_global(title = paste0("plot_", input$plot_type),
+                                   msg = c(ifelse(length(pop) == 1, "new population has been created:", "new populations have been created:"),
+                                           sapply(pop, FUN = function(p) paste0("-", p$name))),
+                                   type = "info", duration = 10)
+                     }, error = function(e) {
+                       mess_global(title = paste0("plot_", input$plot_type),
+                                   msg = c(paste0("error while trying to create new population",ifelse(length(pop) == 1, ":", "s:")),
+                                           sapply(pop, FUN = function(p) paste0("-", p$name)),
+                                           e$message),
+                                   type = "error", duration = 10)
+                     })
+                   }
+                 }
+                 # aesthetics & zooming
+                 for(i in c("graphtitlefontsize", "title",
+                            "axislabelsfontsize", "axistickmarklabelsfontsize",
+                            "regionlabelsfontsize", "xlabel", "ylabel",
+                            "xmin", "ymin",
+                            "xmax", "ymax")) {
+                   g[[i]] <- plot_react[[i]]
+                 }
+                 # maxpoints
+                 g$maxpoints <- as.numeric(input$plot_type_2D_main_option03)/100
+                 if(#ifelse(g$type == "histogram", all("1D" %in% input$plot_type), all(g$type %in% input$plot_type_2D_option01)) &&
+                   all(g$order %in% plot_react$g$order) &&
+                   all(g$xstatsorder %in% plot_react$g$xstatsorder) &&
+                   all(sapply(g$BasePop, FUN = function(x) x$name) %in% sapply(plot_react$g$BasePop, FUN = function(x) x$name)) &&
+                   ifelse(length(g$GraphRegion) == 0, TRUE, (all(sapply(g$GraphRegion, FUN = function(x) x$name) %in% sapply(plot_react$g$GraphRegion, FUN = function(x) x$name)))) &&
+                   ifelse(length(g$ShownPop) == 0, TRUE, (all(sapply(g$ShownPop, FUN = function(x) x$name) %in% sapply(plot_react$g$ShownPop, FUN = function(x) x$name)))) &&
+                   all(g$f1 %in% plot_react$g$f1) &&
+                   ifelse(g$type == "histogram", TRUE, all(g$f2 %in% plot_react$g$f2))) {
+                   plot_react$param_ready = TRUE
+                   plot_react$g = g
+                   isolate({
+                     now = 1000*as.numeric(Sys.time())
+                       delay(200, { plot_react$id = now } )
+                   })
+                   # print(paste0("build done: ",dev_check_plot))
+                 } 
+                 plot_react$g = g
+               }),
+  # plot_sel
   observeEvent(input$plot_sel_init, suspended = TRUE,{
     if(length(input$shape_selected$x) != 0) {
       showModal(modalDialog(tags$p("Are you sure you want to discard applied changes in region '", tags$b(input$shape_selected$name), "' ?"),
@@ -1516,7 +1702,13 @@ obs_plot <- list(
   observeEvent(input$plot_sel_zoomin, suspended = TRUE,{
     set_tool("zoomin")
   }),
-  observeEvent(input$plot_sel_zoomreset, suspended = TRUE,{
+  observeEvent(input$plot_sel_zoomreset, suspended = TRUE, {
+    foo = plotGraph(obj_react$obj, g, viewport = "max", draw = FALSE)
+    plot_react$g$xmin = foo$input$Xlim[1]
+    plot_react$g$xmin = foo$input$Xlim[2]
+    plot_react$g$ymin = foo$input$Ylim[1]
+    plot_react$g$ymax = foo$input$Ylim[2]
+    plot_react$param_ready <- FALSE
     plot_react$zoomed = FALSE
     click("plot_sel_init")
   }),
@@ -1558,4 +1750,11 @@ obs_plot <- list(
       mess_global(title = "adding graph to report", msg = e$message, type = "error")
     })
     set_tool("add")
+  }),
+  observeEvent(input$plot_sel_stack, suspended = TRUE,{
+    runjs(code = "$('#navbar [data-value=\"tab7\"]').trigger('click');" )
+    runjs(code = "Shiny.onInputChange('navbar', 'tab7');")
+    runjs(code = "$('#navbar_batch [data-value=\"Stack\"]').trigger('click');" )
+    runjs(code = "Shiny.onInputChange('navbar_batch', 'Stack');")
+    click("plot_sel_init")
   }))

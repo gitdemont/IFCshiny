@@ -126,7 +126,8 @@ obs_report <- list(
                 obj_react$obj$graphs[[i_graph]]$ysize <- input$report_size
                 obj_react$obj$graphs[[i_graph]]$ylocation <- (i_row - 1) * input$report_size
                 obj_react$obj$graphs[[i_graph]]$xlocation <- (i_col - 1) * input$report_size
-                convert_to_baseplot(plotGraph(obj = obj_react$obj, graph = obj_react$obj$graphs[[i_graph]], draw = FALSE, stats_print = FALSE, viewport = "ideas", precision = "full"))
+                plot_raster(plotGraph(obj = obj_react$obj, graph = obj_react$obj$graphs[[i_graph]], draw = FALSE, stats_print = FALSE,
+                                    viewport = "ideas", precision = "full"))
               }
             }, error = function(e) {
               print(e$message)
@@ -267,7 +268,7 @@ obs_report <- list(
   # item are 5 px padded in each direction
   observeEvent(input$report_size,suspended = TRUE, ignoreInit = TRUE, {
     if(length(na.omit(input$report_size)) == 0) return(NULL)
-    if(length(react_dat())==0) return(NULL)
+    if(length(obj_react$back)==0) return(NULL)
     session$sendCustomMessage('resize_grid', list(eleId = 'report_placeholder',
                                                   width = 5 + (input$report_size + 10) * ncol(plot_react$layout),
                                                   height = 5 + (input$report_size + 10) * nrow(plot_react$layout),

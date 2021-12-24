@@ -120,7 +120,7 @@ observeEvent(input$credits, {
                                                     tags$span("under MIT")),
                                            tags$div(style = "display: list-item;",
                                                     tags$span("Interaction with 1D and 2D plot(s) to create and edit gate(s) is done thanks to"),
-                                                    tags$a(target="_blank", href="https://github.com/taye/interact.js/", "interact, version 0.9.2,"),
+                                                    tags$a(target="_blank", href="https://github.com/taye/interact.js/", "interact, version 1.10.0,"),
                                                     tags$span("under MIT"))
                                       )),
                                  list(tags$hr(),

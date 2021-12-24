@@ -70,14 +70,14 @@ obs_img <- list(
   observeEvent(input$reset_name, suspended = TRUE,  {
     if(is.null(input$reset_name)) return(NULL)
     selected = which(param_react$param$channels$physicalChannel %in% as.numeric(input$chan_sel))
-    name = react_dat()$description$Images[selected,"name"]
+    name = obj_react$back$description$Images[selected,"name"]
     param_react$param$channels$name[selected] <- name
     updateTextInput(session = session, inputId = "chan_name", value = param_react$param$channels$name[selected])
   }),
   observeEvent(input$reset_color, suspended = TRUE, {
     if(is.null(input$reset_color)) return(NULL)
     selected = which(param_react$param$channels$physicalChannel %in% as.numeric(input$chan_sel))
-    color = react_dat()$description$Images[selected,"color"]
+    color = obj_react$back$description$Images[selected,"color"]
     param_react$param$channels$color[selected] <- color
     named_color = c(rgb2hsv(col2rgb(color))); names(named_color) = color; named_color
     param_react$param$colors[[selected]] <- named_color
@@ -86,20 +86,20 @@ obs_img <- list(
   observeEvent(input$reset_gamma, suspended = TRUE, {
     if(is.null(input$reset_gamma) | input$reset_gamma == "") return(NULL)
     selected = which(param_react$param$channels$physicalChannel %in% as.numeric(input$chan_sel))
-    param_react$param$channels$xmin[selected] <- as.numeric(react_dat()$description$Images[selected,"xmin"])
-    param_react$param$channels$xmax[selected] <- as.numeric(react_dat()$description$Images[selected,"xmax"])
-    param_react$param$channels$xmid[selected] <- as.numeric(react_dat()$description$Images[selected,"xmid"])
-    param_react$param$channels$ymid[selected] <- as.numeric(react_dat()$description$Images[selected,"ymid"])
+    param_react$param$channels$xmin[selected] <- as.numeric(obj_react$back$description$Images[selected,"xmin"])
+    param_react$param$channels$xmax[selected] <- as.numeric(obj_react$back$description$Images[selected,"xmax"])
+    param_react$param$channels$xmid[selected] <- as.numeric(obj_react$back$description$Images[selected,"xmid"])
+    param_react$param$channels$ymid[selected] <- as.numeric(obj_react$back$description$Images[selected,"ymid"])
     updateSliderInput(session = session, inputId = "chan_gamma_x", value = param_react$param$channels$xmid[selected])
     updateSliderInput(session = session, inputId = "chan_gamma_y", value = param_react$param$channels$ymid[selected])
   }),
   observeEvent(input$reset_range, suspended = TRUE,  {
     if(is.null(input$reset_range) | input$reset_range == "") return(NULL)
     selected = which(param_react$param$channels$physicalChannel %in% as.numeric(input$chan_sel))
-    param_react$param$channels$xmin[selected] <- as.numeric(react_dat()$description$Images[selected,"xmin"])
-    param_react$param$channels$xmax[selected] <- as.numeric(react_dat()$description$Images[selected,"xmax"])
-    param_react$param$channels$xmid[selected] <- as.numeric(react_dat()$description$Images[selected,"xmid"])
-    param_react$param$channels$ymid[selected] <- as.numeric(react_dat()$description$Images[selected,"ymid"])
+    param_react$param$channels$xmin[selected] <- as.numeric(obj_react$back$description$Images[selected,"xmin"])
+    param_react$param$channels$xmax[selected] <- as.numeric(obj_react$back$description$Images[selected,"xmax"])
+    param_react$param$channels$xmid[selected] <- as.numeric(obj_react$back$description$Images[selected,"xmid"])
+    param_react$param$channels$ymid[selected] <- as.numeric(obj_react$back$description$Images[selected,"ymid"])
     updateSliderInput(session = session, inputId = "chan_gamma_x", 
                       min = param_react$param$channels$xmin[selected], 
                       max = param_react$param$channels$xmax[selected], 
@@ -110,8 +110,8 @@ obs_img <- list(
   observeEvent(input$reset_view, suspended = TRUE, {
     if(is.null(input$reset_view) | input$reset_view == "") return(NULL)
     selected = which(param_react$param$channels$physicalChannel %in% as.numeric(input$chan_sel))
-    param_react$param$channels$scalemin[selected] <- as.numeric(react_dat()$description$Images[selected,"scalemin"])
-    param_react$param$channels$scalemax[selected] <- as.numeric(react_dat()$description$Images[selected,"scalemax"])
+    param_react$param$channels$scalemin[selected] <- as.numeric(obj_react$back$description$Images[selected,"scalemin"])
+    param_react$param$channels$scalemax[selected] <- as.numeric(obj_react$back$description$Images[selected,"scalemax"])
     updateSliderInput(session = session, inputId = "chan_view", value = c(param_react$param$channels$scalemin[selected],param_react$param$channels$scalemax[selected]))
   }),
   observeEvent(input$chan_name, suspended = TRUE, {

@@ -55,8 +55,8 @@ observeEvent(input$compute_go, {
     do_par = TRUE
   }
   tryCatch({
-    extra_feat <- IFCip::ExtractFeatures(fileName = react_dat()$fileName,
-                                         offsets = react_dat()$offsets,
+    extra_feat <- IFCip::ExtractFeatures(fileName = obj_react$back$fileName,
+                                         offsets = obj_react$back$offsets,
                                          display_progress = TRUE,
                                          batch = input$batch,
                                          parallel = do_par,
@@ -65,7 +65,7 @@ observeEvent(input$compute_go, {
                                          session = session)
     attr(extra_feat, "channel_names") <- sapply(as.integer(attr(extra_feat, "channel_id")), FUN = function(i_chan) obj_react$obj$description$Images$name[obj_react$obj$description$Images$physicalChannel == i_chan])
     extra_feat <- IFCip::as_IFC_features(extra_feat)[[2]]
-    if(getFileExt(react_dat()$fileName) == "daf") {
+    if(getFileExt(obj_react$back$fileName) == "daf") {
       extra_feat <- lapply(extra_feat, FUN = function(x) {
         x$name = paste0(x$name, "_extra")
         return(x)
@@ -84,6 +84,7 @@ observeEvent(input$compute_go, {
     showElement(selector = "#navbar [data-value='tab5']")
     # we reactualize some input
     feat_n = grep(input$pattern, names(obj_react$obj$features), perl=TRUE, ignore.case=FALSE, value=TRUE)
+    if(length(feat_n) == 0) feat_n = list()
     updateSelectInput(session=session, inputId = "sel_left", choices = feat_n, selected = feat_n)
     hideElement(id = "compute_features")
     updateTabsetPanel(session = session, "navbar_ML", selected = "ML_inputs")

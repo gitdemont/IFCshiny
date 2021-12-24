@@ -40,7 +40,7 @@ if(length(obj_react$obj$features_comp) == 0) {
                         "only intensities within daf will be recomputed"), 
                 type = "info", duration = 10)
     tryCatch({
-      info = react_dat()$info
+      info = obj_react$back$info
       is_intensity = unlist(sapply(obj_react$obj$features_def, FUN = function(i_feat) {
         if(i_feat$type == "single" && i_feat$userfeaturetype == "Mask and Image") {
           foo = strsplit(i_feat$def, split = "|", fixed = TRUE)[[1]]
@@ -68,7 +68,7 @@ if(length(obj_react$obj$features_comp) == 0) {
           obj_react$obj$features_comp = comp_feat$features[, grepl("^Intensity", names(comp_feat$features))]
           attr(basic_feat, "channel_names") <- sapply(as.integer(attr(basic_feat, "channel_id")), FUN = function(i_chan) obj_react$obj$description$Images$name[obj_react$obj$description$Images$physicalChannel == i_chan])
           extra_feat <- IFCip::as_IFC_features(basic_feat)[[2]]
-          if(getFileExt(react_dat()$fileName) == "daf") {
+          if(getFileExt(obj_react$back$fileName) == "daf") {
             extra_feat <- lapply(extra_feat, FUN = function(x) {
               x$name = paste0(x$name, "_extra")
               return(x)
@@ -87,6 +87,7 @@ if(length(obj_react$obj$features_comp) == 0) {
           showElement(selector = "#navbar [data-value='tab5']")
           # we reactualize some input
           feat_n = grep(input$pattern, names(obj_react$obj$features), perl=TRUE, ignore.case=FALSE, value=TRUE)
+          if(length(feat_n) == 0) feat_n = list()
           updateSelectInput(session=session, inputId = "sel_left", choices = feat_n, selected = feat_n)
           hideElement(id = "compute_features")
         }
