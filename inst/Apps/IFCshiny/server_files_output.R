@@ -106,7 +106,10 @@ output$ML_save_btn <- downloadHandler(
         # add temporary ML pops in obj_react
         # foo <- suppressWarnings(data_add_pops(foo, pops, display_progress = TRUE, session = session))
         sp = comp_react$spillover
-        if(nrow(sp) == 0) sp = foo$description$FCS$spillover
+        if(nrow(sp) == 0) {
+          sp = foo$description$FCS$spillover
+          if(is.list(sp)) sp = sp[sapply(sp, length) != 0]
+        }
         switch(input$ML_save_type, 
                "daf" = {
                  suppressWarnings(data_to_DAF(obj = foo, write_to = tmpfile, overwrite = TRUE,
@@ -249,7 +252,10 @@ output$daf_save_btn <- downloadHandler(
         foo$description$Images <- param_react$param$channels
       }
       sp = comp_react$spillover
-      if(nrow(sp) == 0) sp = foo$description$FCS$spillover
+      if(nrow(sp) == 0) {
+        sp = foo$description$FCS$spillover
+        if(is.list(sp)) sp = sp[sapply(sp, length) != 0]
+      }
       tryCatch({
         switch(input$daf_save_type, 
                "daf" = {
@@ -307,7 +313,7 @@ output$graph_save_btn <- downloadHandler(
                  trunc_string(input$plot_x_feature,20),
                  ifelse(input$plot_type=="1D","", paste0("]y[",trunc_string(input$plot_y_feature, 20))))
     ans = paste0(ans, ifelse(input$plot_type=="3D",paste0("]z[",trunc_string(input$plot_y_feature, 20),"]"),"]"))
-    if(aby(obj_react$back$info$found)) ans = ans = paste0(ans, "(Ch",input$plot_3D_draw_chan,")")
+    if(any(obj_react$back$info$found)) ans = ans = paste0(ans, "(Ch",input$plot_3D_draw_chan,")")
     ans = specialr(paste0(ans,".",input$graph_save_type))
     ans
   },
@@ -342,8 +348,8 @@ output$graph_save_btn <- downloadHandler(
     } else {
       pdf(tmpfile, paper = "a4", onefile = TRUE, pagecentre = TRUE, family = "serif", useDingbats = FALSE)
       tryCatch({
-        foo = plot_react$plot$plot
-        stats = plot_react$plot$stats
+        foo = plot_lattice(plot_react$plot)
+        stats = plot_stats(plot_react$plot)
         stats = stats[,!grepl("Qu", colnames(stats)),drop=FALSE]
         foo_lay = matrix(c(rep(1,9), c(NA,2,NA)), nrow=4, ncol=3, byrow = TRUE)
         foo$vp <- viewport(x=0.5, y=0.5)
@@ -656,7 +662,10 @@ output$features_save_btn <- downloadHandler(
       colnames(all_pops) = names(obj_react$obj$pops)
       df = cbind(obj_react$obj$features[, setdiff(names(obj_react$obj$features), colnames(all_pops))], all_pops)
       sp = comp_react$spillover
-      if(nrow(sp) == 0) sp = foo$description$FCS$spillover
+      if(nrow(sp) == 0) {
+        sp = foo$description$FCS$spillover
+        if(is.list(sp)) sp = sp[sapply(sp, length) != 0]
+      }
       switch(input$features_save_type, 
              "csv" = write.csv(x = df, file = tmpfile),
              "xlsx" = write.xlsx(x = df, file = tmpfile),
