@@ -1176,7 +1176,7 @@ obs_plot <- list(
                                             delay = 50,
                                             delayType = "throttle",
                                             clip = TRUE,
-                                            nullOutside = FALSE)))
+                                            nullOutside = TRUE)))
       do.call(what = "plotOutput", args = args)
     })
     disable("plot_manager")
