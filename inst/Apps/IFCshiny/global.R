@@ -164,6 +164,13 @@ plot_raster <- getFromNamespace("plot_raster", "IFC")
 #' @keywords internal
 plot_base <- getFromNamespace("plot_base", "IFC")
 
+#' @name plot_lattice
+#' @keywords internal
+plot_lattice <- getFromNamespace("plot_lattice", "IFC")
+
+#' @name plot_stats
+#' @keywords internal
+plot_stats <- getFromNamespace("plot_stats", "IFC")
 
 #' @name specialr
 #' @keywords internal
