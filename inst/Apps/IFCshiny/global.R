@@ -168,6 +168,10 @@ plot_base <- getFromNamespace("plot_base", "IFC")
 #' @keywords internal
 plot_lattice <- getFromNamespace("plot_lattice", "IFC")
 
+#' @name CreateGraphReport
+#' @keywords internal
+CreateGraphReport <- getFromNamespace("CreateGraphReport", "IFC")
+
 #' @name plot_stats
 #' @keywords internal
 plot_stats <- getFromNamespace("plot_stats", "IFC")

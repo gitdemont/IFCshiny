@@ -649,6 +649,45 @@ output$batch_save_obj_btn <- downloadHandler(
       mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
     })
   })
+output$batch_save_pdf_btn <- downloadHandler(
+  filename = function() {
+    f = names(obj_react$batch)[1]
+    ans = specialr(paste0(remove_ext(substr(f,3,nchar(f))), "_batch.", input$batch_save_pdf_type))
+    ans
+  },
+  content = function(file) {
+    mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting Batch Report", reset = FALSE)
+    graphs = lapply(obj_react$batch, FUN = function(obj) {
+      CreateGraphReport(obj = obj, display_progress = TRUE, onepage = TRUE)
+    })
+    r_max = 0
+    c_max = 0
+    for(i_graph in seq_along(graphs)) {
+      r_max = max(r_max, nrow(graphs[[i_graph]]$matrix), na.rm = TRUE)
+      c_max = max(c_max, ncol(graphs[[i_graph]]$matrix), na.rm = TRUE)
+    }
+    
+    pdf(file=file, height=3*r_max*2.54, width=3*c_max*2.54)
+    on.exit(dev.off(), add = TRUE)
+    pb = newPB(session = session, title = obj_react$batch[[1]]$fileName,
+               label = "creating batch report",
+               min = 1, max = length(obj_react$batch), initial = 0, style = 3)
+    tryCatch({
+      for(i_graph in seq_along(graphs)) {
+        setPB(pb, value = i_graph, title = title_progress, label = "creating batch report")
+        title_progress = basename(as.character(obj_react$batch[[i_graph]]$fileName))
+        grid.arrange(grobs = graphs[[i_graph]]$grobs[graphs[[i_graph]]$layout$N],
+                     top = title_progress, newpage = TRUE, layout_matrix = graphs[[i_graph]]$matrix, as.table = FALSE)
+      }
+    },
+    error = function(e) {
+      mess_global(title = "exporting batch report", msg = e$message, type = "error", duration = 10)
+    },
+    finally = {
+      endPB(pb)
+      mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
+    })
+  })
 output$features_save_btn <- downloadHandler(
   filename = function() {
     ans = specialr(paste0(remove_ext(basename(obj_react$back$fileName)), "_features.", input$features_save_type))

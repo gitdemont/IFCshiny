@@ -110,7 +110,6 @@ obs_batch = list(
       
       # set names to obj_react$batch
       names(obj_react$batch) <- file_b
-      
       # update selector
       updateSelectInput(session = session, inputId = "file_main", choices = file_b, selected = file_b[obj_react$curr])
       # udpate ridge space
