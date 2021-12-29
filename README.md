@@ -38,7 +38,7 @@ install.packages("devtools")
 - install R dependencies required for IFCshiny package
 "IFC", "shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "visNetwork", 
 "colourpicker", "DT", "gridExtra", "jsonlite", "caret", "MASS", "mclust", "e1071", "xgboost", "bestNormalize", 
-"Rtsne", "umap", "rmarkdown", "rgl", "plotly", "doParallel", "zip", "openxlsx", "imager", "reticulate"
+"Rtsne", "umap", "rmarkdown", "rgl", "plotly", "decido", "doParallel", "zip", "openxlsx", "imager", "reticulate"
 
 ```R
 install.packages(c("IFC", "shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "visNetwork", "colourpicker", "DT", "gridExtra", "jsonlite", "caret", "MASS", "mclust", "e1071", "xgboost", "bestNormalize", "Rtsne", "umap", "rmarkdown", "rgl", "plotly", "doParallel", "zip", "openxlsx", "imager", "reticulate"))
@@ -91,6 +91,12 @@ install.package("BiocManager")
 BiocManager::install(c("flowCore", "FlowSOM"))
 ```
 
+- `heatmaply` for interactive heatmap with dendrogram in batch module
+
+```R
+install.packages("heatmaply")
+```
+
 - Not yet available, `IFCshiny` may require `keras` and `tensorflow`
 
 ```R
@@ -127,6 +133,8 @@ Depending on the file you use (fcs, daf, rif, cif), you will be able to see diff
 `Report` allows to easily create and organize report from graphs that are generated from `Plot` tab. It appears when at least one graph is registered within the file or has been exported.
 
 `Table` allows to easily extract statistics and export features values
+
+`Batch` allow to batch process current file analysis to other files and compare them.
 
 `Logs` permits to keep a track of user action.
 
@@ -282,6 +290,10 @@ Report allows to organize and export report
 ![table](https://github.com/gitdemont/IFCshiny/blob/master/inst/include/imgs/tab-table.PNG?raw=true)
 
 Table allows display and export features values and statistics
+
+>Batch
+
+Batch is implemented but detailed documentation and screenshots remain to be done
 
 >Credits
 
