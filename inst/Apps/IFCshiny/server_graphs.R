@@ -305,54 +305,10 @@ obs_plot <- list(
       plot_react$order = input$plot_shown_order
     }
   }),
-  observeEvent(input$plot_shown, suspended = TRUE,  {
+  observeEvent(list(input$plot_shown,input$plot_type), suspended = TRUE,  {
     if(length(input$plot_shown) == 0) return(NULL)
     shown = input$plot_shown
-    plot_react$shown = (shown)
-    plot_react$order = shown
-    if(input$plot_type == "3D") {
-      shown = rev(shown)
-      sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
-      n_sub = sum(sub)
-      if(n_sub > 2000) {
-        perc = as.integer(100 * 2000 / n_sub)
-      } else {
-        perc = 100
-      }
-      updateSliderInput(session=session, inputId = "plot_type_3D_option03", value=min(max(1,perc), 100))
-      observeEvent(input$plot_type_3D_option03, {
-        if(input$plot_type_3D_option03 == 0) updateSliderInput(session=session, inputId = "plot_type_3D_option03", value=1)
-        n_cells = as.integer(n_sub * input$plot_type_3D_option03 / 100)
-        toggleState(id = "plot_type_3D_option01", condition = n_cells != n_sub)
-        runjs(code = sprintf("document.getElementById('plot_type_3D_option03-count').innerHTML='%s'", paste0("n = ", n_cells, "/", n_sub)))
-      })
-      
-      sub[-sample(x = which(sub), size = n_sub * perc / 100, replace = FALSE)] <- FALSE
-      plot_react$subset = sub
-      plot_react$order = shown
-      plot_react$color = (sapply(obj_react$obj$pops[plot_react$order], FUN = function(p) {
-        p$lightModeColor
-      }))
-      plot_react$symbol = (sapply(obj_react$obj$pops[plot_react$order], FUN = function(p) {
-        p$style
-      }))
-    }
-    if(input$plot_type == "2D") {
-      sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
-      n_sub = sum(sub) 
-      if(n_sub > 5000) {
-        perc = as.integer(100 * 5000 / n_sub)
-      } else {
-        perc = 100
-      }
-      updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value=min(max(1,perc), 100))
-      observeEvent(input$plot_type_2D_main_option03, {
-        if(input$plot_type_2D_main_option03 == 0) updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value=1)
-        n_cells = as.integer(n_sub * input$plot_type_2D_main_option03 / 100)
-        toggleState(id = "plot_type_2D_main_option01", condition = n_cells != n_sub)
-        runjs(code = sprintf("document.getElementById('plot_type_2D_main_option03-count').innerHTML='%s'", paste0("n = ", n_cells, "/", n_sub)))
-      })
-    }
+    if(input$plot_type == "3D") shown = rev(shown)
     html(id = "plot_order", add = FALSE, 
          html = (do.call(what = paste0, 
                          args = lapply(shown, FUN = function(val) {
@@ -377,6 +333,47 @@ obs_plot <- list(
                                     background-color: white; 
                                     width: 100%")
                          }))))
+  }),
+  observeEvent(list(input$plot_type_3D_option03,input$plot_type_3D_option01,input$plot_shown), suspended = TRUE, {
+    if(length(input$plot_shown) == 0) return(NULL)
+    if(input$plot_type_3D_option03 == 0) {
+      updateSliderInput(session=session, inputId = "plot_type_3D_option03", value=1)
+      return(NULL)
+    }
+    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    n_sub = sum(sub) 
+    n_cells = as.integer(n_sub * input$plot_type_3D_option03 / 100)
+    if(n_cells == n_sub) {
+      disable("plot_type_3D_option01")
+    } else {
+      enable("plot_type_3D_option01")
+    }
+    runjs(code = sprintf("document.getElementById('plot_type_3D_option03-count').innerHTML='%s'", paste0("n = ", n_cells, "/", n_sub)))
+    shown = rev(input$plot_shown)
+    plot_react$shown = shown
+    plot_react$order = shown
+    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    sub[-sample(x = which(sub), size = sum(sub) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
+    plot_react$subset = sub
+    plot_react$color = (sapply(obj_react$obj$pops[plot_react$order], FUN = function(p) {
+      p$lightModeColor
+    }))
+    plot_react$symbol = (sapply(obj_react$obj$pops[plot_react$order], FUN = function(p) {
+      p$style
+    }))
+  }),
+  observeEvent(list(input$plot_type_2D_main_option03,input$plot_shown), suspended = TRUE, {
+    if(length(input$plot_shown) == 0) return(NULL)
+    if(input$plot_type_2D_main_option03 == 0) updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value=1)
+    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    n_sub = sum(sub) 
+    n_cells = as.integer(n_sub * input$plot_type_2D_main_option03 / 100)
+    if(n_cells == n_sub) {
+      disable("plot_type_2D_main_option01")
+    } else {
+      enable("plot_type_2D_main_option01")
+    }
+    runjs(code = sprintf("document.getElementById('plot_type_2D_main_option03-count').innerHTML='%s'", paste0("n = ", n_cells, "/", n_sub)))
   }),
   observeEvent(input$plot_3D_mouse_ctrl, suspended = TRUE, {
     if(length(input$plot_3D_mouse_ctrl) == 0) return(NULL)
@@ -1597,6 +1594,7 @@ obs_plot <- list(
                    g[[i]] <- plot_react[[i]]
                  }
                  # maxpoints
+                 input$plot_type_2D_main_option01 # allows to trigger resampling
                  g$maxpoints <- as.numeric(input$plot_type_2D_main_option03)/100
                  if(#ifelse(g$type == "histogram", all("1D" %in% input$plot_type), all(g$type %in% input$plot_type_2D_option01)) &&
                    all(g$order %in% plot_react$g$order) &&

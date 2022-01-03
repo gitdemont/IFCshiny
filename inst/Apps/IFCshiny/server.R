@@ -533,10 +533,10 @@ server <- function(input, output, session) {
           }
           
           # output stats
-          output$plot_stats <- suppressWarnings(renderPrint({
-            stats = IFC:::plot_stats(plot_react$plot)
+          output$plot_stats <- try(suppressWarnings(renderPrint({
+            stats = plot_stats(plot_react$plot)
             stats[,!grepl("Qu", colnames(stats))]
-          }))
+          })), silent = TRUE)
           
           # draw plot
           plot_raster(plot_react$plot)

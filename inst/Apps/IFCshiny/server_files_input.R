@@ -265,8 +265,10 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
   showElement(selector = "#navbar [data-value='tab8']")
   showElement("infos_save")
   # update maxpoints values in plots
-  updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value = min(1, 100 * 1000 / nrow(obj$features)))
-  updateSliderInput(session=session, inputId = "plot_type_3D_option03", value= min(1, 100 * 1000 / nrow(obj$features)))
+  M = 100
+  updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value = max(M/100, 100 * 5000 / nrow(obj$features)), min = M/100, max = M, step = M/100)
+  M = as.integer(min(100, 100 * 20000 / nrow(obj$features)))
+  updateSliderInput(session=session, inputId = "plot_type_3D_option03", value = max(M/100, 100 * 2000 / nrow(obj$features)), min = M/100, max = M, step = M/100)
   # if a file containing images was read we allow some other tabs
   # + we update app input with collected channels
   if(any(obj$info$found)) {
