@@ -104,10 +104,10 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
       }
     } else {
       # here we use dedicated ExtractFromFCS to read FCS file
+      info = try(stop(""), silent = TRUE)
       dat = try(ExtractFromFCS(fileName = fileName, 
                                force_header = TRUE, session = session), silent = TRUE)
       if(("try-error" %in% class(dat))) stop("fcs file does not seem to be well formatted:\n", attr(dat, "condition")$message)
-      info = try(stop(""), silent = TRUE)
     }
     # if info were obtained without error, it means that a rif or a cif was input
     # so we can extract image parameters from this file.
@@ -143,6 +143,8 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
       dat$info$illumination = dat$info$illumination[dat$info$illumination$powered, c("wavelength", "power","min","max")]
       dat$info$found = TRUE
     }
+    obj_react$obj = checkObj(reinit_app(dat))
+    obj_react$back = obj_react$obj
   },
   error = function(e) {
     mess_global(title = "file input", msg = e$message, type = "error")
@@ -151,8 +153,6 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   finally = {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
   })
-  obj_react$obj = checkObj(reinit_app(dat))
-  obj_react$back = obj_react$obj
 }
 
 set_default_info <- function(obj) {
