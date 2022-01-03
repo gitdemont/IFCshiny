@@ -127,35 +127,38 @@ observeEvent(input$pop_alt_click, suspended = FALSE, {
     }))
     
     if(type == "3D") {
+      plot_react$shown = plot_react$order 
       updateSelectInput(session = session, inputId = "plot_base", selected = plot_react$order)
       updateSelectInput(session = session, inputId = "plot_shown", selected = plot_react$order)
-      plot_react$shown = plot_react$order 
-      if(length(plot_react$order) > 1) {
-        runjs(code = sprintf("Shiny.onInputChange('plot_base', { '%s' });", plot_react$shown ))
-      } else {
-        runjs(code = sprintf("Shiny.onInputChange('plot_base', '%s');", plot_react$shown ))
-      }
+      runjs(code = sprintf("Shiny.onInputChange('plot_base', %s );",toJSON(plot_react$shown , null = "null")))
+      # if(length(plot_react$order) > 1) {
+      #   runjs(code = sprintf("Shiny.onInputChange('plot_base', { '%s' });", plot_react$shown ))
+      # } else {
+      #   runjs(code = sprintf("Shiny.onInputChange('plot_base', '%s');", plot_react$shown ))
+      # }
     } else {
-      if(length(plot_react$order) > 1) {
-        runjs(code = sprintf("Shiny.onInputChange('plot_base', { '%s' });", (subset_names)))
-      } else {
-        runjs(code = sprintf("Shiny.onInputChange('plot_base', '%s');", (subset_names)))
-      }
-      updateSelectInput(session = session, inputId = "plot_base", selected = (subset_names))
+      updateSelectInput(session = session, inputId = "plot_base", selected = subset_names)
       updateSelectInput(session = session, inputId = "plot_shown", selected = plot_react$shown)
+      runjs(code = sprintf("Shiny.onInputChange('plot_base', %s );",toJSON(subset_names , null = "null")))
+      # if(length(plot_react$order) > 1) {
+      #   runjs(code = sprintf("Shiny.onInputChange('plot_base', { '%s' });", (subset_names)))
+      # } else {
+      #   runjs(code = sprintf("Shiny.onInputChange('plot_base', '%s');", (subset_names)))
+      # }
     }
     updateRadioButtons(session = session, inputId = "plot_type", selected = type, inline = TRUE)
-    
-    if(length(plot_react$shown) > 1) {
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown', { '%s' });", plot_react$shown))
-    } else {
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown', '%s');", plot_react$shown))
-    }
-    if(length(plot_react$order) > 1) {
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", plot_react$order))
-    } else {
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", plot_react$order))
-    }
+    runjs(code = sprintf("Shiny.onInputChange('plot_shown', %s );",toJSON(plot_react$shown, null = "null")))
+    runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', %s );",toJSON(plot_react$order, null = "null")))
+    # if(length(plot_react$shown) > 1) {
+    #   runjs(code = sprintf("Shiny.onInputChange('plot_shown', { '%s' });", plot_react$shown))
+    # } else {
+    #   runjs(code = sprintf("Shiny.onInputChange('plot_shown', '%s');", plot_react$shown))
+    # }
+    # if(length(plot_react$order) > 1) {
+    #   runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", plot_react$order))
+    # } else {
+    #   runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", plot_react$order))
+    # }
     updatePrettySwitch(session=session, inputId="plot_unlock", value=FALSE)
     runjs(code = "$('#navbar [data-value=\"tab3\"]').trigger('click');" )
     runjs(code = "Shiny.onInputChange('navbar', 'tab3');")
@@ -233,7 +236,7 @@ observeEvent(input$pop_edit,suspended = FALSE, {
     hideElement(selector = "#pop_def_edit, .pop_def_feedback")
   }
 })
-observeEvent(input$report_graph_dblclick, suspended = FALSE, {
+observeEvent(input$report_graph_dblclick, {
   if(length(input$report_graph_dblclick)==0) return(NULL)
   lapply(obs_plot, FUN = function(x) x$resume())
   g = input$report_graph_dblclick
@@ -272,13 +275,7 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
     plot_react$order = v
     plot_react$shown = v
     updateSelectInput(session=session, inputId="plot_shown", selected=v)
-    if(length(v) > 1) {
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown', { '%s' });", v))
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", v))
-    } else {
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown', '%s');", v))
-      runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", v))
-    }
+    runjs(code = sprintf("Shiny.onInputChange('plot_shown', %s );",  toJSON(v, null = "null")))
   } else {
     updateRadioButtons(session=session, inputId="plot_type", selected="2D", inline = TRUE)
     updateSelectInput(session=session, inputId="plot_y_feature", selected=g$f2)
@@ -314,16 +311,10 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
       plot_react$order = v
       plot_react$shown = v
       updateSelectInput(session=session, inputId="plot_shown", selected=v)
-      if(length(v) > 1) {
-        runjs(code = sprintf("Shiny.onInputChange('plot_shown', { '%s' });", v))
-        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", v))
-      } else {
-        runjs(code = sprintf("Shiny.onInputChange('plot_shown', '%s');", v))
-        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", v))
-      }
+      onFlushed(once = TRUE, session = session,
+                fun = function() { runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', %s );",  toJSON(v, null = "null"))) })
     }
   }
-  
   allowed_regions = lapply(obj_react$obj$pops, FUN = function(p) {
     if(p$type != "G") return(NULL)
     r = obj_react$obj$regions[[p$region]]

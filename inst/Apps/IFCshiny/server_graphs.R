@@ -298,7 +298,7 @@ obs_plot <- list(
       runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', $('#%s>.movable').toArray().map(x => x.innerText))",list("plot_order")))
     }
   }),
-  observeEvent(input$plot_shown_order, suspended = TRUE, {
+  observeEvent(input$plot_shown_order, suspended = TRUE, ignoreNULL = FALSE, {
     if(length(input$plot_shown_order) == 0) {
       plot_react$order = input$plot_shown
     } else {
