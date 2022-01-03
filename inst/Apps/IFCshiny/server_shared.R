@@ -249,11 +249,14 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
   plot_react$ymin <- g$ymin
   plot_react$ymax <- g$ymax
   updatePrettySwitch(session=session, inputId="plot_unlock", value=FALSE)
+  runjs(code = "Shiny.onInputChange('plot_unlock', false);")
   
   updateSelectInput(session=session, inputId="plot_x_feature", selected=g$f1)
-  maxpoints = isolate(plot_react$g$maxpoints)
+  maxpoints = plot_react$g$maxpoints
   onFlushed(once = TRUE, fun = function() {
     plot_react$zoomed <- TRUE
+    updatePrettySwitch(session=session, inputId="plot_unlock", value=FALSE)
+    runjs(code = "Shiny.onInputChange('plot_unlock', false);")
     updateSliderInput(session=session, inputId="plot_type_2D_main_option03", value = min(maxpoints*100, 100))
   })  
   plot_react$x_feat = g$f1
@@ -271,16 +274,11 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
     updateSelectInput(session=session, inputId="plot_shown", selected=v)
     if(length(v) > 1) {
       runjs(code = sprintf("Shiny.onInputChange('plot_shown', { '%s' });", v))
+      runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", v))
     } else {
       runjs(code = sprintf("Shiny.onInputChange('plot_shown', '%s');", v))
+      runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", v))
     }
-    onFlushed(once = TRUE, fun = function() {
-      if(length(v) > 1) {
-        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", v))
-      } else {
-        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", v))
-      }
-    }) 
   } else {
     updateRadioButtons(session=session, inputId="plot_type", selected="2D", inline = TRUE)
     updateSelectInput(session=session, inputId="plot_y_feature", selected=g$f2)
@@ -318,16 +316,11 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
       updateSelectInput(session=session, inputId="plot_shown", selected=v)
       if(length(v) > 1) {
         runjs(code = sprintf("Shiny.onInputChange('plot_shown', { '%s' });", v))
+        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", v))
       } else {
         runjs(code = sprintf("Shiny.onInputChange('plot_shown', '%s');", v))
+        runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", v))
       }
-      onFlushed(once = TRUE, fun = function() {
-        if(length(v) > 1) {
-          runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', { '%s' });", v))
-        } else {
-          runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', '%s');", v))
-        }
-      }) 
     }
   }
   
@@ -359,11 +352,11 @@ observeEvent(input$report_graph_dblclick, suspended = FALSE, {
   updateSelectInput(session=session, inputId="plot_base", selected=sapply(g$BasePop, FUN = function(p) p$name))
   if(length(g$GraphRegion) != 0) {
     updateSelectInput(session=session, inputId="plot_regions",
-                      choices=plot_react$allowed_regions,
+                      choices=allowed_regions,
                       selected=sapply(g$GraphRegion, FUN=function(r) r$name))
   } else {
     updateSelectInput(session=session, inputId="plot_regions",
-                      choices=plot_react$allowed_regions,
+                      choices=allowed_regions,
                       selected=NULL)
   }
   runjs(code = "$('#navbar [data-value=\"tab3\"]').trigger('click');" )

@@ -292,7 +292,7 @@ obs_plot <- list(
       updatePrettySwitch(session=session, inputId="plot_unlock", value=TRUE)
     })
   }),
-  observeEvent(input$ele_order, suspended = TRUE, {  
+  observeEvent(input$ele_order, suspended = TRUE, {
     foo = do.call(what=rbind, args=lapply(input$ele_order, FUN = function(x) splitn(definition = x, all_names = c("plot_order",names(obj_react$obj$pops)))))
     if(all(unique(foo[, 1]) == "plot_order")) {
       runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', $('#%s>.movable').toArray().map(x => x.innerText))",list("plot_order")))
@@ -1240,8 +1240,10 @@ obs_plot <- list(
              }
              updateRadioButtons(session = session, inputId = "graph_save_type", choices = "html", selected = "html", inline = TRUE)
            })
-    runjs(code = "Shiny.onInputChange('plot_shown', null)")
-    runjs(code = "Shiny.onInputChange('plot_shown_order', null)")
+    if(!input$plot_unlock) {
+      runjs(code = "Shiny.onInputChange('plot_shown', null)")
+      runjs(code = "Shiny.onInputChange('plot_shown_order', null)")
+    }
   }),
   observeEvent(input$plot_type_3D_option03, suspended = TRUE,{
     if(length(obj_react$back$info$in_use) == 0) return(NULL)
@@ -1383,7 +1385,6 @@ obs_plot <- list(
       plot_react$order = NULL
       runjs(code = "Shiny.onInputChange('plot_shown', null)")
       runjs(code = "Shiny.onInputChange('plot_shown_order', null)")
-      plot_react$order = NULL
     }
     if((input$plot_type_2D_option01 == "scatter") && (input$plot_type == "2D")) {
       showElement(id = "plot_shown")
