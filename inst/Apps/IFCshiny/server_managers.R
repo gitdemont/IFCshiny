@@ -203,11 +203,13 @@ observeEvent(input$pop_manager_visible, {
     runjs(code="$('html, body').animate({scrollTop: '0px' }, 300);")
     runjs("$('#pop_manager').animate($('#general').position());")
     disable("pop_create")
+    disable("pop_sample")
     showElement("pop_manager")
     session$sendCustomMessage("reach", "pop_manager")
   } else {
     lapply(obs_pop, FUN = function(x) x$suspend())
     enable("pop_create")
+    enable("pop_sample")
     hideElement("pop_manager")
   }
 })

@@ -48,6 +48,24 @@ observeEvent(input$pop_create, suspended = FALSE, {
   showElement(selector = "#pop_def_edit, .pop_def_feedback")
   hideElement("pop_remove")
 })
+observeEvent(input$pop_sample_name, suspended = FALSE, {
+  M = sum(obj_react$obj$pops[[input$pop_sample_name]]$obj)
+  updateNumericInput(session = session, inputId = "pop_sample_size", min = 1, max = M, value = M)
+})
+observeEvent(input$pop_sample, suspended = FALSE, {
+  s = input$pop_sample_size; s = s[!is.na(s) && s > 0]
+  new_name = "All"
+  while(new_name %in% names(obj_react$obj$pops)) new_name = paste0("sampled_",input$pop_sample_name,"[",random_name(special = "NULL"),"]")
+  tryCatch({
+    obj_react$obj = data_add_pop_sample(obj = obj_react$obj, pop = input$pop_sample_name,
+                                        size = input$pop_sample_size, new_name = new_name, session = session)
+    mess_global("Population Sampling", msg = c("Sampled pop has been successfully created:", new_name), type = "success")
+  }, warning = function(w) {
+    mess_global("Population Sampling", msg = c("Sampled pop was not created:", w$message), type = "warning")
+  }, error = function(e) {
+    mess_global("Population Sampling", msg = c("Sampled pop was not created:", e$message), type = "stop")
+  })
+})
 observeEvent(input$pop_alt_click, suspended = FALSE, {
   if(length(input$pop_alt_click)==0 || !(input$pop_alt_click %in% names(obj_react$obj$pops))) {
     runjs("Shiny.onInputChange('pop_alt_click', null)")

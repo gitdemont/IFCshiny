@@ -63,6 +63,11 @@ data_rm_features <- function(obj, features, list_only = TRUE, compare_with = obj
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
+data_add_pop_sample <- function(obj, pop, size, new_name, random_seed = NULL, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
+  ans = getFromNamespace("data_add_pop_sample", "IFC")(obj = obj, pop = pop, size = size, new_name = new_name, random_seed = random_seed, session = session, ...)
+  if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
+  compare(ans, compare_with)}
+
 data_add_pops <- function(obj, pops, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
   ans = IFC::data_add_pops(obj = obj, pops = pops,  session = session, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
@@ -439,6 +444,11 @@ update_pops <- function(session = getDefaultReactiveDomain(), obj, init = FALSE,
     updateSelectInput(session=session, inputId = "population", choices = N, selected = session$input$population)
   } else {
     updateSelectInput(session=session, inputId = "population", choices = N, selected = "All")
+  }
+  if(!init && (length(session$input$population) !=0) && all(session$input$population %in% N)) {
+    updateSelectInput(session=session, inputId = "pop_sample_name", choices = N, selected = session$input$population)
+  } else {
+    updateSelectInput(session=session, inputId = "pop_sample_name", choices = N, selected = "All")
   }
   if(!init && (length(session$input$cell_population) !=0) && all(session$input$cell_population %in% N)) {
     updateSelectInput(session=session, inputId = "cell_population", choices = N, selected = session$input$cell_population)
