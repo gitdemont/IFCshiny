@@ -272,7 +272,7 @@ preprocess = function(obj, pops = "All",
   
   # retrieve data and place Object Number 1st
   df = obj$features
-  clust_n = paste0("clust", IFC:::random_name(special = NULL, forbidden = names(df)))
+  clust_n = paste0("clust", random_name(special = NULL, forbidden = names(df)))
   def_sub = which(sapply(obj$features_def, FUN = function(x) x$type=="single"))
   def_def = sapply(obj$features_def, FUN = function(x) x$def)
   def_nam = sapply(obj$features_def, FUN = function(x) x$nam)
@@ -543,7 +543,7 @@ splitdata.IFCml <- function(model, ratio, ..., verbose = FALSE) {
   Q = checknames.IFCml(model)
   if(verbose) cat("splitting data\n")
   # generate unique id for split
-  id = IFC:::random_name(special = FALSE)
+  id = random_name(special = FALSE)
   
   # identify indices of train vs test
   SUB = !is.na(model$data[, Q$is_clust, drop = TRUE])
