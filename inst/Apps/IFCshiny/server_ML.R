@@ -865,7 +865,7 @@ output$training_plot <- renderPlot(expr = {
            }
     )
   }, error = function(e) {
-    mess_global(title = "training plot", msg = c("problem during plot:", e$message), type = "stop")
+    # mess_global(title = "training plot", msg = c("problem during plot:", e$message), type = "stop")
     return(NULL) 
   })
 })
