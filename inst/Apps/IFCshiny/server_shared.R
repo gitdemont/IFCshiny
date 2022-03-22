@@ -133,7 +133,8 @@ observeEvent(input$pop_alt_click, suspended = FALSE, {
     }
     plot_react$shown <- (plot_react$order)
     
-    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[plot_react$order], FUN = function(p) p$obj)), 2, any)
+    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[plot_react$order], FUN = function(p) p$obj)), 2, any)
+    sub = fastAny(lapply(obj_react$obj$pops[plot_react$order], FUN = function(p) p$obj))
     sub[-sample(x = which(sub), size = sum(sub) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
     plot_react$subset = sub 
     

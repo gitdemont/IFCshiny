@@ -112,12 +112,17 @@ plot_prepare_data <- function(obj, graph, color_mode = c("white","black")[1], pr
   }
   
   # subset data
-  base = as.data.frame(sapply(base_n, FUN=function(x) {
+  # base = as.data.frame(sapply(base_n, FUN=function(x) {
+  #   foo = P[[x]]$obj
+  #   if(length(foo) == 0) foo = rep(FALSE, times=obj$description$ID$objcount)
+  #   foo
+  # }), stringsAsFactors = FALSE)
+  # data_sub = apply(base, 1, any)
+  data_sub = cpp_fast_rowAny(lapply(base_n, FUN=function(x) {
     foo = P[[x]]$obj
     if(length(foo) == 0) foo = rep(FALSE, times=obj$description$ID$objcount)
     foo
-  }), stringsAsFactors = FALSE)
-  data_sub = apply(base, 1, any)
+  }))
   displayed_o = c(base_o, shown_o)
   D = cbind(D, displayed_d)
   D = cbind(1:nrow(D), D)

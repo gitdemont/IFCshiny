@@ -200,6 +200,10 @@ cpp_writeBMP <- getFromNamespace("cpp_writeBMP", "IFC")
 #' @keywords internal
 cpp_pnt_in_gate <- getFromNamespace("cpp_pnt_in_gate", "IFC")
 
+#' @name fastAny
+#' @keywords internal
+fastAny <- getFromNamespace("fastAny", "IFC")
+
 #' @name objectTransform
 #' @keywords internal
 objectTransform <- getFromNamespace("objectTransform", "IFC")

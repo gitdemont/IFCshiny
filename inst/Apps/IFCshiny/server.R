@@ -516,11 +516,10 @@ server <- function(input, output, session) {
         # dev_check_plot <<- dev_check_plot + 1
         g = plot_react$g
         output$graph_saved_msg <- renderText({NULL})
-        
           if(input$plot_unlock) {
-            plot_react$plot = plotGraph(obj = obj_react$obj, graph = g, viewport = ifelse(plot_react$zoomed, "ideas", "max"), precision = "full")
+            plot_react$plot = plotGraph(obj = obj_react$obj, graph = g, viewport = ifelse(plot_react$zoomed, "ideas", "max"), precision = "full", draw = FALSE, stats_print = FALSE)
           } else {
-            plot_react$plot = plotGraph(obj = obj_react$obj, graph = g, viewport = "ideas", precision = "full")
+            plot_react$plot = plotGraph(obj = obj_react$obj, graph = g, viewport = "ideas", precision = "full", draw = FALSE, stats_print = FALSE)
           }
           
           if(nrow(plot_react$plot$input$data) == 0) {
@@ -531,19 +530,21 @@ server <- function(input, output, session) {
           } else {
             enable("graph_save_btn")
           }
-          
-          # output stats
-          output$plot_stats <- try(suppressWarnings(renderPrint({
-            stats = plot_stats(plot_react$plot)
-            stats[,!grepl("Qu", colnames(stats))]
-          })), silent = TRUE)
-          
           # draw plot
           plot_raster(plot_react$plot)
       }, error = function(e) {
         mess_global(title = paste0("plot_", input$plot_type), msg = e$message, type = "error", duration = 10)
-      }, finally = runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';"))
+      }, warning = function(w) {
+        mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
+      },
+      finally = runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';"))
     })
+    # output stats
+    output$plot_stats <- try(suppressWarnings(renderPrint({
+      if(!inherits(plot_react$plot, "IFC_plot")) return(NULL)
+      stats = plot_stats(plot_react$plot)
+      stats[,!grepl("Qu", colnames(stats))]
+    })), silent = TRUE)
     output$plot_3D <- renderRglwidget({
       devs = rgl.dev.list()
       if(!any(names(devs) == "null")) open3d(useNULL = TRUE)

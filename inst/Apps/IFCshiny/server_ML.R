@@ -34,7 +34,8 @@ check_pop_training <- function(obj, pops) {
   } else {
     if(any(grepl("^ML_", pops))) msg = c(msg, "you can not select ML population")
     g = sapply(obj$pops[pops], FUN = function(p) p$obj)
-    sub = apply(g, 1, any)
+    # sub = apply(g, 1, any)
+    sub = fastAny(g)
     groups = apply(g, 1, FUN = function(x) {
       foo = which(x)
       if(length(foo) == 1) return(pops[foo])

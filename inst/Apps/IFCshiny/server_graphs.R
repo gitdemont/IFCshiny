@@ -340,7 +340,8 @@ obs_plot <- list(
       updateSliderInput(session=session, inputId = "plot_type_3D_option03", value=1)
       return(NULL)
     }
-    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    sub = fastAny(lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj))
     n_sub = sum(sub) 
     n_cells = as.integer(n_sub * input$plot_type_3D_option03 / 100)
     if(n_cells == n_sub) {
@@ -352,7 +353,8 @@ obs_plot <- list(
     shown = rev(input$plot_shown)
     plot_react$shown = shown
     plot_react$order = shown
-    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    sub = fastAny(lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj))
     sub[-sample(x = which(sub), size = sum(sub) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
     plot_react$subset = sub
     plot_react$color = (sapply(obj_react$obj$pops[plot_react$order], FUN = function(p) {
@@ -365,7 +367,8 @@ obs_plot <- list(
   observeEvent(list(input$plot_type_2D_main_option03,input$plot_shown), suspended = TRUE, {
     if(length(input$plot_shown) == 0) return(NULL)
     if(input$plot_type_2D_main_option03 == 0) updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value=1)
-    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
+    sub = fastAny(lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj))
     n_sub = sum(sub) 
     n_cells = as.integer(n_sub * input$plot_type_2D_main_option03 / 100)
     if(n_cells == n_sub) {
@@ -400,7 +403,8 @@ obs_plot <- list(
              p$style
            }))
            if(length(over) != 0 && all(c(over %in% input$plot_base, over %in% input$plot_shown, input$plot_base %in% over, input$plot_shown %in% over))) {
-             alw = isolate(apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[over], FUN = function(p) p$obj)), 2, any))
+             # alw = isolate(apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[over], FUN = function(p) p$obj)), 2, any))
+             alw = isolate(fastAny(lapply(obj_react$obj$pops[over], FUN = function(p) p$obj)))
              if((length(sub) == 0) || any(sub & !alw)) {
                alw[-sample(x = which(alw), size = sum(alw) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
                plot_react$subset = alw
@@ -1247,7 +1251,8 @@ obs_plot <- list(
     if(any(input$population=="")) return(NULL)
     if(input$plot_type=="") return(NULL)
     if(input$navbar!="tab3") return(NULL)
-    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_base], FUN = function(p) p$obj)), 2, any)
+    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_base], FUN = function(p) p$obj)), 2, any)
+    sub = fastAny(lapply(obj_react$obj$pops[input$plot_base], FUN = function(p) p$obj))
     sub[-sample(x = which(sub), size = sum(sub) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
     plot_react$subset = sub 
     plot_react$color = (sapply(obj_react$obj$pops[plot_react$order], FUN = function(p) {
@@ -1262,7 +1267,8 @@ obs_plot <- list(
     if(any(input$population=="")) return(NULL)
     if(input$plot_type=="") return(NULL)
     if(input$navbar!="tab3") return(NULL)
-    sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_base], FUN = function(p) p$obj)), 2, any)
+    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_base], FUN = function(p) p$obj)), 2, any)
+    sub = fastAny(lapply(obj_react$obj$pops[input$plot_base], FUN = function(p) p$obj))
     sub[-sample(x = which(sub), size = sum(sub) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
     plot_react$subset = sub 
     plot_react$color = (sapply(obj_react$obj$pops[plot_react$order], FUN = function(p) {
@@ -1437,7 +1443,7 @@ obs_plot <- list(
                     # plot_react$ymax),
   suspended = TRUE,
                {
-                 plot_react$param_ready = FALSE
+                 # plot_react$param_ready = FALSE
                  if(input$navbar!="tab3") return(NULL)
                  if(input$plot_type == "3D") return(NULL)
                  if(length(input$plot_base) < 1) return(NULL)
@@ -1447,7 +1453,8 @@ obs_plot <- list(
                  if(input$plot_x_transform != plot_react$x_trans) return(NULL)
                  if(input$plot_y_transform != plot_react$y_trans) return(NULL)
                  if(input$plot_type_2D_main_option03 == 0) return(NULL)
-                 
+                 runjs("document.getElementById('msg_busy_txt2').innerText = 'updating plot';")
+                 runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
                  if(input$plot_type == "1D") {
                    hideElement("plot_shown")
                    showElement("order_placeholder")
@@ -1496,7 +1503,6 @@ obs_plot <- list(
                    updateSelectInput(session=session, inputId="plot_regions", choices = N, selected = NULL)
                    return(NULL)
                  }
-                 
                  if(input$plot_type == "1D") {
                    args = list(type = "histogram",
                                f1 = plot_react$x_feat,
@@ -1523,7 +1529,8 @@ obs_plot <- list(
                      args = c(args,list(ShownPop = list(list())))
                    }
                  }
-                 g = do.call(what = buildGraph, args = args)
+                 tryCatch({
+                   g = do.call(what = buildGraph, args = args)
                  # level/density
                  if(input$plot_type_2D_option01 == "level") {
                    g$BasePop[[1]]$densitylevel = paste(ifelse(input$plot_level_fill,"true","false"),
@@ -1608,11 +1615,24 @@ obs_plot <- list(
                    plot_react$g = g
                    isolate({
                      now = 1000*as.numeric(Sys.time())
-                       delay(200, { plot_react$id = now } )
+                       delay(50, { plot_react$id = now } )
                    })
                    # print(paste0("build done: ",dev_check_plot))
                  } 
                  plot_react$g = g
+                 }, error = function(e) {
+                   mess_global(title = paste0("plot_", input$plot_type), msg = e$message, type = "error", duration = 10)
+                   click("plot_reset")
+                   plot_react$id = 1000*as.numeric(Sys.time())
+                   runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
+                   return(NULL)
+                 },warning = function(w) {
+                   mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
+                   click("plot_reset")
+                   plot_react$id = 1000*as.numeric(Sys.time())
+                   runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
+                   return(NULL)
+                 })
                }),
   # plot_sel
   observeEvent(input$plot_sel_init, suspended = TRUE,{
