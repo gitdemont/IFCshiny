@@ -142,6 +142,10 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
       } 
       dat$info$illumination = dat$info$illumination[dat$info$illumination$powered, c("wavelength", "power","min","max")]
       dat$info$found = TRUE
+      if(!requireNamespace(package = "IFCip", quietly = TRUE)) {
+        msg_react$queue = c(msg_react$queue, "IFCip")
+        updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
+      }
     }
     obj_react$obj = checkObj(reinit_app(dat))
     obj_react$back = obj_react$obj

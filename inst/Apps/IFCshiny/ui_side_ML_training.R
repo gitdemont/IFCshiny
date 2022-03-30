@@ -26,35 +26,27 @@
 # You should have received a copy of the GNU General Public License            #
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
-
-if(requireNamespace("FlowSOM", quietly = TRUE) && requireNamespace("flowCore", quietly = TRUE)) {
-  flowsom_meta = hidden(tags$div(id = "training_flowsom_meta",
-                                 #radioButtons(inputId = "MetaClustering_all", label = "Do meta cluster on the projection of 'All' dataset", choices = c("yes", "no"), selected = "no"),
-                                 numericInput(inputId = "MetaClustering_max", label = "max", value = 20, min = 1, max = 99, step = 1),
-                                 selectInput(inputId = "MetaClustering_method", label = "method", 
-                                             # choices = c("metaClustering_consensus", "metaClustering_hclust", "metaClustering_kmeans", "metaClustering_som"), 
-                                             choices = "metaClustering_kmeans", 
-                                             selected = "metaClustering_kmeans", multiple = FALSE),
-                                 tags$div(tags$div(style = "display:inline-block; width:49%; text-align:left",
-                                                   actionButton(inputId = "MetaClustering_reset", label = "Reset")),
-                                 )))
-  model_avl = 1:8
-} else {
-  flowsom_meta = list()
-  model_avl = (1:8)[-4]
-}
+model_avl = 1
+if(requireNamespace("Rtsne", quietly = TRUE)) model_avl = c(model_avl, 2)
+if(requireNamespace("umap", quietly = TRUE)) model_avl = c(model_avl, 3)
+if(requireNamespace("EmbedSOM", quietly = TRUE)) model_avl = c(model_avl, 4)
+if(requireNamespace("mclust", quietly = TRUE)) model_avl = c(model_avl, 5)
+if(requireNamespace("e1071", quietly = TRUE)) model_avl = c(model_avl, 6)
+if(requireNamespace("xgboost", quietly = TRUE)) model_avl = c(model_avl, 7)
+if(requireNamespace("MASS", quietly = TRUE)) model_avl = c(model_avl, 8)
+model_avl = sort(model_avl)
 list(hidden(tags$div(id="ML_side_training",
                      hidden(actionButton(inputId = "training_go", label = "")),
                      tags$div(tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"=paste0(c("Algorithms used for data modelling",
                                                                                                                              c("pca: principal component analysis",
                                                                                                                              "tsne: t-Distributed Stochastic Neighbor Embedding",
                                                                                                                              "umap: Uniform Manifold Approximation and Projection",
-                                                                                                                             "flowsom: self-organizing map for flow cytometry",
+                                                                                                                             "som: Fast Embedding Guided by Self-Organizing Map",
                                                                                                                              "em: gaussian mixture modelling",
                                                                                                                              "svm: support vector machines",
                                                                                                                              "xgb: extreme gradient boosting",
                                                                                                                              "lda: linear discriminant analysis")[model_avl]), collapse="\n\u00A0\u2022"),
-                                       selectInput(inputId = "training_model", label = "model", choices = c("pca","tsne","umap", "flowsom","em","svm","xgb","lda")[model_avl], multiple = FALSE))),
+                                       selectInput(inputId = "training_model", label = "model", choices = c("pca","tsne","umap", "som","em","svm","xgb","lda")[model_avl], multiple = FALSE))),
                      hidden(tags$div(id="training_dimred",
                                      tags$div("data-toggle"="tooltip", "data-placement"="top", "title"="Quantity of data used dimension reduction. tSNE and UMAP computation can take some time. This setting allows to reduce number of events used. Default is at most 4000 (or at least the total number of input population(s)) events ",
                                               numericInput(inputId = "training_sampling_dimred", label = "number of events used for dimension reduction", value = 4000, min = 1)))),
@@ -108,14 +100,23 @@ list(hidden(tags$div(id="ML_side_training",
                                 numericInput(inputId = "umap_spread", label = "spread", value = 1),
                                 numericInput(inputId = "umap_knn_repeats", label = "knn_repeats", value = 1)
                 )),
-                hidden(tags$div(id = "training_param_flowsom",
-                                numericInput(inputId = "flowsom_seed", label = "seed", value = integer(), step = 1, min = 0)
+                hidden(tags$div(id = "training_param_som",
+                                numericInput(inputId = "som_seed", label = "seed", value = integer(), step = 1, min = 0),
+                                numericInput(inputId = "som_xdim", label = "xdim", value = 10, step = 1, min = 0),
+                                numericInput(inputId = "som_ydim", label = "ydim", value = 10, step = 1, min = 0),
+                                numericInput(inputId = "som_zdim", label = "zdim", value = integer(), step = 1),
+                                radioButtons(inputId = "som_batch", label = "batch", inline = TRUE, choices = c("true", "false"), selected = "false"),
+                                numericInput(inputId = "som_rlen", label = "rlen", value = 10, step = 1, min = 0),
+                                selectInput(inputId = "som_distf", label = "distf", selected = 2,
+                                            choices = c("manhattan" = 1, "euclidean" = 2, "chebyshev" = 3, "cosine" = 4), multiple = FALSE),
+                                selectInput(inputId = "som_nhbr.method", label = "nhbr.method", selected = "maximum",
+                                            choices = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), multiple = FALSE)
                 )),
                 hidden(tags$div(id = "training_param_em",
-                                selectInput(inputId = "MclustDA_G", label = "G", choices = 1:5,
-                                            selected = 1, multiple = TRUE),
+                                # selectInput(inputId = "MclustDA_G", label = "G", choices = 1:5,
+                                #             selected = 1, multiple = TRUE),
                                 selectInput(inputId = "MclustDA_modelType", label = "modelType", choices = c("MclustDA", "EDDA"),
-                                            selected = "MclustDA", multiple = FALSE),
+                                            selected = "EDDA", multiple = FALSE),
                                 selectInput(inputId = "MclustDA_modelNames", label = "modelNames",
                                             choices = c("E", "V", "EII", "VII", "EEI", "VEI", "EVI", "VVI",  "EEE",
                                                         "EVE", "VEE", "VVE", "EEV", "VEV", "EVV", "VVV","X", "XII",
@@ -190,8 +191,7 @@ list(hidden(tags$div(id="ML_side_training",
                                                          # tags$div(style = "display:inline-block; width:49%; text-align:right;",
                                                          #          actionButton(inputId = "kmeans_go", label = "Apply"))
                                                 )
-                                )),
-                                flowsom_meta
+                                ))
                                 )),
                 tags$hr(),
                 tags$div(tags$h4("Download ML features"),

@@ -27,17 +27,23 @@
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
 
-if(!requireNamespace(package = "IFCip", quietly = TRUE)) mess_global(title = "package required", msg = c("'IFCip' package is required to compute extra features from images", "Features computation module has been disabled"), type = "info")
 # multi-thread is disabled on shinyapps.io
-observeEvent(input$use_parallelization, {
-  if(.no_cores <= 1 || Sys.getenv('SHINY_PORT') != "") updateMaterialSwitch(session=session, inputId = "use_parallelization", value = FALSE)
+observeEvent(input$use_parallelization, ignoreInit = TRUE, {
+  if(!requireNamespace("parallel", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "parallel")
+  if(!requireNamespace("doParallel", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "doParallel")
+  if(Sys.getenv('SHINY_PORT') != "") msg_react$queue = c(msg_react$queue, "shiny_multi_thread")
+  updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
+  if(!requireNamespace("parallel", quietly = TRUE) ||
+     !requireNamespace("doParallel", quietly = TRUE) ||
+     (.no_cores <= 1) || (Sys.getenv('SHINY_PORT') != "")) updateMaterialSwitch(session=session, inputId = "use_parallelization", value = FALSE)
 })
 # extra features computation from images with multi-thread capability
 # It relies on IFCip package to extract Zernike, Hu and Haralick features
 observeEvent(input$compute_go, {
   if(!requireNamespace(package = "IFCip", quietly = TRUE)) {
-    mess_global(title = "package required", msg = c("'IFCip' package is required to compute extra features from images", "Features computation module has been disabled"), type = "info")
     disable(id = "compute_features")
+    msg_react$queue = c(msg_react$queue, "IFCip")
+    updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
     return(NULL)
   }
   if(length(input$zernike) == 0) return(NULL)
@@ -49,12 +55,15 @@ observeEvent(input$compute_go, {
               type = "warning", duration = 10)
   mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Computing extra features", reset = FALSE)
   do_par = FALSE
-  if((.no_cores > 1) && input$use_parallelization) {
-    cl <- makePSOCKcluster(.no_cores)
-    registerDoParallel(cl)
+  if(requireNamespace("parallel", quietly = TRUE) &&
+     requireNamespace("doParallel", quietly = TRUE) && 
+     (.no_cores > 1) && input$use_parallelization) {
+    cl <- parallel::makePSOCKcluster(.no_cores)
+    doParallel::registerDoParallel(cl)
     do_par = TRUE
   }
   tryCatch({
+    # debugonce(IFCip::ExtractFeatures)
     extra_feat <- IFCip::ExtractFeatures(fileName = obj_react$back$fileName,
                                          offsets = obj_react$back$offsets,
                                          display_progress = TRUE,
@@ -93,8 +102,7 @@ observeEvent(input$compute_go, {
     mess_global(title = "features extraction", msg = e$message, type = "stop")
   }, finally = {
     if(do_par) {
-      stopCluster(cl)
-      registerDoSEQ()
+      parallel::stopCluster(cl)
     }
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "", reset = TRUE)
   })

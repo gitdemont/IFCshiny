@@ -36,11 +36,11 @@ observeEvent(input$credits, {
   tryCatch({
     pkgs = c("shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "jsonlite", "visNetwork", "colourpicker", "DT",
              "grDevices", "grid", "gridExtra",
-             "zip", "flowCore", "openxlsx",
-             "caret", "MASS", "mclust", "FlowSOM", "e1071", "xgboost", "bestNormalize", "Rtsne", "umap",
-             "rmarkdown", "rgl", 
+             "zip", "openxlsx",
+             "caret", "MASS", "mclust", "EmbedSOM", "e1071", "xgboost", "bestNormalize", "Rtsne", "umap",
+             "RColorBrewer", "viridisLite", "rgl", 
              "utils", "parallel", "doParallel",
-             "reticulate")
+             "reticulate", "methods")
     pkgs_installed = installed.packages()
     pkgs = pkgs[pkgs %in% rownames(pkgs_installed)]
     pkgs = setdiff(pkgs, c(sapply(strsplit(strsplit(pkgs_installed["IFC","Imports"], ",")[[1]], "\\s"), FUN = function(x) x[x!=""][1]),

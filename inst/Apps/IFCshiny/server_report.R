@@ -58,7 +58,7 @@ reinit_layout <- function(obj) {
     }
     showElement(selector = "#navbar [data-value='tab6']")
   } else {
-    if(input$navbar == "tab6") {
+    if(any(input$navbar == "tab6")) {
       runjs(code = "$('#navbar [data-value=\"tab0\"]').trigger('click');" )
       runjs(code = "Shiny.onInputChange('navbar', 'tab0');")
     }

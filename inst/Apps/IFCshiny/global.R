@@ -62,7 +62,7 @@ if(!exists(".path_to_db") || !exists(".passphrase") || (.passphrase == "") || (.
 }
 # In addition, if app is run from installed IFCshiny package, from 
 # IFCshiny::runIFCshinyApp no authentification will be required
-if(.libPaths() %in% dirname(dirname(dirname(.rundir)))) .passphrase = ""
+if(any(.libPaths() %in% dirname(dirname(dirname(.rundir))))) .passphrase = ""
 if(!exists(".path_to_python")) {
   .path_to_python = Sys.getenv("PATH_TO_PYTHON", "")
 }
@@ -108,26 +108,19 @@ suppressMessages(suppressWarnings({
   require(zip, quietly = TRUE, warn.conflicts = FALSE)
   require(openxlsx, quietly = TRUE, warn.conflicts = FALSE)
   require(htmlwidgets, quietly = TRUE, warn.conflicts = FALSE)
-  
-  #' IFCshiny has soft dependency on flowCore and FlowSOM, it will work without these packages
-  # this allows IFCshiny not to be dependent on bioconductor
-  # if(requireNamespace("flowCore", quietly = TRUE)) require(flowCore, quietly = TRUE, warn.conflicts = FALSE)
-  # if(requireNamespace("FlowSOM", quietly = TRUE)) require(FlowSOM, quietly = TRUE, warn.conflicts = FALSE)
-  
+
   #' model & dim reduction
-  require(caret, quietly = TRUE, warn.conflicts = FALSE)
-  require(MASS, quietly = TRUE, warn.conflicts = FALSE)
-  require(mclust, quietly = TRUE, warn.conflicts = FALSE)
-  require(e1071, quietly = TRUE, warn.conflicts = FALSE)
-  require(xgboost, quietly = TRUE, warn.conflicts = FALSE)
-  require(bestNormalize, quietly = TRUE, warn.conflicts = FALSE)
-  require(Rtsne, quietly = TRUE, warn.conflicts = FALSE)
-  require(umap, quietly = TRUE, warn.conflicts = FALSE)
+  # require(EmbedSOM, quietly = TRUE, warn.conflicts = FALSE)
+  # require(caret, quietly = TRUE, warn.conflicts = FALSE)
+  # require(MASS, quietly = TRUE, warn.conflicts = FALSE)
+  # require(mclust, quietly = TRUE, warn.conflicts = FALSE)
+  # require(e1071, quietly = TRUE, warn.conflicts = FALSE)
+  # require(xgboost, quietly = TRUE, warn.conflicts = FALSE)
+  # require(Rtsne, quietly = TRUE, warn.conflicts = FALSE)
+  # require(umap, quietly = TRUE, warn.conflicts = FALSE)
   
   #' representation
   require(RColorBrewer, quietly = TRUE, warn.conflicts = FALSE)
-  require(viridisLite, quietly = TRUE, warn.conflicts = FALSE)
-  require(rmarkdown, quietly = TRUE, warn.conflicts = FALSE)
   require(rgl, quietly = TRUE, warn.conflicts = FALSE)
   require(grDevices, quietly = TRUE, warn.conflicts = FALSE)
   require(grid, quietly = TRUE, warn.conflicts = FALSE)
@@ -135,9 +128,9 @@ suppressMessages(suppressWarnings({
   require(plotly, quietly = TRUE, warn.conflicts = FALSE)
   
   #' parallelization
+  # require(parallel, quietly = TRUE, warn.conflicts = FALSE)
+  # require(doParallel, quietly = TRUE, warn.conflicts = FALSE)
   require(utils, quietly = TRUE, warn.conflicts = FALSE)
-  require(parallel, quietly = TRUE, warn.conflicts = FALSE)
-  require(doParallel, quietly = TRUE, warn.conflicts = FALSE)
 }))
 
 ## all the following are imports of non-exported function from IFC package
@@ -155,6 +148,10 @@ addText <- getFromNamespace("addText", "IFC")
 #' @name densCols
 #' @keywords internal
 densCols <- getFromNamespace("densCols", "IFC")
+
+#' @name rasterplot
+#' @keywords internal
+rasterplot <- getFromNamespace("rasterplot", "IFC")
 
 #' @name plot_raster
 #' @keywords internal
@@ -353,7 +350,7 @@ if(!exists(".max_users")) {
 }
 # define the max number of cpu to use
 if(!exists(".max_cores")) {
-  .max_cores = as.integer(Sys.getenv("MAX_CORES", max(1, detectCores())))
+  .max_cores = as.integer(Sys.getenv("MAX_CORES", ifelse(requireNamespace("parallel", quietly = TRUE), parallel::detectCores(), 1)))
 }
 # define the max time allowed for a session in seconds
 if(!exists(".max_time")) {
@@ -416,10 +413,11 @@ exact_start <- function(pattern, x, value = TRUE) {
 }
 
 # function used in pair plot
-panel_lda = function(x, y, ...) {
+panel_pair = function(x, y, ...) {
   old_par=par("pty");par("pty"="s")
   on.exit(par("pty"=old_par))
-  points(x, y, ...)
+  rasterplot(x = x, y = y, draw = TRUE, new = FALSE, interpolate = FALSE, ...)
+  # points(x, y, ...)
 }
 
 # function to match IFC color

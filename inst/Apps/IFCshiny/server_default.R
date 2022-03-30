@@ -67,6 +67,7 @@ reinit_default <- function(fun = reactiveValues, env = environment(), x, not = N
                                last = as.matrix(data.frame()),
                                sub1 = integer(),
                                sub2 = integer()),
+             msg_react = list(queue = c(), done = c()),
              file_react = list(input = list(), id = character()))
   if(missing(x)) {
     lapply(setdiff(names(foo), not), FUN = function(i) {

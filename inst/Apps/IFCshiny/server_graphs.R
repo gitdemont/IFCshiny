@@ -150,11 +150,12 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
 
 obs_plot <- list(
   observeEvent(list(input$plot_dens_color, input$plot_dens_order), suspended = TRUE, {
+    if(length(input$file) == 0) return(NULL)
     if(input$plot_dens_color == "initial") {
       if(length(plot_react$g$BasePop[[1]]$densitycolorslightmode) == 0) return(NULL)
       col = colConv(plot_react$densitycolorslightmode)
     } else {
-      if(input$plot_dens_color %in% ls(asNamespace("viridisLite"))) {
+      if(requireNamespace("viridisLite", quietly = TRUE) && (input$plot_dens_color %in% ls(asNamespace("viridisLite")))) {
         col = do.call(what = input$plot_dens_color, args = list(n = 5))
       } else {
         col = RColorBrewer::brewer.pal(n = 5, name = input$plot_dens_color)
@@ -389,6 +390,7 @@ obs_plot <- list(
          input$plot_shown,
          plot_react$order,
          input$plot_type_3D_option03)}, suspended = TRUE, {
+           if(length(input$file) == 0) return(NULL)
            if(input$plot_type != "3D") return(NULL)
            if(length(input$plot_base) < 1) return(NULL)
            if(input$plot_type_3D_option03 == 0) return(NULL)
@@ -1444,6 +1446,7 @@ obs_plot <- list(
   suspended = TRUE,
                {
                  # plot_react$param_ready = FALSE
+                 if(length(input$file) == 0) return(NULL)
                  if(input$navbar!="tab3") return(NULL)
                  if(input$plot_type == "3D") return(NULL)
                  if(length(input$plot_base) < 1) return(NULL)

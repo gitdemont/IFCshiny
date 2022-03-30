@@ -84,7 +84,7 @@ obs_ML <- list(
       disable(selector = "#navbar_ML [data-value='ML_training']")
       removeClass(selector = "#navbar_ML [data-value='ML_training']", class = "clickme") 
     }
-    chc = c("pca","tsne","umap","flowsom")
+    chc = c("pca","tsne","umap","som")
     hideElement("training_unsupervised")
     if(length(input$populations_training) == 1) {
       hideElement(id = "features_best_length_ctn")
@@ -93,7 +93,7 @@ obs_ML <- list(
       chc = c(chc, "em","svm","xgb","lda")
       showElement(id = "features_best_length_ctn")
     }
-    updateSelectInput(session = session, inputId = "training_model", choices = chc, selected = "pca")
+    updateSelectInput(session = session, inputId = "training_model", choices = setdiff(chc, c(msg_react$queue, msg_react$done)), selected = "pca")
   }),
   # number of features that best discriminate clusters
   observeEvent(input$features_bst, suspended = TRUE,{
@@ -428,7 +428,7 @@ obs_ML <- list(
   }),
   # observer to control the visibility of current algorithm hyper-parameter
   observeEvent(input$training_param, suspended = TRUE,{
-    sapply(c("pca","tsne","umap","flowsom","em","svm","xgb","lda","bottom"), FUN = function(x) hideElement(id = paste0("training_param_",x)))
+    sapply(c("pca","tsne","umap","som","em","svm","xgb","lda","bottom"), FUN = function(x) hideElement(id = paste0("training_param_",x)))
     if(input$training_param) {
       showElement(id = paste0("training_param_",input$training_model))
       showElement(id = "training_param_bottom")
@@ -462,19 +462,12 @@ obs_ML <- list(
     })
   }),
   # observer on clustering algorithm used
-  # for all unsupervised algorithm, except flowsom, it will be kmeans
-  # for flowsom, it will be a kmeans customized in flowsom 
-  # other flowsom algorithm are not used
-  # TODO, investigate more on implementing the other flowsom metaClustering algorithm
-  # but kmean is fast and I had faulty results with other method
+  # for all unsupervised algorithm, it will be kmeans
   observeEvent(input$training_meta, suspended = TRUE,{
-    hideElement(id = "training_flowsom_meta")
     hideElement(id = "training_kmeans_meta")
     if(input$training_meta) {
-      if(input$training_model %in% c("pca", "tsne", "umap")) {
+      if(input$training_model %in% c("pca", "tsne", "umap", "som")) {
         showElement("training_kmeans_meta")
-      } else {
-        showElement("training_flowsom_meta")
       }
     }
   }),
@@ -509,12 +502,6 @@ obs_ML <- list(
     to_reset = setdiff(N[grep("^kmeans_", N)], c("kmeans_reset", "kmeans_go"))
     sapply(to_reset, FUN = function(x) reset(id = x))
   }),
-  # observer to reset meta clustering (for flowsom)
-  observeEvent(input$MetaClustering_reset,suspended = TRUE, {
-    N = names(input)
-    to_reset = setdiff(N[grep("^MetaClustering_", N)] , c("MetaClustering_reset", "MetaClustering_go"))
-    sapply(to_reset, FUN = function(x) reset(id = x))
-  }),
   # observer to show / hide relevant hyperparameter for svm 
   observeEvent(input$svm_type, suspended = TRUE,{
     if(input$svm_type %in% c("nu-classification", "nu-regression", "one-classification")) {showElement("svm_nu")} else {hideElement("svm_nu")}
@@ -530,25 +517,14 @@ obs_ML <- list(
     if(input$lda_method == "t") {showElement(id = "lda_nu")} else {showElement(id = "lda_nu")}
   }),
   observeEvent(input$training_go, suspended = TRUE, {
-    # check flowsom availability
-    if(input$training_model == "flowsom") {
-      if(!all(c(requireNamespace("FlowSOM", quietly = TRUE), requireNamespace("flowCore", quietly = TRUE)))) {
-        mess_global(title = "package required", msg = c("'flowCore' and 'FlowSOM' packages are required to build Self Organizing Map",
-                                                        "Please install 'flowCore' and 'FlowSOM' from bioconductor first",
-                                                        "install.packages('BiocManager')",
-                                                        "BiocManager::install(c('flowCore','FlowSOM'))"), type = "info")
-        updateSelectInput(session = session, inputId = "training_model", label = "model", choices = c("pca","tsne","umap","em","svm","xgb","lda"), selected = "pca")
-        return(NULL)
-      }
-    } 
-    
     if(input$navbar != "tab5") return(NULL)
     if(input$navbar_ML != "ML_training") return(NULL)
     if(length(model_react$config$pops) == 0) {
       mess_global(title = "building model", msg = c("Please select population(s)", "- one, for unsupervised ML", "- at least two, for supervised ML"), type = "info")
       return(NULL)
     }
-    add_log("fitting data")
+    method = input$training_model
+    add_log(paste("fitting data:",method))
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Fitting data", reset = FALSE)
     obj_back = obj_react$obj
     model_ = reactiveValuesToList(model_react)
@@ -566,10 +542,8 @@ obs_ML <- list(
         hideElement(id="training_supervised")
         ratio = 1
       }
-      method = input$training_model
       if(method %in% c("pca")) ratio = 1
       if(method %in% c("tsne", "umap")) ratio = input$training_sampling_dimred / sum(!is.na(model_$data[,Q$is_clust,drop=TRUE]))
-      
       # split data
       model_ = splitdata.IFCml(model = model_, ratio = ratio, session = session)
       # retrieve fit parameters
@@ -578,18 +552,11 @@ obs_ML <- list(
       model_ = fit.IFCml_set(model = model_, method = method, session = session)
       # set meta_args and apply model
       if(length(model_$config$pops) == 1) {
-        if(model_$method == "flowsom") {
-          meta_args = list(method = input$MetaClustering_method, max = input$MetaClustering_max)
-          if(input$MetaClustering_method == "metaClustering_consensus") meta_args = c(meta_args, list(seed = seed))
-          # newdata = input$MetaClustering_all == "yes"
-          newdata = 1L
-        } else {
-          meta_args <- list(centers = input$kmeans_centers,
-                            iter.max = input$kmeans_iter_max,
-                            nstart = input$kmeans_nstart,
-                            algorithm = input$kmeans_algorithm)  
-          newdata = input$kmeans_all == "yes"
-        }
+        meta_args <- list(centers = input$kmeans_centers,
+                          iter.max = input$kmeans_iter_max,
+                          nstart = input$kmeans_nstart,
+                          algorithm = input$kmeans_algorithm)  
+        newdata = input$kmeans_all == "yes"
         model_$meta_args <- meta_args
       } else {
         newdata = 0L
@@ -606,7 +573,6 @@ obs_ML <- list(
       h = 600; w = h
       lev = levels(model_$data[,Q$is_clust,drop=TRUE])
       switch(model_react$method, 
-             "em" = { h = max(600, 200*(length(lev)-1)); w = h },
              "xgb" = { w = 2 * h }
       )
       if(method == "svm") {
@@ -633,7 +599,10 @@ obs_ML <- list(
     }, error = function(e) {
       obj_react$obj = obj_back
       click("training_param_reset")
-      mess_global(title = "building model", msg = c("Can't fit data with input parameters:", e$message), type = "stop")
+      mess_global(title = "building model", msg = c("Can't fit data with input parameters:", e$message,
+                                                    "Tips: Try to tweak model parameters",
+                                                    "Tips: Try to include more cells",
+                                                    "Tips: tweak pre-processing step"), type = "stop")
     }, finally = {
       mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "", reset = TRUE)
     })
@@ -658,18 +627,11 @@ obs_ML <- list(
                       tryCatch({
                         model_ = reactiveValuesToList(model_react)
                         if(length(model_$config$pops) == 1) {
-                          if(model_$method == "flowsom") {
-                            meta_args = list(method = input$MetaClustering_method, max = input$MetaClustering_max)
-                            if(input$MetaClustering_method == "metaClustering_consensus") meta_args = c(meta_args, list(seed = seed))
-                            # newdata = input$MetaClustering_all == "yes"
-                            newdata = 1L
-                          } else {
-                            meta_args <- list(centers = input$kmeans_centers,
-                                              iter.max = input$kmeans_iter_max,
-                                              nstart = input$kmeans_nstart,
-                                              algorithm = input$kmeans_algorithm) 
-                            newdata = input$kmeans_all == "yes"
-                          }
+                          meta_args <- list(centers = input$kmeans_centers,
+                                            iter.max = input$kmeans_iter_max,
+                                            nstart = input$kmeans_nstart,
+                                            algorithm = input$kmeans_algorithm) 
+                          newdata = input$kmeans_all == "yes"
                           model_$meta_args <- meta_args
                         } else {
                           newdata = 0L
@@ -724,7 +686,7 @@ output$training_matrix <- renderPlot(expr = {
       Q = checknames.IFCml(model_)
       sub_ = model_$sub
       y_test = model_$data[sub_, Q$is_clust, drop = TRUE]
-      conf = confusionMatrix(data = model_$pred, reference = y_test) 
+      conf = caret::confusionMatrix(data = model_$pred, reference = y_test) 
       output$training_summary <- renderPrint(conf)
       plot_conf(confusion_matrix = conf, c(table(y_test)))
     },
@@ -779,12 +741,11 @@ output$training_plot <- renderPlot(expr = {
                dat = cbind(dat, dat)
                ylab = "pca_1_extra"
              }
-             
-             plot(x = dat[, 1], y = dat[, 2], main = "PCA dimension reduction",
+             rasterplot(x = dat[, 1], y = dat[, 2], main = "PCA dimension reduction",
                   xlim = range(proj_all[, 1], finite = TRUE), ylim = range(proj_all[, 2], finite = TRUE),
-                  pch = pch[V[sub_]],
-                  col = col[V[sub_]],
-                  xlab = "pca_1_extra", ylab = "pca_2_extra") 
+                  pch = pch[V],
+                  col = col[V],
+                  xlab = "pca_1_extra", ylab = ylab)
              legend("topleft", legend = sapply(lab, center_short), pch=pch, col=col,
                     xpd=TRUE, horiz=FALSE, inset = 0.025, 
                     cex = 0.6, bg = "#ADADAD99", 
@@ -792,16 +753,15 @@ output$training_plot <- renderPlot(expr = {
            },
            "tsne" = {
              # proj_all, no projection on all dataset can be done
-             
              dat = fit$Y[, , drop=FALSE]
              ylab = "tSNE_2"
              sub1 = !apply(model_react$pca$x, 1, anyNA)
              if(ncol(dat) == 1) { dat = cbind(dat, dat); ylab = "tSNE_1" }
-             plot(x = dat[,1,drop=TRUE], y = dat[,2,drop=TRUE], main = "t-SNE dimension reduction",
+             rasterplot(x = dat[,1,drop=TRUE], y = dat[,2,drop=TRUE], main = "t-SNE dimension reduction",
                   xlim = range(dat[, 1], finite = TRUE),
                   ylim = range(dat[, 2], finite = TRUE),
-                  pch = pch[V[sub_[sub1]]],
-                  col = col[V[sub_[sub1]]],
+                  pch = pch[V[sub1]],
+                  col = col[V[sub1]],
                   xlab = "tSNE_1", ylab = ylab)
              legend("topleft", legend = sapply(lab, center_short), pch=pch, col=col,
                     xpd=TRUE, horiz=FALSE, inset = 0.025, 
@@ -810,59 +770,82 @@ output$training_plot <- renderPlot(expr = {
            },
            "umap" = {
              proj_all = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "all", session = session)$proj
-             plot(x = model_$proj[,1,drop=TRUE], y = model_$proj[,2,drop=TRUE], main = "UMAP dimension reduction",
+             rasterplot(x = model_$proj[,1,drop=TRUE], y = model_$proj[,2,drop=TRUE], main = "UMAP dimension reduction",
                   xlim = range(proj_all[, 1,drop=TRUE], finite = TRUE),
                   ylim = range(proj_all[, 2,drop=TRUE], finite = TRUE),
-                  pch = pch[V[sub_]],
-                  col = col[V[sub_]],
+                  pch = pch[V],
+                  col = col[V],
                   xlab = "umap_1", ylab = "umap_2")
              legend("topleft", legend = sapply(lab, center_short), pch=pch, col=col,
                     xpd=TRUE, horiz=FALSE, inset = 0.025,
                     cex = 0.6, bg = "#ADADAD99",
                     pt.cex = 1, bty = "o", box.lty = 0)
            },
-           "flowsom" = { 
-             # proj_all , special type of plot
-             
-             if(length(lev) > 1) {
-               FlowSOM::PlotPies(fit, cellTypes = y_train, colorPalette = grDevices::colorRampPalette(col[lev]), view = "MST")
-             } else {
-               FlowSOM::PlotPies(fsom = model_$proj, cellTypes = V[sub_], view = "MST")
-             }
+           "som" = { 
+             proj_all = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "all", session = session)$proj
+             rasterplot(x = model_$proj[,1,drop=TRUE], y = model_$proj[,2,drop=TRUE], main = "SOM MST embedding",
+                        xlim = range(proj_all[, 1,drop=TRUE], finite = TRUE),
+                        ylim = range(proj_all[, 2,drop=TRUE], finite = TRUE),
+                        pch = pch[V],
+                        col = col[V],
+                        xlab = "som_1", ylab = "som_2")
+             legend("topleft", legend = sapply(lab, center_short), pch=pch, col=col,
+                    xpd=TRUE, horiz=FALSE, inset = 0.025,
+                    cex = 1, bg = "#ADADAD99",
+                    pt.cex = 1, bty = "o", box.lty = 0)
            },
            "em" = { 
-             plot(MclustDR(fit, lambda = 1), dimens = c(1:3), what = "pairs")
-             legend("topleft", legend = sapply(lab, center_short),
-                    pch=pch,
-                    col=col, 
-                    horiz=FALSE, "xpd"=TRUE, bty="o", inset = isolate(0.025*h/600),
-                    cex = 0.6, bg = "#ADADAD",
-                    pt.cex = 1,  box.lty = 0)
+             dr = mclust::MclustDR(fit, lambda = 1)
+             dims = dr$dir
+             if(!is.matrix(dims) || (ncol(dims) < 2)) dims = cbind(dims, dims)
+             pairs(dims, lower.panel = panel_pair, upper.panel =  panel_pair,
+                   label.pos = 0.5, diag.panel = function(x, ...) {
+                     mfg <- par("mfg")
+                     if(mfg[1] == 1 && mfg[2] == 1) {
+                       legend("topleft", legend = sapply(lab, center_short), pch=pch, col=col,
+                              horiz=FALSE, "xpd"=TRUE, bty="o", inset = 0.025,
+                              cex = 1, bg = "#ADADAD",
+                              pt.cex = 1,  box.lty = 0)
+                     }
+                   },
+                   pch = pch[V],
+                   col = col[V])
            },
            "svm" = {
              return(NULL)
            },
            "xgb" = { 
-             nn = xgb.importance(Q$is_feat, model = fit)
+             nn = xgboost::xgb.importance(Q$is_feat, model = fit)
              maxchar = 20
              toolong = sapply(nn$Feature, FUN = function(x) ifelse(nchar(x) > maxchar, "...", ""))
              nn$Feature <- paste(substring(nn$Feature, 1, maxchar), toolong, sep = "")
-             xgb.plot.importance(importance_matrix = nn, top_n = min(length(nn$Feature), 10), left_margin = max(nchar(nn$Feature[1:min(length(nn$Feature), 10)])) / 2.5)
+             xgboost::xgb.plot.importance(importance_matrix = nn, top_n = min(length(nn$Feature), 10), left_margin = max(nchar(nn$Feature[1:min(length(nn$Feature), 10)])) / 2.5)
            },
            "lda" = {
-             if(length(lev) <= 2) return(NULL)
-             old_par=par("pty");par("pty"="s")
-             on.exit(par("pty"=old_par), add = TRUE)
-             plot(fit, panel = panel_lda,
-                  pch = pch[V[sub_]],
-                  col = col[V[sub_]]
-                  # pch = pch[as.character(y_train)],
-                  # col = col[as.character(y_train)]
-             )
-             legend("topleft", legend = sapply(lab, center_short), pch=pch, col=col, 
-                    horiz=FALSE, "xpd"=TRUE, bty="o", inset = isolate(0.025*h/600),
-                    cex = 0.6, bg = "#ADADAD",
-                    pt.cex = 1,  box.lty = 0)
+             if(!is.matrix(fit$scaling) || (ncol(fit$scaling) <= 2)) {
+               plot(fit, panel = panel_pair,
+                    pch = pch[V],
+                    col = col[V]
+               )
+               legend("topleft", legend = sapply(lab, center_short), pch=pch, col=col,
+                      xpd=TRUE, horiz=FALSE, inset = 0.025,
+                      cex = 1, bg = "#ADADAD99",
+                      pt.cex = 1, bty = "o", box.lty = 0)
+             } else{
+               plot(fit, panel = panel_pair, 
+                    label.pos = 0.5, diag.panel = function(x, ...) {
+                      mfg <- par("mfg")
+                      if(mfg[1] == 1 && mfg[2] == 1) {
+                        legend("topleft", legend = sapply(lab, center_short), pch=pch, col=col,
+                               horiz=FALSE, "xpd"=TRUE, bty="o", inset = 0.025,
+                               cex = 1, bg = "#ADADAD",
+                               pt.cex = 1,  box.lty = 0)
+                      }
+                    },
+                    pch = pch[V],
+                    col = col[V]
+               )
+             }
            }
     )
   }, error = function(e) {

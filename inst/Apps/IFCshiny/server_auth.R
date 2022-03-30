@@ -32,7 +32,7 @@ res_auth = NULL
 
 # depending if we are on shinyapps or not we enable / disable some features
 if(.passphrase == "") {
-  .no_cores <- max(1, min(.max_cores, detectCores()))
+  .no_cores <- max(1, min(.max_cores, ifelse(requireNamespace("parallel", quietly = TRUE), parallel::detectCores(), 1)))
   runjs(code = "$('.app_dashboard_panel').show()")
   # allow dev mode
   showElement("dev")
@@ -61,13 +61,15 @@ if(.passphrase == "") {
     session = session
   )
   runjs(code = "$('.app_dashboard_panel').hide()")
-  .no_cores <- max(1, min(.max_cores, detectCores()))
+  .no_cores <- max(1, min(.max_cores, ifelse(requireNamespace("parallel", quietly = TRUE), parallel::detectCores(), 1)))
   runjs(code = "document.getElementById('msg_busy_ctn2').style.display = 'none';")
 }
 
-if(.no_cores <= 1 || Sys.getenv('SHINY_PORT') != "") { 
+if(!requireNamespace("parallel", quietly = TRUE) ||
+   !requireNamespace("doParallel", quietly = TRUE) ||
+   .no_cores <= 1 || Sys.getenv('SHINY_PORT') != "") { 
   updateMaterialSwitch(session=session, inputId = "use_parallelization", value = FALSE)
-  disable("use_parallelization")
+  # disable("use_parallelization")
 }
 
 # depending if we use authentication we manage session time + number on allowed users connected

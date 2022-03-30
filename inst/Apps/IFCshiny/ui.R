@@ -54,7 +54,7 @@ if(all(file.exists(file.path(.rundir, c("server_compensation.R", "server_navbar_
                                  # style = "position:absolute; top:80%; left:20px; transform:translateY(-100%);",
                                  actionButton(inputId="comp_resample", label="Resample", icon = icon("random", lib = "font-awesome")),
                                  numericInput(inputId="comp_size1", label = "Number of objects in single plot", value = 5000, min = 1, max = 10000),
-                                 numericInput(inputId="comp_size2", label = "Number of objects per pair plot", value = 100, min = 1, max = 1000),
+                                 numericInput(inputId="comp_size2", label = "Number of objects per pair plot", value = 500, min = 1, max = 5000),
                                  tags$div(style="display: inline-block",
                                           shinyjs::hidden(actionButton(inputId="comp_compute", label="Compute")),
                                           actionButton(inputId="comp_reset", label=NULL, icon = icon("undo", lib = "font-awesome")),
@@ -359,7 +359,7 @@ ui <- fluidPage(
                                                 value = "ML_training",
                                                 verbatimTextOutput("training_summary"),
                                                 # hidden(plotOutput("training_plot", width = "400px")),
-                                                hidden(uiOutput(outputId = "training_plot_placeholder")),
+                                                hidden(uiOutput(outputId = "training_plot_placeholder", width = "max-content", height = "max-content")),
                                                 # hidden(plotOutput("training_matrix", width = "100%", height = "500px")),
                                                 hidden(uiOutput(outputId = "training_matrix_placeholder")),
                                                 verbatimTextOutput("training_features"))

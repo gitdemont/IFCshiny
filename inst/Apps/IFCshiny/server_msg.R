@@ -117,3 +117,25 @@ mess_global <- function(title = NULL, msg = "", type = "warning", duration = 10,
                             "showMethod"= "fadeIn",
                             "hideMethod"= "fadeOut"))
 }
+
+observeEvent(input$msg_once, ignoreInit = TRUE, {
+  to_show = input$msg_once
+  to_show = setdiff(to_show, msg_react$done)
+  if(length(to_show) != 0) {
+    if("viridisLite" %in% to_show) mess_global(title = "package required", msg = c("'viridisLite' package is required to get more color palettes"), type = "info", duration = 100)
+    if("IFCip" %in% to_show) mess_global(title = "package required", msg = c("'IFCip' package is required to compute extra features from images", "Features computation module has been disabled"), type = "info", duration = 100)
+    if("bestNormalize" %in% to_show) mess_global(title = "package required", msg = c("'bestNormalize' package is required to use Yeo-Johnson transformation", "Haralick's Normalization in machine learning module has been disabled"), type = "info", duration = 100)
+    if("som" %in% to_show) mess_global(title = "package required", msg = c("'EmbedSOM' package can't be found", "Please install 'EmbedSOM' to build Self Organizing Map"), type = "info", duration = 100)
+    if("lda" %in% to_show) mess_global(title = "package required", msg = c("'MASS' package can't be found", "Please install 'MASS' to run Linear Discriminant Analysis"), type = "info", duration = 100)
+    if("svm" %in% to_show) mess_global(title = "package required", msg = c("'e1071' package can't be found", "Please install 'e1071' to use Support Vector Machine"), type = "info", duration = 100)
+    if("tsne" %in% to_show) mess_global(title = "package required", msg = c("'Rtsne' package can't be found", "Please install 'Rtsne' to perform t-Distributed Stochastic Neighbor Embedding"), type = "info", duration = 100)
+    if("umap" %in% to_show) mess_global(title = "package required", msg = c("'umap' package can't be found", "Please install 'umap' to compute manifold approximation and projection"), type = "info", duration = 100)
+    if("xgboost" %in% to_show) mess_global(title = "package required", msg = c("'xgboost' package can't be found", "Please install 'e1071' for eXtreme Gradient Boosting Training"), type = "info", duration = 100)
+    if("em" %in% to_show) mess_global(title = "package required", msg = c("'mclust' package can't be found", "Please install 'mclsut' for Gaussian Mixture Modelling for Model-Based Clustering"), type = "info", duration = 100)
+    if("parallel" %in% to_show) mess_global(title = "package required", msg = c("'parallel' package is required for parallelization", "Parallelization will not be available"), type = "info", duration = 100)
+    if("doParallel" %in% to_show) mess_global(title = "package required", msg = c("'doParallel' package is required for parallelization", "Parallelization will not be available"), type = "info", duration = 100)
+    if("shiny_multi_thread" %in% to_show) mess_global(title = "ShinyApps.io", msg = c("Using parallelization is not possible on shinyapp.io"), type = "info", duration = 100)
+    msg_react$done = c(msg_react$done, input$msg_once)
+    msg_react$queue = setdiff(msg_react$queue, msg_react$done)
+  }
+})

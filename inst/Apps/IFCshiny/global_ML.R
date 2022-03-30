@@ -76,9 +76,9 @@ plot_conf <- function(confusion_matrix, class_n) {
 # function to match model name
 match_model <- function(x = session$input$training_model, to_exlude = "_reset", session = shiny::getDefaultReactiveDomain()) {
   if(length(x) == 0) return(NULL)
-  mdl = c("pca","tsne","umap","flowsom","em","svm","xgb","lda")
+  mdl = c("pca","tsne","umap","som","em","svm","xgb","lda")
   pattern = x == mdl
-  pattern = c("^pca_","^Rtsne_","^umap_","^flowsom_","^MclustDA_","^svm","^xgb_","^lda_")[pattern]
+  pattern = c("^pca_","^Rtsne_","^umap_","^som_","^MclustDA_","^svm","^xgb_","^lda_")[pattern]
   N = names(session$input)
   return(setdiff(N[grep(pattern, N)], paste0(mdl, to_exlude)))
 }
@@ -410,8 +410,12 @@ preprocess = function(obj, pops = "All",
       if(verbose) cat("preprocessing data [transforming haralick features]\n")
       switch(features_ham,
              "yeojohnson" = {
-               df[, har_to_tra] = sapply(har_to_tra, FUN = function(i_trans) yeojohnson(x = df[, i_trans], standardize = FALSE)$x.t)
-               ans$ham = "yeojohnson"
+               if(requireNamespace("bestNormalize", quietly = TRUE)) {
+                 df[, har_to_tra] = sapply(har_to_tra, FUN = function(i_trans) bestNormalize::yeojohnson(x = df[, i_trans], standardize = FALSE)$x.t)
+                 ans$ham = "yeojohnson" 
+               } else {
+                 stop("'bestNormalize' package is required to perform Yeo-Johnson transformation")
+               }
              },
              stop("the transformation algorithm:", features_ham," is not supported"))
       ans$har = har_to_tra
@@ -567,22 +571,22 @@ splitdata.IFCml <- function(model, ratio, ..., verbose = FALSE) {
 #' @description
 #' Fits training data of `IFCml` model
 #' @param model an `IFCml` model of class `IFCml_set`
-#' @param method algorithm used for fitting the data. Allowed is either "pca","tsne","umap", "flowsom", "em", "svm", "xgb", or "lda".
+#' @param method algorithm used for fitting the data. Allowed is either "pca","tsne","umap", "som", "em", "svm", "xgb", or "lda".
 #' If missing the default, the value in model$method will be used.
 #' @param ... other arguments to be passed.
 #' @param verbose whether to display information. Default is FALSE.
 #' @details fitting will be performed using model$param or dots, which should contain (if any) arguments to pass to (with the exception of):\cr
 #' base::prcomp ('x' = train, 'center', 'scale.', and 'rank.')
 #' Rtsne::Rtsne ('X', 'dims', 'pca', 'partial_pca', 'normalize', 'pca_center', 'pca_scale', and 'verbose'),\cr
-#' umap::umap ('d', 'n_components', 'method', and 'verbose'),\cr
-#' FlowSOM::BuildMST ('som' and 'silent'),\cr
+#' umap::umap ('d', 'n_components', 'method', 'objective' and 'verbose'),\cr
+#' EmbedSOM::SOM ('data'),\cr
 #' mclust::MclustDA ('data' and 'class'),\cr
 #' e1071::svm ('x', 'y', and 'scale'),\cr
 #' xgboost::xgb ('data', 'label', and 'verbose'),\cr
 #' MASS::lda ('x' and 'grouping').\cr
 #' NOTE: extra arguments should be named in the form name_, e.g. for e1071::svm, svm_nu to be applied as 'nu' argument to svm. Or directly used as 'nu'.\cr
-#' NOTE: centering and scaling is set to FALSE because it can be performed during preprocessing.\cr
-#' NOTE: a "pca" (base::prcomp) is always performed and is used as 'X' input to Rtsne
+#' NOTE: centering and scaling is set to FALSE because it has to be performed during preprocessing.\cr
+#' NOTE: a "pca" (base::prcomp) is always performed and is used as 'X' input to Rtsne::Rtsne.
 #' @value an `IFCml` model of class `IFCml` and `IFCml_fit` or 'model' if model$idx is NULL
 #' @keywords internal
 fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
@@ -596,20 +600,26 @@ fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
   if(!identical(attr(model$idx, "id"), attr(model$data, "id"))) stop("'idx' was not built on 'dataset'")
   
   method = model$method
-  method_alw = c("pca","tsne","umap", "flowsom", "em", "svm", "xgb", "lda")
-  method_alt = c("pca","Rtsne","umap", "flowsom", "MclustDA", "svm", "xgb", "lda")
-  method_fun = c("prcomp","Rtsne","umap", "FlowSOM::BuildSOM", "MclustDA", "svm", "xgboost", "lda")
-  method_cla = c("prcomp","list","umap","FlowSOM","MclustDA","svm","xgb.Booster","lda")
+  method_alw = c("pca", "tsne", "umap", "som", "em", "svm", "xgb", "lda")
+  method_alt = c("pca", "Rtsne", "umap", "som", "MclustDA", "svm", "xgb", "lda")
+  method_fun = c("stats::prcomp", "Rtsne::Rtsne","umap::umap", "EmbedSOM::SOM", "mclust::MclustDA", "e1071::svm", "xgboost::xgboost", "MASS::lda")
+  method_cla = c("prcomp", "list", "umap", "list", "MclustDA", "svm", "xgb.Booster", "lda")
   assert(method, len = 1, alw = method_alw)
   method_fun = method_fun[match(method, method_alw)]
   method_alt = method_alt[match(method, method_alw)]
   method_cla = method_cla[match(method, method_alw)]
+  
+  fun_ = strsplit(method_fun, split = "::", fixed = TRUE)[[1]]
+  env_ = head(fun_, 1)
+  if(!requireNamespace(env_, quietly = TRUE)) stop(env_, " is required to fit data. Please install it")
   
   # method parameters are appended with method$name_ so we need to remove it
   param = c(model$param, dots)
   param_names = names(param)
   if(length(param_names) != 0) param_names = sapply(strsplit(param_names, split = paste0(method_alt,"_"), fixed = TRUE), FUN = function(x) paste0(x[-1], collapse = ""))
   names(param) = param_names
+  method_arg = formals(tail(fun_, 1), envir = asNamespace(env_))
+  param = param[names(param) %in% names(method_arg)]
   
   train = model$data[model$idx, Q$is_feat, drop = FALSE]
   y_train = model$data[model$idx, Q$is_clust, drop = TRUE]
@@ -627,51 +637,41 @@ fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
   if(verbose) cat("fitting data with method [\"",method,"\"]\n", sep="")
   switch(method, 
          "em" = {
+           require(package = "mclust", quietly = TRUE, warn.conflicts = FALSE) # otherwise it is not working
            args = list(data = train, class = y_train)
-           args = c(args, param)
          },
          "svm" = {
            args = list(x = train, y = y_train, scale = FALSE)
-           args = c(args, param[param_names != "gamma"])
-           if((length(param$gamma) !=0) && !is.na(param$gamma)) args = c(svm_args, list(gamma = param$gamma))
+           if((length(param$gamma) !=0) && !is.na(param$gamma)) args = c(args, list(gamma = param$gamma))
          },
          "xgb" = {
-           args = list(data = as.matrix(train), label = (as.integer(y_train) - 1L), verbose=0)
-           args = c(args, param[c("nrounds", "early_stopping_rounds")])
-           extra_param = param[!(param_names %in% c("nrounds", "early_stopping_rounds"))]
-           extra_param$num_class = nlevels(y_train)
-           args = c(args, params = list(extra_param))
+           args = list(data = as.matrix(train), label = (as.integer(y_train) - 1L), verbose = 0,
+                       objective = "multi:softprob", num_class = nlevels(y_train))
          },
          "lda" = {
            args = list(x = train, grouping = y_train)
-           args = c(args, param)
-           if(length(param$nu != 0) && !is.na(param$nu)) args = c(args, list(nu=param$nu))
+           args = c(args, list(nu = na.omit(param$nu)))
          },
-         "flowsom" = {
-           G = floor(sqrt(nrow(train)))
-           ff = new(structure("flowFrame", package="flowCore"), exprs = as.matrix(train))
-           SOM = FlowSOM::BuildSOM(fsom = FlowSOM::ReadInput(ff, compensate = FALSE, transform = FALSE, scale = FALSE), 
-                                   silent = TRUE, xdim = min(G, 10), ydim = min(G, 10))
-           args = list(fsom = SOM, silent = TRUE)
+         "som" = {
+           args = list(data = as.matrix(train))
+           args = c(args, list(zdim = na.omit(param$zdim)))
+           args = c(args, list(distf = as.integer(param$distf)))
+           args = c(args, list(batch = param$batch == "yes"))
          },
          "tsne" = {
            sub = !apply(pca_dr$x, 1, anyNA) # in case pca produce some NA ?
            args = list(X = pca_dr$x[sub, ,drop=FALSE], dims = 3, 
                        pca = FALSE, partial_pca = FALSE, normalize = FALSE, pca_center = FALSE, pca_scale = FALSE, verbose = FALSE)
-           args = c(args, param)
          },
          "umap" = {
            args = list(d = train, n_components = 3, method = "naive", verbose = 2)
-           args = c(args, param)
          })
-  if(method == "flowsom") {
-    fit = fit = suppressMessages(do.call(FlowSOM::BuildMST, args))
+  if(method == "pca") {
+    fit = pca_dr
   } else {
-    if(method == "pca") {
-      fit = pca_dr
-    } else {
-      fit = do.call(what = method_fun, args = args)
-    }
+    args = c(args, param[!(names(param) %in% names(args))])
+    args = args[sapply(args, length) != 0]
+    fit = do.call(what = eval(parse(text=method_fun)), args = args)
   }
   
   attr(fit, "id") = attr(model$idx, "id")
@@ -690,9 +690,7 @@ fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
 #' @verbose whether to display information. Default is FALSE.
 #' @details metaclustering will be done automatically when model$config$pops is of length 1.\cr
 #' It will be performed by calling model$meta_fun with model$meta_args parameters.\cr
-#' If model$method is "flowsom", then meta_fun is "FlowSOM::MetaClustering" and "stats::kmeans" otherwise\cr
 #' If model$meta_args are not found, default values are:\cr
-#' -model$meta_args = list(method = "metaClustering_consensus", max = 10L, seed = NULL), for "FlowSOM::MetaClustering"\cr
 #' -model$meta_args = list(centers = 10L, iter.max = 10L, nstart = 1L, algorithm = "Hartigan-Wong"), for "stats::kmeans".
 #' @value an `IFCml` model of class `IFCml` and `IFCml_fit` or 'model' if model$idx is NULL
 #' @keywords internal
@@ -761,32 +759,18 @@ predict.IFCml_fit <- function(model, newdata="train", ..., verbose = FALSE) {
                buildFeature(name = sprintf("ML_lda_%02i_extra", i), val = feat_NA)
              }))
            },
-           "flowsom" = { # pred + proj
+           "som" = { # pred + proj
              # proj
-             n_dat = new(structure("flowFrame", package="flowCore"), exprs = as.matrix(n_dat))
-             proj = FlowSOM::NewData(fit, n_dat, spillover = FALSE, transform = FALSE, scale = FALSE)
-             feat_som = data.frame(proj$MST$l[proj$map$mapping[,1], , drop=FALSE],
-                                   proj$MST$size[proj$map$mapping[,1]],
-                                   model$data[sub_, Q$is_clust, drop=TRUE],
-                                   seq_along(proj$map$mapping[,1]),
-                                   proj$map$mapping[,1], stringsAsFactors = FALSE)
-             # add jittering
-             ran = diff(apply(fit$MST$l, 2, range, finite=TRUE))
-             flowsom_ratio = ran[1]/ran[2]
-             feat_som = data.frame(do.call(what = rbind, args = by(feat_som, feat_som[, 6], FUN = function(d) { 
-               cbind(x = rnorm(nrow(d), d[, 1], d[, 3]/25), y = rnorm(nrow(d), d[, 2], d[, 3]/25 / flowsom_ratio),
-                     ids = d[, 5], clust = d[, 4], size = d[, 3])
-             })))
-             feat_som = feat_som[order(feat_som[, "ids"]), ]
-             exported_feat = c(exported_feat, lapply(1:min(2, ncol(feat_som)), FUN = function(i) {
-               feat_NA[sub_] <- feat_som[,i,drop=TRUE]
-               buildFeature(name = sprintf("ML_flowsom_%i_extra", i), val = feat_NA)
+             proj = EmbedSOM::EmbedSOM(data = n_dat, map = fit, coordsFn = EmbedSOM::MSTCoords())
+             exported_feat = c(exported_feat, lapply(1:min(2, ncol(proj)), FUN = function(i) {
+               feat_NA[sub_] <- proj[,i,drop=TRUE]
+               buildFeature(name = sprintf("ML_som_%i_extra", i), val = feat_NA)
              }))
              # pred
+             dcode = EmbedSOM::MapDataToCodes(fit$codes, data = n_dat)
              if(length(lev) > 1) {
-               proj_new = FlowSOM::NewData(fit, n_dat, spillover = FALSE, transform = FALSE, scale = FALSE)
-               map = by(fit$map$mapping[, 1], y_train, FUN = function(x) {
-                 proj_new$map$mapping[, 1] %in% x
+               map = by(fit$mapping[, 1], y_train, FUN = function(x) {
+                 dcode[, 1] %in% x
                })
                map = sapply(map, FUN = function(x) x)
                N = colnames(map)
@@ -836,9 +820,8 @@ predict.IFCml_fit <- function(model, newdata="train", ..., verbose = FALSE) {
   model$meta_fun <- NULL
   if(length(lev) == 1) {
     if(verbose) cat("computing metaclusters\n")
-    if((method %in% c("flowsom","tsne","umap","pca"))) {
+    if((method %in% c("som","tsne","umap","pca"))) {
       model$meta_fun = "stats::kmeans"
-      if(method == "flowsom") model$meta_fun <- "FlowSOM::MetaClustering"
       meta_fun = strsplit(model$meta_fun, split = "::", fixed = TRUE)[[1]]
       meta_env = head(meta_fun,1)
       meta_fun = tail(meta_fun,1)
@@ -855,17 +838,12 @@ predict.IFCml_fit <- function(model, newdata="train", ..., verbose = FALSE) {
       if(length(meta_args) == 0) {
         if(meta_fun == "kmeans") {
           model$meta_args = list(centers = 10L, iter.max = 10L, nstart = 1L, algorithm = "Hartigan-Wong")
-        } else {
-          model$meta_args = list(method = "metaClustering_consensus", max = 10L, seed = NULL)
         }
         meta_args <- model$meta_args
         N = names(model$meta_args)
         warning("no \"metaclust\" args found. '",model$meta_fun, "' will use:\n-", paste0(sapply(1:length(model$meta_args), FUN = function(i) paste0(N[i]," = [",typeof(meta_args[[i]]),"] ", meta_args[[i]])), collapse="\n-"))
       }
       switch(method,
-             "flowsom" = {
-               clust[sub_] = do.call(what = FlowSOM::MetaClustering, args = c(list(data = proj$map$codes), meta_args))[proj$map$mapping[, 1]]
-             },
              "tsne" = {
                if(newdata == "train") if(any(attr(model$pca, "id") == attr(fit, "id"))) {
                  sub = !apply(model$pca$x, 1, anyNA) # # in case pca produce some NA ?
@@ -877,6 +855,11 @@ predict.IFCml_fit <- function(model, newdata="train", ..., verbose = FALSE) {
                  warning("'tsne', can't make metaclust: 'id' do not match")
                }
              }, 
+             "som" = { # in som clustering is done on map$codes and not on MST projection
+                 K = do.call(kmeans, c(list(x = dcode), model$meta_args))
+                 clust[sub_] = K$cluster
+                 model$meta_args$centers = K$centers
+             },
              {
                K = do.call(kmeans, c(list(x = proj), model$meta_args))
                clust[sub_] = K$cluster
@@ -1086,7 +1069,7 @@ apply.IFCml <- function(model, obj, mode = c("self", "predict", "predict_norm", 
   if(length(n_model$pred) != 0) {
     pred = n_model$pred
     sub_ = n_model$sub
-    foo = !is.na(pred) # some prediction can result in NA (e.g. FlowSOM)
+    foo = !is.na(pred) # some prediction can result in NA (e.g. som)
     pred_NA[sub_][foo] <- as.character(pred[foo])
     exported_pops = c(exported_pops, lapply(lev, FUN = function(p) {
       tmp = (!is.na(pred_NA)) & (pred_NA == p) 
@@ -1122,9 +1105,6 @@ apply.IFCml <- function(model, obj, mode = c("self", "predict", "predict_norm", 
         tmp = (!is.na(y_train)) & (is.na(pred[sub_train] == y_train) | (pred[sub_train] != y_train)) & (y_train == p)
         if(any(tmp)) {
           pred_FALSE[sub_train][tmp]  <- TRUE
-          # print(paste0("ML_pred_train_", p, "_mismatch"))
-          # print(sum(tmp))
-          # print(sum(pred_FALSE))
           buildPopulation(name = paste0("ML_pred_train_", p, "_mismatch"), type = "T",
                           lightModeColor = lightModeColor[p],
                           color = color[p],

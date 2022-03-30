@@ -97,7 +97,7 @@ observeEvent(input$pop_alt_click, suspended = FALSE, {
     if("lda" %in% input$training_model) dims = "ML_lda_0"
     if("tsne" %in% input$training_model) dims = "ML_tSNE_"
     if("umap" %in% input$training_model) dims = "ML_umap_"
-    if("flowsom" %in% input$training_model) dims = "ML_flowsom_"
+    if("som" %in% input$training_model) dims = "ML_som_"
     dims = paste(dims, c("1", "2", "3"), sep = "")
     dims = paste(dims, "extra", sep="_")
     type = "1D"

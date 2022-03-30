@@ -45,8 +45,7 @@ server <- function(input, output, session) {
   # function to record LOGS + trigger LOGS download on app error
   session_react <- reactiveValues(id = sessionid, dir = sessiondir)
   
-  # we use shiny:outputinvalidated to show/hide msg_busy_ctn on training_plot update
-  # it taining_plot can be long when flowsom is used because of metaClustering computation
+  # we use shiny:outputinvalidated to show/hide msg_busy_ctn on training_plot because it can be long
   # TODO find something to test if webgl is available for interaction once rgl has sent scene to javascript
   # the idea is to hide IFCshiny app on output invalidation and to show it back only when the whole scene is ready
   runjs(code = paste(sep = ";\n;",
@@ -419,7 +418,6 @@ server <- function(input, output, session) {
       
       info = obj_react$obj$info
       info$Images = param_react$param$channels
-      
       img = objectExtract(ifd = IFD,  info = info,
                           mode = "rgb", export = "matrix",
                           # base64_id = TRUE, base64_att ='style = "display: block; margin: 0px auto; transform: scale(3);"', write_to = "%o_%c.png",
@@ -439,10 +437,14 @@ server <- function(input, output, session) {
       h$density = h$density / max(h$density)
       
       html(id = "controls_cell", add = FALSE,
-           sprintf('<img id="chan_cell_image" style="display: block; margin: 0px auto; transform: scale(3);" width="%i" height="%i" src="data:image/png;base64,%s">',
-                   dim(img)[2],
-                   dim(img)[1],
-                   cpp_base64_encode(png::writePNG(image = img, target = raw()))))
+           objectExtract(ifd = IFD,  info = info,
+                         mode = "rgb", export = "base64", write_to = "%o_%c.png",
+                         base64_att="id='chan_cell_image' style='display: block; margin: 0px auto; transform: scale(3);'",
+                         selection = as.numeric(input$chan_sel), force_width = FALSE, removal = "none", 
+                         full_range = "full_range" %in% input$chan_force,
+                         force_range = "force_range" %in% input$chan_force,
+                         display_progress = FALSE,
+                         bypass = FALSE)[[1]][[1]])
       
       plot(h, xlim = c(param_react$param$channels$scalemin[k],param_react$param$channels$scalemax[k]), main=NULL, xlab=NULL, ylab=NULL, col="grey", border="black")
       # axis(side = 2, at= c(0, 100/255,200/255, 1), labels=c(0, "100", "200", "255"))

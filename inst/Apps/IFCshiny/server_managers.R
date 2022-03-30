@@ -98,6 +98,10 @@ observeEvent(input$graph_manager_visible, {
     updateSelectInput(session = session, inputId = "plot_lab_x", selected = plot_react$xlabel)
     updateSelectInput(session = session, inputId = "plot_lab_y", selected = plot_react$ylabel)
     if(plot_react$g$type == "density") {
+      if(!requireNamespace("viridisLite", quietly = TRUE)) {
+        msg_react$queue = c(msg_react$queue, "viridisLite")
+        updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
+      }
       updateSelectInput(session = session, inputId = "plot_dens_color", selected = plot_react$densitycolorslightmode_selected)
       updateSelectInput(session = session, inputId = "plot_dens_feature", selected = ifelse(plot_react$g$BasePop[[1]]$densitytrans %in% names(obj_react$obj$features), plot_react$g$BasePop[[1]]$densitytrans, "initial"))
       col = colConv(plot_react$g$BasePop[[1]]$densitycolorslightmode)
@@ -154,7 +158,7 @@ observeEvent(input$graph_manager_visible, {
       if(input$plot_dens_color == "initial") {
         col = colConv(plot_react$densitycolorslightmode)
       } else {
-        if(input$plot_dens_color %in% ls(asNamespace("viridisLite"))) {
+        if(requireNamespace("viridisLite", quietly = TRUE) && (input$plot_dens_color %in% ls(asNamespace("viridisLite")))) {
           col = do.call(what = input$plot_dens_color, args = list(n = 5))
         } else {
           col = RColorBrewer::brewer.pal(n = 5, name = input$plot_dens_color)

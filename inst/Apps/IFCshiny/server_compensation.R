@@ -177,7 +177,8 @@ output$comp_graphs <- renderPlot({
   df[, -ncol(df)] = apply(df[, -ncol(df)], 2, smoothLinLog, hyper = hyper)
   panel <- function(x,y, ...) {
     par(new = TRUE)
-    plot(x = y, y = x,  ...)
+    # plot(x = y, y = x,  ...)
+    rasterplot(x = x, y = y, draw = TRUE, new = FALSE, ...)
     try(suppressWarnings({
     Xlim = (range(y, na.rm = TRUE))
     Ylim = (range(x, na.rm = TRUE))
@@ -221,7 +222,7 @@ output$comp_plot <- renderPlot({
   df$type = factor(df$type, levels = c("raw", "comp", "rec"))
   hyper = 1000
   df[, -ncol(df)] = apply(df[, -ncol(df)], 2, smoothLinLog, hyper = hyper)
-  plot(x = df[, input$comp_plot_2], y = df[, input$comp_plot_1], axes = FALSE,
+  rasterplot(x = df[, input$comp_plot_2], y = df[, input$comp_plot_1], axes = FALSE,
        pch = ifelse(df$type == "comp", 21, 19), 
        col= sapply(c("lightgrey", "chartreuse4", "firebrick"), FUN = function(x) { 
          paste0(c("#",sprintf("%02X", col2rgb(x)),"FF"),collapse = "")
