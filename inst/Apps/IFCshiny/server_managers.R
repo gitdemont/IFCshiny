@@ -159,7 +159,7 @@ observeEvent(input$graph_manager_visible, {
         col = colConv(plot_react$densitycolorslightmode)
       } else {
         if(requireNamespace("viridisLite", quietly = TRUE) && (input$plot_dens_color %in% ls(asNamespace("viridisLite")))) {
-          col = do.call(what = input$plot_dens_color, args = list(n = 5))
+          col = do.call(what = get(input$plot_dens_color, envir = asNamespace("viridisLite")), args = list(n = 5))
         } else {
           col = RColorBrewer::brewer.pal(n = 5, name = input$plot_dens_color)
         } 
