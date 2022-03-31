@@ -67,6 +67,7 @@ if(.passphrase == "") {
 
 if(!requireNamespace("parallel", quietly = TRUE) ||
    !requireNamespace("doParallel", quietly = TRUE) ||
+   !requireNamespace("foreach", quietly = TRUE) ||
    .no_cores <= 1 || Sys.getenv('SHINY_PORT') != "") { 
   updateMaterialSwitch(session=session, inputId = "use_parallelization", value = FALSE)
   # disable("use_parallelization")

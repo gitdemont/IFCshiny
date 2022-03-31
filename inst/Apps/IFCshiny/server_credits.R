@@ -34,19 +34,14 @@ observeEvent(input$credits, {
   add_log("credits")
   if(length(input$license_decline) == 0) runjs(code = "$('.app_dashboard_panel').hide()")
   tryCatch({
-    pkgs = c("shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "jsonlite", "visNetwork", "colourpicker", "DT",
-             "grDevices", "grid", "gridExtra",
-             "zip", "openxlsx",
-             "caret", "MASS", "mclust", "EmbedSOM", "e1071", "xgboost", "bestNormalize", "Rtsne", "umap",
-             "RColorBrewer", "viridisLite", "rgl", 
-             "utils", "parallel", "doParallel",
-             "reticulate", "methods")
+    get_dep <- function(pkg, pkgs_installed = utils::installed.packages(), which = c("Imports", "Suggests")) gsub("^(.*) \\(.*$", "\\1", setdiff(trimws(unlist(unname(tryCatch(strsplit(pkgs_installed[pkg,which], ", |,\\n"), error = function(e) return(NULL))))), ""))
     pkgs_installed = installed.packages()
+    pkgs = get_dep("IFCshiny", pkgs_installed, c("Imports", "Suggests"))
     pkgs = pkgs[pkgs %in% rownames(pkgs_installed)]
-    pkgs = setdiff(pkgs, c(sapply(strsplit(strsplit(pkgs_installed["IFC","Imports"], ",")[[1]], "\\s"), FUN = function(x) x[x!=""][1]),
-                           pkgs[grepl("^Part of R ", pkgs_installed[pkgs, "License"])]))
+    pkgs = setdiff(pkgs, c(get_dep("IFC", pkgs_installed, "Imports"), pkgs[grepl("^Part of R ", pkgs_installed[pkgs, "License"])]))
+    
     if(requireNamespace("IFCdata", quietly = TRUE)) {
-      pkgs = setdiff(pkgs, sapply(strsplit(strsplit(pkgs_installed["IFCdata","Imports"], ",")[[1]], "\\s"), FUN = function(x) x[x!=""][1]))
+      pkgs = setdiff(pkgs, get_dep("IFCdata", pkgs_installed, "Imports"))
       IFCdata_args = list(tags$div(style = "display: list-item;",
                                    tags$p(style = "font-weight: bold;",
                                           sprintf("IFCdata, under %s", pkgs_installed["IFCdata", "License"])),
@@ -56,7 +51,7 @@ observeEvent(input$credits, {
       IFCdata_args = list()
     }
     if(requireNamespace("IFCip", quietly = TRUE)) {
-      pkgs = setdiff(pkgs, sapply(strsplit(strsplit(pkgs_installed["IFCip","Imports"], ",")[[1]], "\\s"), FUN = function(x) x[x!=""][1]))
+      pkgs = setdiff(pkgs, get_dep("IFCip", pkgs_installed, "Imports"))
       IFCip_args = list(tags$div(style = "display: list-item;",
                                    tags$p(style = "font-weight: bold;",
                                           sprintf("IFCip, under %s", pkgs_installed["IFCip", "License"])),

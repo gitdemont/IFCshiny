@@ -637,7 +637,6 @@ fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
   if(verbose) cat("fitting data with method [\"",method,"\"]\n", sep="")
   switch(method, 
          "em" = {
-           require(package = "mclust", quietly = TRUE, warn.conflicts = FALSE) # otherwise it is not working
            args = list(data = train, class = y_train)
          },
          "svm" = {

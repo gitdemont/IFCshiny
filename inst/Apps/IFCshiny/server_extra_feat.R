@@ -31,10 +31,12 @@
 observeEvent(input$use_parallelization, ignoreInit = TRUE, {
   if(!requireNamespace("parallel", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "parallel")
   if(!requireNamespace("doParallel", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "doParallel")
+  if(!requireNamespace("foreach", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "foreach")
   if(Sys.getenv('SHINY_PORT') != "") msg_react$queue = c(msg_react$queue, "shiny_multi_thread")
   updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
   if(!requireNamespace("parallel", quietly = TRUE) ||
      !requireNamespace("doParallel", quietly = TRUE) ||
+     !requireNamespace("foreach", quietly = TRUE) ||
      (.no_cores <= 1) || (Sys.getenv('SHINY_PORT') != "")) updateMaterialSwitch(session=session, inputId = "use_parallelization", value = FALSE)
 })
 # extra features computation from images with multi-thread capability
@@ -57,6 +59,7 @@ observeEvent(input$compute_go, {
   do_par = FALSE
   if(requireNamespace("parallel", quietly = TRUE) &&
      requireNamespace("doParallel", quietly = TRUE) && 
+     requireNamespace("foreach", quietly = TRUE) && 
      (.no_cores > 1) && input$use_parallelization) {
     cl <- parallel::makePSOCKcluster(.no_cores)
     doParallel::registerDoParallel(cl)
@@ -103,6 +106,7 @@ observeEvent(input$compute_go, {
   }, finally = {
     if(do_par) {
       parallel::stopCluster(cl)
+      foreach::registerDoSEQ()
     }
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "", reset = TRUE)
   })

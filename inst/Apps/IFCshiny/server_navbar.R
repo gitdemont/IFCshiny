@@ -101,7 +101,7 @@ observeEvent(input$navbar,{
          }, "tab5" = {
            add_log("ML")
            if(!requireNamespace("bestNormalize", quietly = TRUE)) { 
-             pkg_not_avl = c(pkg_not_avl, "bestNormalize")
+             msg_react$queue = c(msg_react$queue, "bestNormalize")
            } else {
              enable("features_har")
            }
