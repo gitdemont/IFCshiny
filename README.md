@@ -37,11 +37,11 @@ install.packages("devtools")
 
 - install R dependencies required for IFCshiny package
 "IFC", "shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "visNetwork", 
-"colourpicker", "DT", "gridExtra", "jsonlite", "caret", "MASS", "mclust", "e1071", "xgboost", "bestNormalize", 
-"Rtsne", "umap", "rmarkdown", "rgl", "plotly", "decido", "doParallel", "zip", "openxlsx", "imager", "reticulate"
+"colourpicker", "DT", "gridExtra", "jsonlite", "caret", "MASS", "mclust", "e1071", "EmbedSOM", "xgboost", "bestNormalize", 
+"Rtsne", "umap", "rmarkdown", "rgl", "heatmaply", "viridisLite", "plotly", "decido", "doParallel", "zip", "openxlsx", "reticulate"
 
 ```R
-install.packages(c("IFC", "shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "visNetwork", "colourpicker", "DT", "gridExtra", "jsonlite", "caret", "MASS", "mclust", "e1071", "xgboost", "bestNormalize", "Rtsne", "umap", "rmarkdown", "rgl", "plotly", "doParallel", "zip", "openxlsx", "imager", "reticulate"))
+install.packages(c("IFC", "shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "visNetwork", "colourpicker", "DT", "gridExtra", "jsonlite", "caret", "MASS", "mclust", "e1071", "EmbedSOM", "xgboost", "bestNormalize", "Rtsne", "umap", "rmarkdown", "rgl", "heatmaply", "viridisLite", "plotly", "foreach", "doParallel", "zip", "openxlsx", "reticulate"))
 ```
 
 - install "remotes", to install IFCshiny package from github remotes is needed.
@@ -78,23 +78,6 @@ In addition several functions may require additional packages
 
 ```R
 remotes::install_github(repo = "gitdemont/IFCip", ref = "master", dependencies = FALSE)
-```
-
-- `flowCore` and `FlowSOM` for building Self-Organizing Maps and Minimal Spanning Trees
-
-```R
-# These packages are from Bioconductor
-# At first, BiocManager needs to be installed
-install.package("BiocManager")
-
-# then, flowCore and FlowSOM can be installed from bioconductor
-BiocManager::install(c("flowCore", "FlowSOM"))
-```
-
-- `heatmaply` for interactive heatmap with dendrogram in batch module
-
-```R
-install.packages("heatmaply")
 ```
 
 - Not yet available, `IFCshiny` may require `keras` and `tensorflow`
@@ -273,7 +256,7 @@ Once input have been set by user Start training tab will be available and will a
 
 Depending on this model several graphs will be generated and information printed
 
-If one unique population was chosen before, then PCA, tSNE, UMAP, and FlowSOM (if installed) will be available and you will have access to model and clustering parameters.
+If one unique population was chosen before, then PCA, tSNE, UMAP, and SOM (if installed) will be available and you will have access to model and clustering parameters.
 
 Otherwise, supervised algorithms EM, SVM, XGB, LDA will be available in addition to the former ones and you will have access model parameters only + sampling for these supervised algorithms. In such case, sampling will allow to control amount of events used for training vs testing and confusion matrix will be shown to evaluate fitting accuracy
 
