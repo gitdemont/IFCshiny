@@ -28,11 +28,22 @@
 ################################################################################
 
 ## define cleanup to recover options and environment
-.cleanup = list(ls = setdiff(ls(all.names = TRUE),"..."), env = environment(), back_env = new.env(), options = options())
+.cleanup = list(ls = setdiff(ls(all.names = TRUE),"..."), env = environment(), back_env = new.env(), options = options(), sysenv = Sys.getenv())
 for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$env), envir = .cleanup$back_env)
 shiny::onStop(fun = function() {
+  # recover options
   options(.cleanup$options)
   if(!("shiny.maxRequestSize" %in% names(.cleanup$options))) options("shiny.maxRequestSize"=NULL)
+  # recover Environment Variables
+  sapply(names(.cleanup$sysenv), FUN = function(x) {
+    args = list(.cleanup$sysenv[[x]])
+    names(args) = x
+    do.call(what = Sys.setenv, args = args)
+  })
+  cur_sysenv_names = names(Sys.getenv())
+  sapply(cur_sysenv_names[!(cur_sysenv_names %in% names(.cleanup$sysenv))], Sys.unsetenv)
+  Sys.getenv()[!(names(Sys.getenv()) %in% names(.cleanup$sysenv))]
+  # recover values assigned in the app environment
   for(i in .cleanup$ls) assign(x = i, value = get(x = i, envir = .cleanup$back_env), envir = .cleanup$env)
   rm(list = setdiff(ls(all.names = TRUE, envir = .cleanup$env), .cleanup$ls), envir = .cleanup$env)
   return(invisible(NULL))
@@ -63,11 +74,13 @@ if(!exists(".path_to_db") || !exists(".passphrase") || (.passphrase == "") || (.
 # In addition, if app is run from installed IFCshiny package, from 
 # IFCshiny::runIFCshinyApp no authentification will be required
 if(any(.libPaths() %in% dirname(dirname(dirname(.rundir))))) .passphrase = ""
+
+# For python
+Sys.setenv("RETICULATE_MINICONDA_ENABLED" = FALSE) # prevent reticulate from trying to install miniconda
 if(!exists(".path_to_python")) {
   .path_to_python = Sys.getenv("PATH_TO_PYTHON", "")
 }
 
-# For python
 # Python path can be provided through .path_to_python variable
 # if this variable is not found in evaluating environment value from Sys.getenv("PATH_TO_PYTHON", "") will be used
 # if this results in something different from "", it will be passed to reticulate::use_python(required = TRUE)
@@ -110,10 +123,10 @@ suppressMessages(suppressWarnings({
   require(htmlwidgets, quietly = TRUE, warn.conflicts = FALSE)
 
   #' model & dim reduction
+  require(mclust, quietly = TRUE, warn.conflicts = FALSE) # otherwise we get BLAS ERROR
   # require(EmbedSOM, quietly = TRUE, warn.conflicts = FALSE)
   # require(caret, quietly = TRUE, warn.conflicts = FALSE)
   # require(MASS, quietly = TRUE, warn.conflicts = FALSE)
-  # require(mclust, quietly = TRUE, warn.conflicts = FALSE)
   # require(e1071, quietly = TRUE, warn.conflicts = FALSE)
   # require(xgboost, quietly = TRUE, warn.conflicts = FALSE)
   # require(Rtsne, quietly = TRUE, warn.conflicts = FALSE)
