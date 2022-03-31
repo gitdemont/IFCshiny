@@ -122,6 +122,8 @@ observeEvent(input$msg_once, ignoreInit = TRUE, {
   to_show = input$msg_once
   to_show = setdiff(to_show, msg_react$done)
   if(length(to_show) != 0) {
+    # data example
+    if("IFCdata" %in% to_show) mess_global(title = "package required", msg = c("'IFCdata' package is not installed", "To install 'IFCdata' package, run `install.packages('IFCdata', repos = 'https://gitdemont.github.io/IFCdata/', type = 'source')`"), type = "info", duration = 100)
     # extra feat
     if("IFCip" %in% to_show) mess_global(title = "package required", msg = c("'IFCip' package is required to compute extra features from images", "Features computation module has been disabled"), type = "info", duration = 100)
     # representation

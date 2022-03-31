@@ -354,9 +354,8 @@ observeEvent(list(input$use_example, input$example_file), ignoreInit = TRUE, {
   if(!requireNamespace("IFCdata", quietly = TRUE)) {
     # not installed, we send a message to user and switch use_example to FALSE
     updateSwitchInput(session=session, inputId="use_example", value=FALSE)
-    mess_global(title = "package required", 
-                msg = c("'IFCdata' package is not installed",
-                        "To install 'IFCdata' package, run `install.packages('IFCdata', repos = 'https://gitdemont.github.io/IFCdata/', type = 'source')`"), type = "info")
+    msg_react$queue = c(msg_react$queue, "IFCdata")
+    updateSelectInput(session = session, inputId = "msg_once", choices  = msg_react$queue, selected = msg_react$queue)
   } else { # if IFCdata pkg is installed
     if(input$use_example) { # if use_example switch is TRUE
       # we allow example_file selection and disable input$file upload

@@ -69,7 +69,7 @@ runIFCshinyApp <- function(app="IFCshiny", host="127.0.0.1", launch.browser=NULL
       if(local) {
         for(i in names(extra)) assign(i, value = dots[[i]])
       } else {
-        local = globalenv()
+        local <- globalenv()
         for(i in names(extra)) assign(i, value = dots[[i]], envir = local)
       }
     } else {
