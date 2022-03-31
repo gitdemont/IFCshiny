@@ -137,7 +137,6 @@ obs_report <- list(
               # plot_react$layout[i_row, i_col] <- NA
             },
             finally = dev.off())
-            
             # we need to recreate an image each time we want to pass it to the grid
             if(i_graph == 0) {
               insertUI(selector = "#empty_tile_placeholder", where = "beforeEnd",
@@ -147,7 +146,7 @@ obs_report <- list(
                                      tags$img(class = "report_item-content",
                                               "data-id" = "",
                                               src = session$fileUrl(NULL, outfile, contentType='image/png'))))
-              runjs(code = JS(sprintf("var tile = $('#empty_tile_placeholder>.report_item')[0]", i_graph),
+              runjs(code = JS("var tile = $('#empty_tile_placeholder>.report_item')[0]",
                               sprintf("IFCshiny.grid.add(tile, { index: %i, layout: false } );", i_tile)))
             } else {
               insertUI(selector = "#plot_tile_placeholder", where = "beforeEnd",
@@ -165,7 +164,7 @@ obs_report <- list(
                                      tags$div(class="report_item_btn",
                                               onclick = "IFCshiny.report_close(event)",
                                               icon("window-close", lib = "font-awesome"))))
-              runjs(code = JS(sprintf("var tile = $('#plot_tile_placeholder>.report_item')[0]", i_graph),
+              runjs(code = JS("var tile = $('#plot_tile_placeholder>.report_item')[0]",
                               sprintf("IFCshiny.grid.add(tile, { index: %i, layout: false } );", i_tile)))
             }
             unlink(outfile)
