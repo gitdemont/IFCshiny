@@ -107,11 +107,11 @@ observeEvent(input$navbar,{
            }
            if(!requireNamespace("Rtsne", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "tsne")
            if(!requireNamespace("umap", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "umap")
+           if(!requireNamespace("EmbedSOM", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "som")
            if(!requireNamespace("mclust", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "em")
            if(!requireNamespace("e1071", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "svm")
-           if(!requireNamespace("xgboost", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "xgboost")
+           if(!requireNamespace("xgboost", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "xgb")
            if(!requireNamespace("MASS", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "lda")
-           if(!requireNamespace("EmbedSOM", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "som")
            updateSelectInput(session = session, inputId = "msg_once", choices  = msg_react$queue, selected = msg_react$queue)
            lapply(obs_ML, FUN = function(x) x$resume())
            hideElement("population")
