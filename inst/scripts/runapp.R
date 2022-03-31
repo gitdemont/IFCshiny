@@ -34,7 +34,7 @@
 #' Arguments will be first passed to shiny::runApp function.\cr
 #' Then, remaining named arguments will be passed as current evaluated environment variables to 'app'.
 #' @examples 
-#' if(interactive()) run_my_app()
+#' if(interactive()) runapp()
 #' @return it invisibly returns an object representing the app. See ?shiny::shinyApp.
 #' @keywords internal
 runapp <- function(...) {
