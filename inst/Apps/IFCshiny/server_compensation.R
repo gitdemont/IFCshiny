@@ -127,18 +127,20 @@ obs_comp <- list(
   observeEvent(input$comp_graphs_click, suspended = TRUE, {
     if(length((obj_react$obj$features_comp)) == 0) return(NULL)
     if(length(input$comp_graphs_click) == 0) return(NULL)
-    if(input$comp_graphs_click$x < 0.04 || input$comp_graphs_click$x > 0.96 ||
-       input$comp_graphs_click$y < 0.04 || input$comp_graphs_click$y > 0.96) return(NULL)
-    id1 = (floor((input$comp_graphs_click$x - 0.04) / 0.92 * ncol(comp_react$spillover))) + 1
-    id2 = ncol(comp_react$spillover) - (floor((input$comp_graphs_click$y - 0.04) / 0.92 * ncol(comp_react$spillover)))
-    if(id1 <= id2 || id2 <= 0 || id1 > ncol(comp_react$spillover)) return(NULL)
+    img_h = (input$comp_graphs_click$range$bottom - input$comp_graphs_click$range$top) / input$comp_graphs_click$img_css_ratio$y
+    img_w = (input$comp_graphs_click$range$right - input$comp_graphs_click$range$left) / input$comp_graphs_click$img_css_ratio$x
+    min_h = img_h * 0.05
+    min_w = img_w * 0.05
+    y = floor(ncol(comp_react$spillover) * (input$comp_graphs_click$coords_css$y - min_h) / (img_h - 2 * min_h)) + 1
+    x = floor(ncol(comp_react$spillover) * (input$comp_graphs_click$coords_css$x - min_w) / (img_w - 2 * min_w)) + 1
+    if((y + x > ncol(comp_react$spillover)) || (x < 1) || (y < 1)) return(NULL)
+    id1 = ncol(comp_react$spillover) - y + 1
+    id2 = x
     shinyjs::runjs(sprintf("Shiny.onInputChange('comp_manager_visible', %s)", ifelse(input$comp_manager_visible, "false", "true")))
-    # if((input$comp_plot_1 != id1) || (input$comp_plot_2 != id2)) {
       shinyjs::runjs(sprintf("Shiny.onInputChange('comp_plot_1', %i)", id1))
       shinyjs::runjs(sprintf("Shiny.onInputChange('comp_plot_2', %i)", id2))
       shinyWidgets::updateNoUiSliderInput(session=session,inputId="comp_sliderX",value=100*unname(comp_react$spillover[id2, id1]))
       shinyWidgets::updateNoUiSliderInput(session=session,inputId="comp_sliderY",value=100*unname(comp_react$spillover[id1, id2]))
-    # }
   }),
   observeEvent(input$comp_table_cell_edit, suspended = TRUE, {
     value = suppressWarnings(signif(as.numeric(input$comp_table_cell_edit$value), 3))
@@ -196,7 +198,7 @@ output$comp_graphs <- renderPlot({
     }), silent = TRUE)
     box()
   }
-  try(suppressWarnings(pairs(d,
+  try(suppressWarnings(pairs(d, row1attop = FALSE,
         pch = 20, 
         # asp = 1,
         col= sapply(c("lightgrey", "chartreuse4"), FUN = function(x) { 
