@@ -33,7 +33,7 @@ obs_comp <- list(
                     input$comp_size1,
                     input$comp_size2), suspended = TRUE,
                ignoreNULL = FALSE, {
-                 if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
+                 if(length((obj_react$obj$features_comp)) == 0) return(NULL)
                  comp_react$sub1 = sample(1:nrow(obj_react$obj$features_comp), size = min(nrow(obj_react$obj$features_comp), input$comp_size1))
                  comp_react$sub2 = sample(comp_react$sub1, size = min(length(comp_react$sub1), input$comp_size2))
                }),
@@ -71,7 +71,7 @@ obs_comp <- list(
     })
   }),
   observeEvent(input$comp_compute, suspended = TRUE, {
-    if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
+    if(length((obj_react$obj$features_comp)) == 0) return(NULL)
     raw = decompensate(obj_react$obj$features_comp, spillover = comp_react$spillover)
     if(inherits(x = raw, what = "try-error")) return(NULL)
     obj_react$obj$features_comp = compensate(raw, spillover = comp_react$pre)
@@ -84,7 +84,7 @@ obs_comp <- list(
     }
   }),
   observeEvent(input$comp_apply, suspended = TRUE, {
-    if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
+    if(length((obj_react$obj$features_comp)) == 0) return(NULL)
     showModal(modalDialog("Are you sure you want to apply compensation ?",
                           size = "s",
                           easyClose = FALSE,
@@ -125,7 +125,7 @@ obs_comp <- list(
     })
   }),
   observeEvent(input$comp_graphs_click, suspended = TRUE, {
-    if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
+    if(length((obj_react$obj$features_comp)) == 0) return(NULL)
     if(length(input$comp_graphs_click) == 0) return(NULL)
     if(input$comp_graphs_click$x < 0.04 || input$comp_graphs_click$x > 0.96 ||
        input$comp_graphs_click$y < 0.04 || input$comp_graphs_click$y > 0.96) return(NULL)
@@ -164,7 +164,7 @@ obs_comp <- list(
 )
 # output
 output$comp_graphs <- renderPlot({
-  if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
+  if(length((obj_react$obj$features_comp)) == 0) return(NULL)
   raw = decompensate(obj_react$obj$features_comp[comp_react$sub2, ], spillover = comp_react$spillover)
   if(inherits(x = raw, what = "try-error")) return(NULL)
   raw = cbind(data.frame(raw, stringsAsFactors =  FALSE), type = "raw")
@@ -174,14 +174,15 @@ output$comp_graphs <- renderPlot({
   df = rbind(raw, int, deparse.level = 0, make.row.names = FALSE)
   df$type = factor(df$type, levels = c("raw", "comp"))
   hyper = 1000
-  df[, -ncol(df)] = apply(df[, -ncol(df)], 2, smoothLinLog, hyper = hyper)
-  panel <- function(x,y, ...) {
+  d = apply(df[, -ncol(df)], 2, smoothLinLog, hyper = hyper)
+  panel <- function(x, y, ...) {
     par(new = TRUE)
-    # plot(x = y, y = x,  ...)
-    rasterplot(x = x, y = y, draw = TRUE, new = FALSE, ...)
+    Xlim = (range(x, na.rm = TRUE))
+    Ylim = (range(y, na.rm = TRUE))
+    rasterplot(x = x, y = y, draw = TRUE, new = FALSE,
+               xlim = Xlim, ylim = Ylim,
+               main = "", xlab = "", ylab = "", ...)
     try(suppressWarnings({
-    Xlim = (range(y, na.rm = TRUE))
-    Ylim = (range(x, na.rm = TRUE))
     x_ticks = base_axis_constr(lim = Xlim, trans = hyper, nint = 10)
     y_ticks = base_axis_constr(lim = Ylim, trans = hyper, nint = 10)
     x_axis = axis(side = 3, at = x_ticks$at, labels = FALSE)
@@ -195,7 +196,7 @@ output$comp_graphs <- renderPlot({
     }), silent = TRUE)
     box()
   }
-  try(suppressWarnings(pairs(df[, -ncol(df)], 
+  try(suppressWarnings(pairs(d,
         pch = 20, 
         # asp = 1,
         col= sapply(c("lightgrey", "chartreuse4"), FUN = function(x) { 
@@ -209,7 +210,7 @@ output$comp_graphs <- renderPlot({
   )), silent = TRUE)
 })
 output$comp_plot <- renderPlot({
-  if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
+  if(length((obj_react$obj$features_comp)) == 0) return(NULL)
   raw = decompensate(obj_react$obj$features_comp[comp_react$sub1, ], spillover = comp_react$spillover)
   rec = compensate(raw, spillover = comp_react$pre)
   raw = cbind(data.frame(raw, stringsAsFactors =  FALSE), type = "raw")
@@ -221,16 +222,17 @@ output$comp_plot <- renderPlot({
   df = rbind(raw, int, rec)
   df$type = factor(df$type, levels = c("raw", "comp", "rec"))
   hyper = 1000
-  df[, -ncol(df)] = apply(df[, -ncol(df)], 2, smoothLinLog, hyper = hyper)
-  rasterplot(x = df[, input$comp_plot_2], y = df[, input$comp_plot_1], axes = FALSE,
+  x = smoothLinLog(df[, input$comp_plot_2], hyper = hyper)
+  y = smoothLinLog(df[, input$comp_plot_1], hyper = hyper)
+  rasterplot(x = x, y = y, axes = FALSE,
        pch = ifelse(df$type == "comp", 21, 19), 
        col= sapply(c("lightgrey", "chartreuse4", "firebrick"), FUN = function(x) { 
          paste0(c("#",sprintf("%02X", col2rgb(x)),"FF"),collapse = "")
        })[as.integer(df$type)],
        ylab = #colnames(df)[input$comp_plot_2],
-       param_react$param$channels$name[input$comp_plot_2],
+       param_react$param$channels$name[input$comp_plot_1],
        xlab = #colnames(df)[input$comp_plot_1] 
-       param_react$param$channels$name[input$comp_plot_1]
+       param_react$param$channels$name[input$comp_plot_2]
   )
   try({
   Xlim = (range(df[, input$comp_plot_2], na.rm = TRUE))
@@ -249,7 +251,7 @@ output$comp_plot <- renderPlot({
   box()
 })
 output$comp_table <- DT::renderDT({
-  if(length(unlist(obj_react$obj$features_comp)) == 0) return(NULL)
+  if(length((obj_react$obj$features_comp)) == 0) return(NULL)
   if(length(comp_react$spillover) == 0) return(NULL)
   foo = comp_react$pre
   colnames(foo) <- gsub("^(.*) <.*>$", "\\1", param_react$param$channels$name)

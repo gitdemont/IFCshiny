@@ -29,7 +29,7 @@
 
 newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   # reinit values
-  reinit_default(reactiveValues, env = shinyEnv)
+  reinit_default(TRUE)
   reinit_app(list())
   unlink(file.path(session_react$dir, "batch_raw"), recursive = TRUE, force = TRUE)
   file_react$input <- files
