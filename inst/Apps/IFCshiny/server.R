@@ -152,7 +152,7 @@ server <- function(input, output, session) {
     
     # we setup reactiveValues that will be used within the app
     source(file.path(.rundir, "server_default.R"), local = TRUE, echo = FALSE, verbose = FALSE)
-    reinit_default(reactiveValues, env = shinyEnv)
+    reinit_default()
 
     # observers for draggable panels
     source(file.path(.rundir, "server_managers.R"), local = TRUE, echo = FALSE, verbose = FALSE)

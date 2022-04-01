@@ -27,7 +27,7 @@
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
 
-reinit_default <- function(fun = reactiveValues, env = environment(), x, not = NULL) {
+reinit_default <- function(reset = FALSE, x, not = NULL, env = shinyEnv) {
   foo = list(obj_react = list(obj = list(haschanged_objects = character()), back = list(), 
                               batch = list(), curr = 1, stats = array(numeric(), dim=c(0,0,4))),
              model_react =   list(data = data.frame(), 
@@ -69,15 +69,19 @@ reinit_default <- function(fun = reactiveValues, env = environment(), x, not = N
                                sub2 = integer()),
              msg_react = list(queue = c(), done = c()),
              file_react = list(input = list(), id = character()))
-  if(missing(x)) {
-    lapply(setdiff(names(foo), not), FUN = function(i) {
-      assign(x = i, value = do.call(what = fun, args = foo[[i]]), envir = env)
+  if(missing(x)) x = setdiff(names(foo), not)
+  if(reset) {
+    lapply(x, FUN = function(i) {
+      if(!(i %in% names(foo))) {
+        warning("no default value for: ", x)
+      } else {
+        lapply(names(foo[[i]]), FUN = function(j) env[[i]][[j]] <- foo[[i]][[j]])
+      }
     })
   } else {
-    x = setdiff(x, not)
     lapply(x, FUN = function(i) {
-      if(!(x %in% names(foo))) stop("no default value for: ", x)
-      assign(x = i, value = do.call(what = fun, args = foo[[i]]), envir = env)
+      if(!(i %in% names(foo))) warning("no default value for: ", x)
+      assign(x = i, value = do.call(what = reactiveValues, args = foo[[i]]), envir = env)
     })
   }
 }
