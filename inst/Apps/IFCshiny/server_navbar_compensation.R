@@ -32,22 +32,19 @@ if(length(obj_react$obj$features_comp) == 0) {
   hideElement("comp_new")
   if(length(obj_react$obj$description$FCS) == 0) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Preparing compensation", reset = FALSE)
-    mess_global(title = "Compensation", 
-                msg = c("Compensation is under development",
-                        "This tab is not fully functional yet",
-                        "A real IFC compensation will modify images and masks to create a new cif file",
-                        "This IS NOT DONE here !",
-                        "only intensities within daf will be recomputed"), 
-                type = "info", duration = 10)
+    msg_react$queue = c(msg_react$queue, "comp_img")
+    updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
+    mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Preparing compensation", reset = FALSE)
     tryCatch({
+      if(!is.matrix(obj_react$back$info$CrossTalkMatrix) || (length(obj_react$back$info$CrossTalkMatrix) == 0)) obj_react$back$info$CrossTalkMatrix = getInfo(obj_react$back$fileName)$CrossTalkMatrix
       info = obj_react$back$info
       is_intensity = unlist(sapply(obj_react$obj$features_def, FUN = function(i_feat) {
         if(i_feat$type == "single" && i_feat$userfeaturetype == "Mask and Image") {
           foo = strsplit(i_feat$def, split = "|", fixed = TRUE)[[1]]
           if((foo[1] == "Intensity") && (foo[2] == "MC")) {
-            bar = info$Images$physicalChannel[foo[3] == info$Images$name]
+            bar = info$Images$physicalChannel[paste0(foo[-c(1,2)],collapse="") == info$Images$name]
             if(length(bar) == 0) {
-              return(info$Images$physicalChannel[foo[3] == sprintf("Ch%02i", info$Images$physicalChannel)])
+              return(info$Images$physicalChannel[paste0(foo[-c(1,2)],collapse="") == sprintf("Ch%02i", info$Images$physicalChannel)])
             } else {
               return(bar)
             }
@@ -92,7 +89,12 @@ if(length(obj_react$obj$features_comp) == 0) {
           hideElement(id = "compute_features")
         }
       } else {
+       img_names = unlist(sapply(obj_react$obj$features_def[names(is_intensity)], FUN = function(i_feat) {
+            foo = strsplit(i_feat$def, split = "|", fixed = TRUE)[[1]]
+            paste0(foo[-c(1,2)],collapse="")
+        }))
         obj_react$obj$features_comp = obj_react$obj$features[, names(is_intensity)]
+        param_react$param = list(channels = data.frame(name = img_names))
       }
       spillover = info$CrossTalkMatrix[which(info$in_use), which(info$in_use)]
       colnames(spillover) = sprintf("Ch%02i",info$Images$physicalChannel) #info$Images$name
@@ -101,7 +103,6 @@ if(length(obj_react$obj$features_comp) == 0) {
       diag(obj_react$obj$description$spillover) <- 1
       colnames(obj_react$obj$description$spillover) = colnames(spillover) 
       rownames(obj_react$obj$description$spillover) = rownames(spillover)
-      
       shinyjs::runjs(sprintf("Shiny.onInputChange('comp_plot_1', %i)", 0))
       shinyjs::runjs(sprintf("Shiny.onInputChange('comp_plot_2', %i)", 0))
       shinyjs::runjs(sprintf("$('#comp_table').width('%ipx')", ncol(spillover) * 50))

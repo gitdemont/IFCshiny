@@ -152,6 +152,8 @@ observeEvent(input$navbar,{
            showElement("logs_save")
          }, "tab9" = {
            # compensation is under development
+           msg_react$queue = c(msg_react$queue, "comp_dev")
+           updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
            if(all(file.exists(file.path(.rundir, c("server_compensation.R", "server_navbar_compensation.R"))))) source(file.path(.rundir, "server_navbar_compensation.R"), local = TRUE)$value
          })
 })
