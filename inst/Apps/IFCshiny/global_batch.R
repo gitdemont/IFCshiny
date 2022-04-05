@@ -118,7 +118,7 @@ plot_prepare_data <- function(obj, graph, color_mode = c("white","black")[1], pr
   #   foo
   # }), stringsAsFactors = FALSE)
   # data_sub = apply(base, 1, any)
-  data_sub = cpp_fast_rowAny(lapply(base_n, FUN=function(x) {
+  data_sub = fastAny(lapply(base_n, FUN=function(x) {
     foo = P[[x]]$obj
     if(length(foo) == 0) foo = rep(FALSE, times=obj$description$ID$objcount)
     foo
@@ -427,7 +427,7 @@ plotly_batch_violin <- function(batch, pop = "All", feat = "Object Number", tran
   if(missing(feat)) feat = "Object Number"
   L = length(batch)
   N = names(batch)
-  N = sort(names(batch))
+  # N = sort(names(batch))
   if(length(N) == 0) {
     N = as.character(seq_len(L))
     names(batch) = N
@@ -486,7 +486,7 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
   dots = list(...)
   L = length(batch)
   N = names(batch)
-  N = sort(names(batch))
+  # N = sort(names(batch))
   if(length(N) == 0) {
     N = as.character(seq_len(L))
     names(batch) = N
@@ -604,7 +604,7 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
                                                 text = paste(N[i_batch],disp,sep="<br>"),
                                                 hovertemplate = "x: %{x}<br>y: %{y}<extra>%{text}</extra>",
                                                 showlegend = !canfill,
-                                                legendgrouptitle = list(text=N[i_batch]),
+                                                # legendgrouptitle = list(text=N[i_batch]),
                                                 legendgroup = N[i_batch],
                                                 type = "scatter3d",
                                                 mode = "lines") 
@@ -632,7 +632,7 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
                                                  colorscale = K,
                                                  hoverinfo = "skip",
                                                  name = disp, 
-                                                 legendgrouptitle = list(text=N[i_batch]),
+                                                 # legendgrouptitle = list(text=N[i_batch]),
                                                  legendgroup = N[i_batch],
                                                  type = "mesh3d")
                      
@@ -667,7 +667,7 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
                                                 hovertemplate = "x: %{x}<br>y: %{y}<extra>%{text}</extra>",
                                                 ids = d[, "Object Number"],
                                                 name = disp,
-                                                legendgrouptitle = list(text=N[i_batch]),
+                                                # legendgrouptitle = list(text=N[i_batch]),
                                                 legendgroup = N[i_batch],
                                                 type = "scatter3d",
                                                 mode="markers")
@@ -717,7 +717,7 @@ plotly_batch_stack <- function(batch, g, viewport = "data", pt_size = 2, alpha =
                                                     range = rev(Zlim), zeroline=FALSE,
                                                     tickmode = "array",
                                                     tickvals = 1:L,
-                                                    ticktext = as.character(1:L))),
+                                                    ticktext = N[1:L])),
                             legend = list(title = center_short(N, 20), groupclick = "toggleitem"))
   p
 }

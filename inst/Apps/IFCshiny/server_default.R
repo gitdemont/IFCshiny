@@ -28,7 +28,7 @@
 ################################################################################
 
 reinit_default <- function(reset = FALSE, x, not = NULL, env = shinyEnv) {
-  foo = list(obj_react = list(obj = list(haschanged_objects = character()), back = list(), 
+  foo = list(obj_react = list(obj = list(haschanged_objects = character()), back = list(), syncbatch = FALSE,
                               batch = list(), curr = 1, stats = array(numeric(), dim=c(0,0,4))),
              model_react =   list(data = data.frame(), 
                                   cen = numeric(),cem = mean,
@@ -42,7 +42,7 @@ reinit_default <- function(reset = FALSE, x, not = NULL, env = shinyEnv) {
                                   pred = factor(), proj = matrix(numeric()), feat = list(),
                                   clust = factor(), meta_args = list(), meta_fun = "kmeans"),
              pops_react = list(def = character(), new = FALSE, revert = list()),
-             plot_react = list(plot = list(),  g = buildGraph(type = "histogram"),
+             plot_react = list(plot = list(),  g = buildGraph(type = "histogram"), stack = buildGraph(type = "histogram"),
                                shown = NULL, order = NULL,
                                uri = NULL, param = list(), shared = NULL,
                                x_feat = "Object Number", y_feat = "Object Number", z_feat = "Object Number",

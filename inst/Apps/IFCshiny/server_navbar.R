@@ -127,11 +127,19 @@ observeEvent(input$navbar,{
          }, "tab7" = {
            add_log("batch")
            lapply(obs_batch, FUN = function(x) x$resume())
-           N = names(obj_react$batch)
+           N = unname(sapply(obj_react$batch, FUN = function(b) basename(b$fileName)))
            if(length(N) == 0) N = list()
            sel = input$file_main;
            if((length(N) == 0) || !any(N %in% input$file_main)) {
-             sel = NULL
+             id1 = random_name(special = NULL)
+             file_b = paste0(id1, " _ ", basename(obj_react$obj$fileName))
+             obj_react$obj$fileName <- file_b[1]
+             obj_react$back <- obj_react$obj
+             obj_react$curr = id1
+             obj_react$batch = list(obj_react$obj)
+             names(obj_react$batch) = id1
+             N = file_b
+             sel = N
              hideElement("batch_save")
              hideElement("batch_plot_controls")
            } else {

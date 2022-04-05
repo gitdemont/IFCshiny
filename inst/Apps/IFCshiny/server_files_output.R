@@ -608,7 +608,7 @@ output$batch_save_obj_btn <- downloadHandler(
       files = sapply(1:L, FUN = function(i_batch) {
         setPB(pb_write, value = i_batch, title = N[i_batch])
         suppressWarnings(writeIFC(obj_react$batch[[i_batch]],
-                                  write_to = file.path(tmpdr, "batch", N[i_batch]), overwrite = TRUE,
+                                  write_to = file.path(tmpdr, "batch", basename(obj_react$batch[[i_batch]]$fileName)), overwrite = TRUE,
                                   fullname = FALSE, binary = TRUE, 
                                   display_progress = TRUE, session = session))
       })

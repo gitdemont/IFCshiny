@@ -27,14 +27,28 @@
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
 
+
+observeEvent(obj_react$obj$haschanged_objects, {
+  # observer to sync obj_react$batch with current obj_react$obj modification, always on
+  if(length(obj_react$obj$haschanged_objects) != 0) obj_react$syncbatch <- TRUE
+})
+
 obs_batch = list(
+  observeEvent(obj_react$syncbatch, {
+    if(obj_react$syncbatch) {
+      n = strsplit(basename(obj_react$obj$fileName), split = " _ ", fixed = TRUE)[[1]][1]
+      if(n %in% names(obj_react$batch)) obj_react$batch[[n]] <- obj_react$obj
+      obj_react$syncbatch <- FALSE
+    }
+  }),
   observeEvent(input$file_batch, {
     if(length(input$file_batch) == 0) return(NULL)
-    # creates names, names are digit-basename(file)
-    # this will allow to navigate between batch files
+    # creates unique random names, this allows to navigate between batch files
     L = length(obj_react$batch)
-    start = ifelse(L == 0, 1, L)
-    file_b <- paste0(seq_along(unlist(input$file_batch$name)) + start, "-",  unlist(input$file_batch$name))
+    NN = unlist(input$file_batch$name)
+    ids = c()
+    while(length(ids) != length(NN)) ids = c(ids, random_name(special = NULL, forbidden = ids))
+    file_b <- paste0(ids, " _ ",  NN)
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Batching files", reset = FALSE)
     tryCatch({
       # place files in batch_raw dir
@@ -91,40 +105,43 @@ obs_batch = list(
           obj
         })
       }
-      if(L == 0) {
+      if(L == 0) { # should not happen since batch list with initial file is created when batch tab is clicked
         # add current obj_react$obj in 1st position of the batch list
-        file_b = c(paste0("1-",basename(obj_react$obj$fileName)), file_b)
+        id1 = random_name(special = NULL, forbidden = ids)
+        file_b = c(paste0(id1, " _ ", basename(obj_react$obj$fileName)), file_b)
         obj_react$obj$fileName <- file_b[1]
-        # in this process we remove images from current obj and param_react
-        # FIXME maybe it could be interesting to keep images ?
-        obj_react$obj <- set_default_info(obj_react$obj)
         obj_react$back <- obj_react$obj
-        # set current batch # to 1 (i.e, the current obj_react$obj)
-        obj_react$curr = 1
+        obj_react$curr = id1
         obj_react$batch = c(list(obj_react$obj), batch)
       } else {
         # add new uploaded files to previous obj_react$batch list
-        file_b = c(names(obj_react$batch), file_b)
+        file_b = c(unname(sapply(obj_react$batch, FUN = function(b) basename(b$fileName))), file_b)
         obj_react$batch = c(obj_react$batch, batch)
       }
-      
       # set names to obj_react$batch
-      names(obj_react$batch) <- file_b
+      names(obj_react$batch) <- sapply(strsplit(file_b, split = " _ ", fixed = TRUE), FUN = function(x) x[1])
       # update selector
-      updateSelectInput(session = session, inputId = "file_main", choices = file_b, selected = file_b[obj_react$curr])
+      updateSelectInput(session = session, inputId = "file_main", choices = file_b, selected = file_b[1])
       # udpate ridge space
       updateSliderInput(session = session, inputId = "ridge_space", value = min(10,max(0.5, 2*length(file_b)-1)))
     }, error = function(e) {
       mess_global(title = "file batch", msg = e$message, type = "error")
       return(NULL)
-    }, finally = mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE))
+    }, finally = {
+      if(length(obj_react$batch) <= 1) {
+        shinyjs::disable(id = "remove_main")
+      } else {
+        shinyjs::enable(id = "remove_main")
+      }
+      mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
+    })
   }),
   observeEvent(input$file_main, {
     if(length(input$file_main) == 0 || input$file_main == "") return(NULL)
-    new_main = as.integer(strsplit(input$file_main, split = "-", fixed = TRUE)[[1]][1])
-    if(names(obj_react$batch)[obj_react$curr] != input$file_main) add_log(paste0("moving from batch file: '", names(obj_react$batch)[obj_react$curr], "', to: '", input$file_main, "'"))
+    add_log(paste0("moving to batch file: '", input$file_main, "'"))
+    new_main = strsplit(input$file_main, split = " _ ", fixed = TRUE)[[1]][1]
     obj_react$batch[[obj_react$curr]] <- obj_react$obj
-    obj_react$obj <- compare(reinit_app(obj_react$batch[[new_main]]),obj_react$obj, session=session) 
+    obj_react$obj <- compare(reinit_app(obj_react$batch[[new_main]]), obj_react$obj, session=session) 
     obj_react$back <- obj_react$obj
     obj_react$curr = new_main
     # modify current file_react
@@ -136,32 +153,30 @@ obs_batch = list(
     updateTabsetPanel(session = session, "navbar", selected = "tab7")
   }),
   observeEvent(input$remove_main, {
-    if(length(obj_react$batch) == 0) return(NULL)
+    if(length(obj_react$batch) <= 1) return(NULL)
     if(length(input$file_main) == 0 || input$file_main == "") return(NULL)
     add_log(paste0("removing from batch: '", input$file_main))
-    to_rm = !input$file_main == names(obj_react$batch)
-    obj_react$batch = obj_react$batch[to_rm]
+    to_rm = strsplit(input$file_main, split = " _ ", fixed = TRUE)[[1]][1]
+    to_rm = to_rm == names(obj_react$batch)
+    obj_react$batch = obj_react$batch[!to_rm]
     obj_react$stats = array(numeric(), dim=c(0,0,4))
     if(length(obj_react$batch) != 0) {
-      N = names(obj_react$batch)
-      N = sapply(N, FUN = function(x) paste0(strsplit(x, "-", fixed = TRUE)[[1]][-1], collapse = ""))
-      N = paste(1:length(N), N, sep = "-")
-      names(obj_react$batch) = N
+      N = unname(sapply(obj_react$batch, FUN = function(b) basename(b$fileName)))
+      obj_react$curr = names(obj_react$batch)[1L]
+      obj_react$obj <- compare(reinit_app(obj_react$batch[[obj_react$curr]]), obj_react$obj, session=session)
       updateSelectInput(session=session, inputId = "file_main", choices = N, selected = N[1])
-    } else {
+    } else { # should not happen since button is disabled when obj_react$batch length is <= 1
       updateSelectInput(session=session, inputId = "file_main", selected = c(), choices = list())
-      obj_react$stats = array(numeric(), dim=c(0,0,4))
       hideElement("batch_plot_controls")
       hideElement("batch_save")
-      obj_react$obj$fileName <- paste0(strsplit(obj_react$obj$fileName, "-", fixed = TRUE)[[1]][-1], collapse = "")
-      obj_react$back$fileName <- obj_react$obj$fileName
       # modify current file_react
       file_react$input = list(name = basename(obj_react$obj$fileName),
                               size = file.size(obj_react$obj$fileName),
                               type = "",
                               datapath = obj_react$obj$fileName)
-      file_react$id = random_name(n = 20)
     }
+    file_react$id = random_name(n = 20)
+    if(length(obj_react$batch) <= 1) shinyjs::disable(id = "remove_main")
   }),
   observeEvent(input$navbar_batch, suspended = TRUE, ignoreInit = FALSE, {
     if(input$navbar != "tab7") return(NULL)
@@ -291,7 +306,7 @@ output$stack_plot <- renderPlotly({
   runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
   tryCatch({
     plotly_batch_stack(obj_react$batch, 
-                       g = plot_react$g,
+                       g = plot_react$stack,
                        batch_mode = TRUE,
                        height = input$plot_batch_height)
   }, error = function(e) {

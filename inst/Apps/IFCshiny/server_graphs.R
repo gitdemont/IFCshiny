@@ -1774,6 +1774,7 @@ obs_plot <- list(
     set_tool("add")
   }),
   observeEvent(input$plot_sel_stack, suspended = TRUE,{
+    plot_react$stack <- plot_react$g
     runjs(code = "$('#navbar [data-value=\"tab7\"]').trigger('click');" )
     runjs(code = "Shiny.onInputChange('navbar', 'tab7');")
     runjs(code = "$('#navbar_batch [data-value=\"Stack\"]').trigger('click');" )
