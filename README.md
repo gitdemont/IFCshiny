@@ -29,66 +29,23 @@ shell('setx PATH "C:\\Rtools\\mingw_32\\bin"')
 
 #### in R
 
-- install devtools if not already there
-
-```R
-install.packages("devtools")
-```
-
-- install R dependencies required for IFCshiny package
-"IFC", "shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "visNetwork", 
-"colourpicker", "DT", "gridExtra", "jsonlite", "caret", "MASS", "mclust", "e1071", "EmbedSOM", "xgboost", "bestNormalize", 
-"Rtsne", "umap", "rmarkdown", "rgl", "heatmaply", "viridisLite", "plotly", "decido", "doParallel", "zip", "openxlsx", "reticulate"
-
-```R
-install.packages(c("IFC", "shiny", "shinyjs", "shinymanager", "shinyFeedback", "shinyWidgets", "htmlwidgets", "visNetwork", "colourpicker", "DT", "gridExtra", "jsonlite", "caret", "MASS", "mclust", "e1071", "EmbedSOM", "xgboost", "bestNormalize", "Rtsne", "umap", "rmarkdown", "rgl", "heatmaply", "viridisLite", "plotly", "foreach", "doParallel", "zip", "openxlsx", "reticulate"))
-```
-
-- install "remotes", to install IFCshiny package from github remotes is needed.
+- install "remotes", to install IFCshiny package from github.
 
 ```R
 install.packages("remotes")
 ```
 
-- IFCshiny uses latest improvement of IFC package. So you need to install current in-dev IFC package from github 
-
-```R
-remotes::install_github(repo = "gitdemont/IFC", ref = "master", dependencies = FALSE)
-```
-
 - install IFCshiny
 
 ```R
-remotes::install_github(repo = "gitdemont/IFCshiny", ref = "master", dependencies = FALSE)
+remotes::install_github(repo = "gitdemont/IFCshiny", ref = "master", dependencies = TRUE)
 ```
 
 ## USAGE
 
-Several examples in `IFCshiny` package are dependent on data files that can be found in dedicated `IFCdata` package.
-
-To install `IFCdata` package and run examples in `IFCshiny`:
-
-```R
-install.packages("IFCdata", repos = "https://gitdemont.github.io/IFCdata/", type = "source")
-```
-
-In addition several functions may require additional packages
-
-- `IFCip` for features extraction directly from images
-
-```R
-remotes::install_github(repo = "gitdemont/IFCip", ref = "master", dependencies = FALSE)
-```
-
-- Not yet available, `IFCshiny` may require `keras` and `tensorflow`
-
-```R
-install.package(c("keras", "tensorflow"))
-```
+The application should smoothly start using **IFCshiny::runIFCshinyApp()**
 
 ## DETAILS
-
-The application should smoothly start using **IFCshiny::runIFCshinyApp()**
 
 >Startup
 
@@ -105,11 +62,11 @@ Depending on the file you use (fcs, daf, rif, cif), you will be able to see diff
 
 `Compensation` is experimental and will be used to tweak compensation
 
-`Images` is displayed when input file(s) contains a rif or a cif file. It allow to tweak, display and export images. User can also drag the tab; doing so Images tab becomes floatable and allows for manual tagging or live population modification display.
+`Images` is displayed when input file(s) contain(s) a rif or a cif file. It allows to tweak, display and export images. User can also drag the tab; doing so Images tab becomes floatable and allows for manual tagging or live population modification display.
 
 `Network` contains the gating strategy. It also permits to import and export gating strategy
 
-`Plot` includes user friendly clickable elements to display features (FL) values as histogram (1D), bi parametric scatter or density plot (2D) and even 3D graphs. In addition, several tools allows to easily draw and manipulate regions in an interactive way.
+`Plot` includes user friendly clickable elements to display features (FL) values as histogram (1D), bi parametric scatter or density plot (2D) and even 3D graphs. In addition, several tools allow to easily draw and manipulate regions in an interactive way.
 
 `Machine Learning` is the place to apply several machine learning algorithms on your data to help you in doing supervised or unsupervised clustering
 
@@ -117,7 +74,7 @@ Depending on the file you use (fcs, daf, rif, cif), you will be able to see diff
 
 `Table` allows to easily extract statistics and export features values
 
-`Batch` allow to batch process current file analysis to other files and compare them.
+`Batch` allows to batch process current file analysis to other files and compare them.
 
 `Logs` permits to keep a track of user action.
 
@@ -125,7 +82,7 @@ Depending on the file you use (fcs, daf, rif, cif), you will be able to see diff
 
 ![infos](https://github.com/gitdemont/IFCshiny/blob/master/inst/include/imgs/tab-infos.PNG?raw=true)
 
-Several information will be available depending on file type. Like acquisition device name, date, file name, software version, merge file information, illumination, magnification, masks description, compensation matrix.
+Several information will be available depending on file type. It includes acquisition device name, date, file name, software version, merge file information, illumination, magnification, masks description, compensation matrix.
 
 These informations can be saved
 
@@ -189,11 +146,13 @@ Plot is the place to draw graph from the features (FL) values stored in your fil
 
 In case, you have several shown populations, **Order** will allow you to arrange them conveniently.
 
-Depending if you choose 1D, 2D or 3D representation, you will have access to x-, y- and z- axis features selector, respectively.
+Depending if you choose 1D, 2D or 3D representation, you will have access to x-, y- and z- axis **features** selector accompanied with their transformations, respectively.
+
+Clicking on **tweak parameters** will allow you to get even more control on axes names, range, title, density colors, contour plots.
 
 In 1D and 2D plot, you will be able to draw, edit or remove already existing regions.
 
-**to draw** you should select a drawing tool (line, rectangle, polygon, hand, oval) and then click within the graph to start drawing the shape. For polygon clicking will draw a new vertex. For all, double-clicking will terminate the drawing and invite you to save the region you draw. Finally, clicking another shape while drawing will cancel current drawing and start another one.
+**to draw** you should select a drawing tool (line, rectangle, polygon, hand, oval) and then click within the graph to start drawing the shape. For polygon, clicking will draw a new vertex. For all, double-clicking will terminate the drawing and invite you to save the region you draw. Finally, clicking another shape while drawing will cancel current drawing and start another one.
 
 **to edit** you should select the edit tool. Hovering the regions in your plot will highlight the closest one. Once the region you want to edit is highlighted you can click it to start the edition process. This will show its boundaries and its name. You will then be able to re-position the whole gate, each of its boundaries or/and its name. Clicking the edit tool will terminate and save the edition while clicking on the arrow while abort it.
 
@@ -223,9 +182,9 @@ Since, 3D plotting can consume some resources with large number of points. So yo
 
 >Machine Learning
 
-Machine Learning tab is aimed to allow user to use machine learninge. It happens in 2 phases. The first requires user to identify the population(s) he wants to use.
+Machine Learning tab is aimed to allow user to use machine learning. It happens in 2 phases. The first requires user to identify the population(s) he wants to use.
 
-Basically, if more than one population is entered then the app will use supervised machine learning. Otherwise unsupervised will be available.
+Basically, if more than one population is entered, the app will use supervised machine learning. Otherwise unsupervised will be available.
 
 ![ml](https://github.com/gitdemont/IFCshiny/blob/master/inst/include/imgs/tab-ML_input.PNG?raw=true)
 
@@ -252,7 +211,7 @@ For example, the default pre processing in supervised clustering is:
 
 ![ml](https://github.com/gitdemont/IFCshiny/blob/master/inst/include/imgs/tab-ML_training.PNG?raw=true)
 
-Once input have been set by user Start training tab will be available and will allow to choose the Machine Leaning algorithm in **model**
+Once input have been set by user Start training tab will be available and will allow to choose the Machine Learning algorithm in **model**
 
 Depending on this model several graphs will be generated and information printed
 
@@ -294,7 +253,7 @@ So, please only rely on IFCshiny::runIFCshinyApp()
 
 Please take this into account and report bugs or address features implementations to help the development.
 
-## DISCLAMER
+## DISCLAIMER
 
 - You are using this package **on your own risk!**
 
