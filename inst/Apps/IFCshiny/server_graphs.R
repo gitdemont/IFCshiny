@@ -250,6 +250,8 @@ obs_plot <- list(
                                                              columnDefs = list(list(orderable = FALSE, targets = "_all"))))
       regions_react$pre = reg
       regions_react$pre$name = input$reg_selection
+    } else {
+      regions_react$back = FALSE
     }
     reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "valid", session = getDefaultReactiveDomain())
   }),

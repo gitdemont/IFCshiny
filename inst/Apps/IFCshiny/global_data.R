@@ -406,23 +406,23 @@ reg_def = function(reg, reg_back, all_names, check = "valid", session = getDefau
            removeClass(id = "reg_color_light_reset", class = "modified")
            removeClass(id = "reg_color_dark_reset", class = "modified")
            same = structure(rep(TRUE, 6), names = c("label", "light", "dark", "cx", "cy", "table"))
-           if(reg$label != reg_back$label) {
+           if(any(reg$label != reg_back$label)) {
              same[1] = FALSE
              myfeedback(inputId = "reg_def_label", text=reg_back$label)
            }
-           if(reg$color != reg_back$color) {
+           if(any(reg$color != reg_back$color)) {
              same[2] = FALSE
              addClass(id = "reg_color_dark_reset", class = "modified")
            }
-           if(reg$lightcolor != reg_back$lightcolor) {
+           if(any(reg$lightcolor != reg_back$lightcolor)) {
              same[3] = FALSE
              addClass(id = "reg_color_light_reset", class = "modified")
            }
-           if(reg$cx != reg_back$cx) {
+           if(any(reg$cx != reg_back$cx)) {
              same[4] = FALSE
              myfeedback(inputId = "reg_def_cx", text=as.character(reg_back$cx))
            }
-           if(reg$cy != reg_back$cy) {
+           if(any(reg$cy != reg_back$cy)) {
              same[5] = FALSE
              myfeedback(inputId = "reg_def_cy", text=as.character(reg_back$cy))
            }
