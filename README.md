@@ -139,7 +139,7 @@ Compensation is highly experimental. It is aimed to tweak current file compensat
 
 You will be able to edit compensation directly inside the cell of the compensation table of by clicking a graph and manually adjusting sliders position.
 
-Since displaying interactively all 1-to-1 combination is computationaly expensive only a small number of cells are shown (100 **Number of objects per pair plot**). However, when clicking a single graph, you will be able to see more points (5000 **Number of objects in single plot**).
+Since displaying interactively all 1-to-1 combination is computationaly expensive only a small number of cells are shown (500 **Number of objects per pair plot**). However, when clicking a single graph, you will be able to see more points (5000 **Number of objects in single plot**).
 
 Compensation can be reset to initial value or if you think that the modification you've applied are suitable you can apply them and eventually save the new compensation matrix.
 
