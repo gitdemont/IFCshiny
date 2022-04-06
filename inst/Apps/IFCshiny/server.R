@@ -542,11 +542,17 @@ server <- function(input, output, session) {
       finally = runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';"))
     })
     # output stats
-    output$plot_stats <- try(suppressWarnings(renderPrint({
+    output$plot_stats <- suppressWarnings(renderPrint({
       if(!inherits(plot_react$plot, "IFC_plot")) return(NULL)
-      stats = plot_stats(plot_react$plot)
-      stats[,!grepl("Qu", colnames(stats))]
-    })), silent = TRUE)
+      stats = NULL
+      tryCatch({
+        stats = plot_stats(plot_react$plot)
+        stats[,!grepl("Qu", colnames(stats))]
+      }, error = function(e) {
+        e$message
+      })
+      stats
+    }))
     output$plot_3D <- renderRglwidget({
       devs = rgl.dev.list()
       if(!any(names(devs) == "null")) open3d(useNULL = TRUE)

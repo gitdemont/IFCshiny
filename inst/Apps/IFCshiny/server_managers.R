@@ -219,7 +219,18 @@ observeEvent(input$pop_manager_visible, {
 })
 observeEvent(input$reg_manager_visible, {
   add_log(sprintf("Region Manager Visible: %s", input$reg_manager_visible))
+  N = names(obj_react$obj$regions)
   if(input$reg_manager_visible) {
+    if(any(input$reg_selection %in% N)) {
+      reg_back = obj_react$obj$regions[[input$reg_selection]]
+      reg_back$cx = signif(reg_back$cx, digits = 3)
+      reg_back$cy = signif(reg_back$cy, digits = 3)
+      reg_back$x = signif(reg_back$x, digits = 3)
+      reg_back$y = signif(reg_back$y, digits = 3)
+      if((length(regions_react$pre) == 0) || !(regions_react$pre$name %in% N)) regions_react$pre = reg_back
+      regions_react$pre$name = input$reg_selection
+      reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both", session = getDefaultReactiveDomain())
+    }
     runjs(sprintf("Shiny.onInputChange('reg_manager_visible', %s)", names(check_managers(alw="reg"))))
     lapply(obs_reg, FUN = function(x) x$resume())
     runjs(code="$('html, body').animate({scrollTop: '0px' }, 300);")

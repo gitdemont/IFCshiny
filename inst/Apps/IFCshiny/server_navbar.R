@@ -55,6 +55,16 @@ observeEvent(input$navbar,{
     hideElement("comp_side_inputs")
     lapply(obs_comp, FUN = function(x) x$suspend())
   }
+  if(length(input$shape_selected) != 0) {
+    mess_global(title = "Region Edition", msg = "current action has cancelled region edition", type = "warning", duration = 10)
+    runjs(code = "Shiny.onInputChange('shape_selected', null)")
+    set_tool("init")
+  }
+  if(plot_react$action == "drawing") {
+    mess_global(title = "Region Creation", msg = "current action has cancelled region creation", type = "warning", duration = 10)
+    runjs(code = "Shiny.onInputChange('shape_selected', null)")
+    set_tool("init")
+  }
   lapply(obs_plot, FUN = function(x) x$suspend())
   lapply(obs_report, FUN = function(x) x$suspend())
   lapply(obs_cells, FUN = function(x) x$suspend())

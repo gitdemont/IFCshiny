@@ -352,10 +352,6 @@ pop_def = function(x = "") {
 # function to check validity of region definition and display information about element edition
 reg_def = function(reg, reg_back, all_names, check = "valid", session = getDefaultReactiveDomain()) {
   if(length(reg$name) == 0) return(structure(rep(FALSE, 6), names = c("label", "light", "dark", "cx", "cy", "table")))
-  hideFeedback(session=session, inputId="reg_def_label")
-  hideFeedback(session=session, inputId="reg_def_cx")
-  hideFeedback(session=session, inputId="reg_def_cy")
-  hideFeedback(session=session, inputId="reg_def_table_feedback")
   type = check
   if(check == "info") {
     type = "edit"
@@ -363,36 +359,48 @@ reg_def = function(reg, reg_back, all_names, check = "valid", session = getDefau
   } else {
     myfeedback = showFeedbackWarning
   }
+  same = structure(rep(TRUE, 6), names = c("label", "light", "dark", "cx", "cy", "table"))
+  valid = structure(rep(TRUE, 6), names = c("label", "light", "dark", "cx", "cy", "table"))
   switch(type,
+         "both" = {
+           valid = reg_def(reg, reg_back, all_names, check = "valid", session)
+           same = reg_def(reg, reg_back, all_names, check = "info", session)
+         },
          "valid" = {
-           valid = structure(rep(TRUE, 6), names = c("label", "light", "dark", "cx", "cy", "table"))
            if((length(session$input$reg_def_label) == 0) || (session$input$reg_def_label == "")) {
              valid[1] = FALSE
+             hideFeedback(session=session, inputId="reg_def_label")
              showFeedbackDanger(session = session, inputId = "reg_def_label", text = "empty")
            } else {
              if(session$input$reg_def_label %in% c("And", "Or", "Not", "(", ")", "All")) {
                valid[1] = FALSE
+               hideFeedback(session=session, inputId="reg_def_label")
                showFeedbackDanger(session = session, inputId = "reg_def_label", text = "invalid")
              }
              if(grepl("^ML_", session$input$reg_def_label)) {
                valid[1] = FALSE
+               hideFeedback(session=session, inputId="reg_def_label")
                showFeedbackDanger(session = session, inputId = "reg_def_label", text = "not allowed")
              }
              if(session$input$reg_def_label %in% setdiff(all_names, reg$name)) {
                valid [1]= FALSE
+               hideFeedback(session=session, inputId="reg_def_label")
                showFeedbackDanger(session = session, inputId = "reg_def_label", text = "already exists")
              }
            }
-           if(!is.finite(reg$cx) ) {
+           if(!any(is.finite(na.omit(reg$cx)))) {
              valid[4] = FALSE
+             hideFeedback(session=session, inputId="reg_def_cx")
              showFeedbackDanger(session=session, inputId="reg_def_cx", text="non-finite value")
            }
-           if(!is.finite(reg$cy)) {
+           if(!any(is.finite(na.omit(reg$cy)))) {
              valid[5]= FALSE
+             hideFeedback(session=session, inputId="reg_def_cy")
              showFeedbackDanger(session=session, inputId="reg_def_cy", text="non-finite value")
            }
            if(!all(is.finite(c(reg$x, reg$y)))) {
              valid[6] = FALSE
+             hideFeedback(session=session, inputId="reg_def_table_feedback")
              showFeedbackDanger(session=session, inputId="reg_def_table_feedback", text="non-finite value")
            }
            if(all(valid)) {
@@ -400,15 +408,11 @@ reg_def = function(reg, reg_back, all_names, check = "valid", session = getDefau
            } else {
              disable("reg_validate")
            }
-           return(valid)
          },
          "edit" = {
-           removeClass(id = "reg_color_light_reset", class = "modified")
-           removeClass(id = "reg_color_dark_reset", class = "modified")
-           same = structure(rep(TRUE, 6), names = c("label", "light", "dark", "cx", "cy", "table"))
            if(any(reg$label != reg_back$label)) {
              same[1] = FALSE
-             myfeedback(inputId = "reg_def_label", text=reg_back$label)
+             if(valid[1]) myfeedback(inputId = "reg_def_label", text=reg_back$label)
            }
            if(any(reg$color != reg_back$color)) {
              same[2] = FALSE
@@ -418,20 +422,28 @@ reg_def = function(reg, reg_back, all_names, check = "valid", session = getDefau
              same[3] = FALSE
              addClass(id = "reg_color_light_reset", class = "modified")
            }
-           if(any(reg$cx != reg_back$cx)) {
+           if(!identical(as.numeric(reg$cx), as.numeric(reg_back$cx))) {
              same[4] = FALSE
-             myfeedback(inputId = "reg_def_cx", text=as.character(reg_back$cx))
+             if(valid[4]) myfeedback(inputId = "reg_def_cx", text=as.character(reg_back$cx))
            }
-           if(any(reg$cy != reg_back$cy)) {
+           if(!identical(as.numeric(reg$cy), as.numeric(reg_back$cy))) {
              same[5] = FALSE
-             myfeedback(inputId = "reg_def_cy", text=as.character(reg_back$cy))
+             if(valid[5]) myfeedback(inputId = "reg_def_cy", text=as.character(reg_back$cy))
            }
-           if(!(all(c(identical(reg$x, reg_back$x), identical(reg$y, reg_back$y))))) {
+           if(!(all(c(identical(as.numeric(reg$x), as.numeric(reg_back$x)),
+                      identical(as.numeric(reg$y), as.numeric(reg_back$y)))))) {
              same[6] = FALSE
-             myfeedback(inputId = "reg_def_table_feedback", text="edited")
+             if(valid[6]) myfeedback(inputId = "reg_def_table_feedback", text="edited")
            }
-           return(same)
          })
+  ans = valid & same
+  if(ans[1]) hideFeedback(session=session, inputId="reg_def_label")
+  if(ans[2]) removeClass(id = "reg_color_dark_reset", class = "modified")
+  if(ans[3]) removeClass(id = "reg_color_light_reset", class = "modified")
+  if(ans[4]) hideFeedback(session=session, inputId="reg_def_cx")
+  if(ans[5]) hideFeedback(session=session, inputId="reg_def_cy")
+  if(ans[6]) hideFeedback(session=session, inputId="reg_def_table_feedback")
+  return(ans)
 }
 
 # function to update all input containing population name

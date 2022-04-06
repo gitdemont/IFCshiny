@@ -144,7 +144,6 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
       enable("plot_sel_line") 
     }
   }
-  obs_reg[["remove"]]$suspend()
   return(NULL)
 }
 
@@ -178,8 +177,7 @@ obs_plot <- list(
                                 plot_react$zoomed = plot_react$zoomed || any(!foo)
                               }),
   observeEvent(input$reg_edit, suspended = TRUE,  {
-    add_log("Region Edition")
-    if(length(input$shape_selected) != 0) {
+    if(plot_react$tool != "init") {
       mess_global(title = "editing region", msg = "please terminate graphical editing first", type = "error", duration = 10)
       return(NULL)
     }
@@ -187,6 +185,7 @@ obs_plot <- list(
       mess_global(title = "editing region", msg = "there is no region to edit", type = "error", duration = 10)
       return(NULL)
     }
+    add_log("Region Edition")
     runjs("Shiny.onInputChange('reg_manager_visible', true)")
     disable("reg_def_table_feedback")
     pop = names(obj_react$obj$regions)[1]
@@ -215,7 +214,7 @@ obs_plot <- list(
       reg_back$cy = signif(reg_back$cy, digits = 3)
       reg_back$x = signif(reg_back$x, digits = 3)
       reg_back$y = signif(reg_back$y, digits = 3)
-      if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = names(obj_react$obj$regions), check = "edit", session = getDefaultReactiveDomain()))) {
+      if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain()))) {
         showModal(modalDialog(tags$p("Are you sure you want to discard applied changes in region '", tags$b(regions_react$pre$name), "' ?"),
                               size = "s",
                               easyClose = FALSE,
@@ -223,7 +222,7 @@ obs_plot <- list(
                                             actionButton(inputId = "reg_abort", label = "Yes"))),
                   session = session)
         return(NULL)
-      } 
+      }
     }
     if(!regions_react$back) {
       reg = obj_react$obj$regions[[input$reg_selection]]
@@ -236,32 +235,20 @@ obs_plot <- list(
       colourpicker::updateColourInput(session = session, inputId = "reg_color_light", value = reg$lightcolor)
       colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = reg$color)
       updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
-      output$reg_def_viz <- renderPrint({
-        str(list(type = reg[["type"]],
-                 "LinLog x" = reg[["xlogrange"]], 
-                 "LinLog y" = reg[["ylogrange"]]))})
-      output$reg_def_table <- DT::renderDataTable(data.frame(x = reg$x, y = reg$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE,
-                                              rownames = FALSE, extensions = 'Buttons',
-                                              selection = list(mode = 'none'), #style = "bootstrap",
-                                              options = list(pageLength = -1,
-                                                             buttons = c('csv', 'excel', 'pdf'),
-                                                             dom = 'Btr',
-                                                             autoWidth = FALSE,
-                                                             columnDefs = list(list(orderable = FALSE, targets = "_all"))))
       regions_react$pre = reg
       regions_react$pre$name = input$reg_selection
     } else {
       regions_react$back = FALSE
     }
-    reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "valid", session = getDefaultReactiveDomain())
   }),
   observeEvent(input$reg_validate, suspended = TRUE,{
+    N = names(obj_react$obj$regions)
     reg_back = obj_react$obj$regions[[regions_react$pre$name]]
     reg_back$cx = signif(reg_back$cx, digits = 3)
     reg_back$cy = signif(reg_back$cy, digits = 3)
     reg_back$x = signif(reg_back$x, digits = 3)
     reg_back$y = signif(reg_back$y, digits = 3)
-    if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "info", session = getDefaultReactiveDomain()))) {
+    if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both", session = getDefaultReactiveDomain()))) {
       toredraw = data_rm_regions(obj = obj_react$obj, regions = regions_react$pre$name, list_only = TRUE, session=session)
       names(obj_react$obj$graphs)[toredraw$graphs] <- NA
       N = names(obj_react$obj$graphs)
@@ -271,12 +258,12 @@ obs_plot <- list(
           runjs(code = JS(sprintf("IFCshiny.grid.remove(IFCshiny.grid.getItems().filter(function (item) { return item._element.id === 'report_graph_%0.4i' }), { removeElements: true, layout: false })", i)))
         })
       }
-      obj_react$obj = data_modify_regions(obj = obj_react$obj, 
-                                          regions = structure(list(regions_react$pre), names = regions_react$pre$name), 
-                                          display_progress = TRUE, 
-                                          title = "recomputing populations", 
+      obj_react$obj = data_modify_regions(obj = obj_react$obj,
+                                          regions = structure(list(regions_react$pre), names = regions_react$pre$name),
+                                          display_progress = TRUE,
+                                          title = "recomputing populations",
                                           session = session)
-    } 
+    }
   }),
   observeEvent(input$plot_base, suspended = TRUE, {
     if(input$plot_unlock) plot_react$zoomed = FALSE
@@ -997,19 +984,7 @@ obs_plot <- list(
         colourpicker::updateColourInput(session = session, inputId = "reg_color_light", value = reg$lightcolor)
         colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = reg$color)
         updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
-        output$reg_def_viz <- renderPrint({
-          str(list(type = reg[["type"]],
-                   "LinLog x" = reg[["xlogrange"]], 
-                   "LinLog y" = reg[["ylogrange"]]))})
-        output$reg_def_table <- DT::renderDataTable(data.frame(x = reg$x, y = reg$y, stringsAsFactors = FALSE), editable = TRUE, server = FALSE, # escape = FALSE,
-                                                rownames = FALSE, extensions = 'Buttons',
-                                                selection = list(mode = 'none'), #style = "bootstrap",
-                                                options = list(pageLength = -1,
-                                                               buttons = c('csv', 'excel', 'pdf'),
-                                                               dom = 'Btr',
-                                                               autoWidth = FALSE,
-                                                               columnDefs = list(list(orderable = FALSE, targets = "_all"))))
-        reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "valid", session = getDefaultReactiveDomain())
+        reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain())
         click("plot_sel_init")
       }
       if("remove" %in% plot_react$tool) {
@@ -1161,7 +1136,16 @@ obs_plot <- list(
     hideElement(id = "plot_image_placeholder")
     html("plot_image_placeholder", NULL)
     hideElement(id = "plot_stats_placeholder")
-    
+    if(length(input$shape_selected) != 0) {
+      mess_global(title = "Region Edition", msg = "current action has cancelled region edition", type = "warning", duration = 10)
+      runjs(code = "Shiny.onInputChange('shape_selected', null)")
+      set_tool("init")
+    }
+    if(plot_react$action == "drawing") {
+      mess_global(title = "Region Creation", msg = "current action has cancelled region creation", type = "warning", duration = 10)
+      runjs(code = "Shiny.onInputChange('shape_selected', null)")
+      set_tool("init")
+    }
     output$plot_1or2D_placeholder <- renderUI({
       args = list(outputId = "plot_1or2D", width = "600px", height = "600px",
                   brush = brushOpts(
