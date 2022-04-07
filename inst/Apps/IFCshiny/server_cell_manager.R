@@ -312,7 +312,8 @@ obs_cell <- list(
     }
     session$sendCustomMessage("updateSelection", list(selector = ".cell_checkbox", inputId = "cell_selected"))
     updateNumericInput(session=session, inputId="cell_page", max=max(1, ceiling(n/extract_max)),value=1)
-    if(input$cell_feature_sort %% 2) click("cell_feature_sort")
+    if(input$cell_feature_sort %% 2) runjs(sprintf("Shiny.onInputChange('cell_feature_sort', %i)", ifelse(length(input$cell_feature_sort) == 0, 0, input$cell_feature_sort + 1L)))
+    # shinyjs::click("cell_feature_sort")
     df = obj_react$obj$features[obj_react$obj$pops[[input$cell_population]]$obj, c("Object Number", input$cell_feature)]
     df = df[!is.na(df[, 1]), ]
     df = obj_react$obj$features[obj_react$obj$pops[[input$cell_population]]$obj, c("Object Number", input$cell_feature)]

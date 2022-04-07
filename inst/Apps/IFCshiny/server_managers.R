@@ -79,7 +79,8 @@ observeEvent(input$comp_manager_visible, {
     shinyjs::showElement("comp_manager")
     session$sendCustomMessage("reach", "comp_manager")
   } else {
-    shinyjs::click("comp_compute")
+    runjs(sprintf("Shiny.onInputChange('comp_compute', %i)", ifelse(length(input$comp_compute) == 0, 0, input$comp_compute + 1L)))
+    # shinyjs::click("comp_compute")
     shinyjs::hideElement("comp_manager")
   }
 })

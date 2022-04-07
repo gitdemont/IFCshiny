@@ -30,7 +30,7 @@
 runjs("Shiny.setInputValue('report_draw', 0)")
 runjs("Shiny.setInputValue('report_recover', 0)")
 
-reinit_layout <- function(obj) {
+reinit_layout <- function(obj, recover = TRUE) {
   L = length(obj$graphs)
   if(L > 0) {
     lay=lapply(obj$graphs, FUN=function(g) with(g, c(x=xlocation,y=ylocation)))
@@ -64,6 +64,7 @@ reinit_layout <- function(obj) {
     }
     hideElement(selector = "#navbar [data-value='tab6']")
   }
+  if(recover) runjs(sprintf("Shiny.onInputChange('report_recover', %i)", ifelse(length(input$report_recover) == 0, 0, input$report_recover + 1L)))
   return(obj)
 }
 
@@ -79,7 +80,7 @@ obs_report <- list(
              "$('#report_placeholder').children().remove();"))
     session$sendCustomMessage("init_grid", "")
     plot_react$layout = matrix(ncol=1, nrow=0)
-    obj_react$obj = reinit_layout(obj_react$obj)
+    obj_react$obj = reinit_layout(obj_react$obj, recover = FALSE)
     if(input$navbar == "tab6") runjs(sprintf("Shiny.onInputChange('report_draw', %i)", input$report_draw + 1L))
   }),
   
@@ -248,7 +249,8 @@ obs_report <- list(
                                                   layout = FALSE))
     # we inspect the -1 last column, if it is empty we trigger a last column removal
     n_col = ncol(plot_react$layout)
-    if(n_col > 2) if(all(is.na(plot_react$layout[, n_col:(n_col-1)]))) click("report_col_rm")
+    if(n_col > 2) if(all(is.na(plot_react$layout[, n_col:(n_col-1)]))) runjs(sprintf("Shiny.onInputChange('report_col_rm', %i)", ifelse(length(input$report_col_rm) == 0, 0, input$report_col_rm + 1L)))
+      # shinyjs::click("report_col_rm")
     # finally, if there is no more graphs stored after user action
     # we exit report tab and hide it
     if(length(obj_react$obj$graphs) == 0) {

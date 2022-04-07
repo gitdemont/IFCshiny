@@ -193,7 +193,8 @@ if(length(obj_react$obj$features_comp) == 0) {
         
         showElement(selector = "#navbar [data-value='tab9']")
         lapply(obs_comp, FUN = function(x) x$resume())
-        shinyjs::click("comp_resample")
+        runjs(sprintf("Shiny.onInputChange('comp_resample', %i)", ifelse(length(input$comp_resample) == 0, 0, input$comp_resample + 1L)))
+        # shinyjs::click("comp_resample")
         add_log("compensation")
         hideElement("population")
         showElement("comp_side_inputs")
@@ -210,7 +211,8 @@ if(length(obj_react$obj$features_comp) == 0) {
 if(length(obj_react$obj$features_comp) != 0) {
   showElement(selector = "#navbar [data-value='tab9']")
   lapply(obs_comp, FUN = function(x) x$resume())
-  shinyjs::click("comp_resample")
+  runjs(sprintf("Shiny.onInputChange('comp_resample', %i)", ifelse(length(input$comp_resample) == 0, 0, input$comp_resample + 1L)))
+  # shinyjs::click("comp_resample")
   add_log("compensation")
   hideElement("population")
   showElement("comp_side_inputs")

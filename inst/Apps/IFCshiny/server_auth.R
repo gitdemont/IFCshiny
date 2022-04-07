@@ -147,7 +147,8 @@ observeEvent(res_auth , {
       # we allow xxx seconds of use before automatically disconnect the user
       # except if user is an admin
       if(!(as.logical(res_auth$admin) || as.logical(res_auth$privileged))) {
-        click("credits")
+        runjs(sprintf("Shiny.onInputChange('credits', %i)", ifelse(length(input$credits) == 0, 0, input$credits + 1L)))
+        # shinyjs::click("credits")
         runjs(code =sprintf("setTimeout(function(sec = %i) {
       var foo = sec * 1000;
       setInterval(function() {

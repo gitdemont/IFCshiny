@@ -123,7 +123,8 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
                             "IDEAS will not be able to use it for applying on other files"),
                     # msg = "Creating a region based on ML pop is not allowed",
                     type = "warning", duration = 10)
-        # click("plot_sel_init")
+        # runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+        # shinyjs::click("plot_sel_init")
       }
       if(any(grepl("^ML_", c(input$plot_x_feature, input$plot_y_feature)))) {
         mess_global(title = "creating region",
@@ -131,7 +132,8 @@ set_tool <- function(tool = "init", plotId = plot_react$current) {
                             "IDEAS will not be able to compute these feature for applying on other files"),
                     # msg = "Creating a region based on ML feature is not allowed",
                     type = "warning", duration = 10)
-        # click("plot_sel_init")
+        # runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+        # shinyjs::click("plot_sel_init")
       }
     }
     if(length(obj_react$batch) != 0) enable("plot_sel_stack") 
@@ -275,7 +277,8 @@ obs_plot <- list(
   observeEvent(input$plot_base, suspended = TRUE, {
     if(input$plot_unlock) plot_react$zoomed = FALSE
     if(any(input$plot_base=="")) return(NULL)
-    click("plot_sel_init")
+    runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+    # shinyjs::click("plot_sel_init")
   }),
   observeEvent(input$plot_unlock, suspended = TRUE, {
     if(input$plot_unlock) {
@@ -638,8 +641,10 @@ obs_plot <- list(
              "remove" = {
                if(length(regions_react$pre$name) == 0) return(NULL)
                obs_reg[["remove"]]$resume()
-               click("reg_remove")
-               click("plot_sel_init")
+               runjs(sprintf("Shiny.onInputChange('reg_remove', %i)", ifelse(length(input$reg_remove) == 0, 0, input$reg_remove + 1L)))
+               # shinyjs::click("reg_remove")
+               runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+               # shinyjs::click("plot_sel_init")
              })
     }
   }),
@@ -665,7 +670,8 @@ obs_plot <- list(
              }
              plot_react$zoomed = TRUE
            })
-    click("plot_sel_init")
+    runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+    # shinyjs::click("plot_sel_init")
   }),
   
   # plot_hover observer is aimed to allow selection of a region already drawn in a plot
@@ -992,12 +998,15 @@ obs_plot <- list(
         colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = tolower(reg$color))
         updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
         reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain())
-        click("plot_sel_init")
+        runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+        # shinyjs::click("plot_sel_init")
       }
       if("remove" %in% plot_react$tool) {
         obs_reg[["remove"]]$resume()
-        click("reg_remove")
-        click("plot_sel_init")
+        runjs(sprintf("Shiny.onInputChange('reg_remove', %i)", ifelse(length(input$reg_remove) == 0, 0, input$reg_remove + 1L)))
+        # shinyjs::click("reg_remove")
+        runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+        # shinyjs::click("plot_sel_init")
       }
     }
   }),
@@ -1016,7 +1025,8 @@ obs_plot <- list(
     }
   }),
   observeEvent(input$plot_region_create_abort, suspended = TRUE,{
-    click("plot_sel_init")
+    runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+    # shinyjs::click("plot_sel_init")
     removeModal(session=session)
   }),
   observeEvent(input$plot_region_create_ok, suspended = TRUE, {
@@ -1102,7 +1112,8 @@ obs_plot <- list(
       obj_react$obj = obj_back
     }, finally = {
       runjs("Shiny.onInputChange('pop_edit', null)")
-      click("plot_sel_init")
+      runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+      # shinyjs::click("plot_sel_init")
       removeModal()
     })
   }),
@@ -1542,7 +1553,8 @@ obs_plot <- list(
                    plot_react$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
                    plot_react$densitycolorslightmode_selected = "initial"
                    plot_react$densitytrans_selected = "initial"
-                   if(input$plot_dens_order %% 2) click("plot_dens_order")
+                   if(input$plot_dens_order %% 2) runjs(sprintf("Shiny.onInputChange('plot_dens_order', %i)", ifelse(length(input$plot_dens_order) == 0, 0, input$plot_dens_order + 1L)))
+                     # shinyjs::click("plot_dens_order")
                    # }
                    g$BasePop[[1]]$densitycolorslightmode <- plot_react$g$BasePop[[1]]$densitycolorslightmode
                    if(input$plot_type_2D_option01 != "level") g$BasePop[[1]]$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
@@ -1618,13 +1630,15 @@ obs_plot <- list(
                  plot_react$g = g
                  }, error = function(e) {
                    mess_global(title = paste0("plot_", input$plot_type), msg = e$message, type = "error", duration = 10)
-                   click("plot_reset")
+                   runjs(sprintf("Shiny.onInputChange('plot_reset', %i)", ifelse(length(input$plot_reset) == 0, 0, input$plot_reset + 1L)))
+                   # shinyjs::click("plot_reset")
                    plot_react$id = 1000*as.numeric(Sys.time())
                    runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
                    return(NULL)
                  },warning = function(w) {
                    mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
-                   click("plot_reset")
+                   runjs(sprintf("Shiny.onInputChange('plot_reset', %i)", ifelse(length(input$plot_reset) == 0, 0, input$plot_reset + 1L)))
+                   # shinyjs::click("plot_reset")
                    plot_react$id = 1000*as.numeric(Sys.time())
                    runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
                    return(NULL)
@@ -1651,7 +1665,8 @@ obs_plot <- list(
   observeEvent(input$editing_close_ok,suspended = TRUE, {
     removeModal(session=session)
     runjs(code = "Shiny.onInputChange('shape_selected', null)")
-    click("plot_sel_init")
+    runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+    # shinyjs::click("plot_sel_init")
   }),
   observeEvent(input$plot_sel_line, suspended = TRUE,{
     set_tool("line")
@@ -1699,7 +1714,10 @@ obs_plot <- list(
       regions_react$pre$y = signif(regions_react$pre$y, digits = 3)
       regions_react$pre$cx = signif(regions_react$pre$cx, digits = 3)
       regions_react$pre$cy = signif(regions_react$pre$cy, digits = 3)
-      click("reg_validate")
+      lapply(obs_plot, FUN = function(x) x$resume())
+      # don't understand why but click can only run once 
+      runjs(sprintf("Shiny.onInputChange('reg_validate', %i)", ifelse(length(input$reg_validate) == 0, 0, input$reg_validate + 1L)))
+      # shinyjs::click("reg_validate")
       set_tool("init")
     } else {
       set_tool("edit") 
@@ -1709,7 +1727,8 @@ obs_plot <- list(
     if(length(plot_react$plot)==0) return(NULL)
     if(length(plot_react$plot$input$regions) == 0) {
       mess_global(title = "removing region", msg = "there is no region to remove", type = "error", duration = 10)
-      click("plot_sel_init")
+      runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+      # shinyjs::click("plot_sel_init")
       return(NULL)
     }
     set_tool("remove")
@@ -1725,7 +1744,8 @@ obs_plot <- list(
     plot_react$g$ymax = foo$input$Ylim[2]
     plot_react$param_ready <- FALSE
     plot_react$zoomed = FALSE
-    click("plot_sel_init")
+    runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+    # shinyjs::click("plot_sel_init")
   }),
   observeEvent(input$plot_sel_add, suspended = TRUE,{
     if(any(grepl("^ML_", c(plot_react$g$f1, plot_react$g$f2, sapply(c(plot_react$g$BasePop, plot_react$g$ShownPop), FUN = function(p) p$name))))) {
@@ -1734,7 +1754,7 @@ obs_plot <- list(
                           "IDEAS will not be able to use it for applying on other files"),
                   # msg = "Creating a visualization for graph report based on ML is not allowed",
                   type = "warning", duration = 10)
-      # click("plot_sel_init")
+      # shinyjs::click("plot_sel_init")
       # return(NULL)
     }
     tryCatch({
@@ -1772,5 +1792,6 @@ obs_plot <- list(
     runjs(code = "Shiny.onInputChange('navbar', 'tab7');")
     runjs(code = "$('#navbar_batch [data-value=\"Stack\"]').trigger('click');" )
     runjs(code = "Shiny.onInputChange('navbar_batch', 'Stack');")
-    click("plot_sel_init")
+    runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
+    # shinyjs::click("plot_sel_init")
   }))

@@ -61,7 +61,8 @@ observeEvent(once = TRUE, session_react$dir, {
     uri = paste0("data:text/plain;base64,",
                  cpp_base64_encode(charToRaw(paste0(c(readLines(file.path(dir, "LOGS.txt")), geterrmessage()), collapse="\n"))))
     runjs(code = sprintf("$('#get_logs').attr('href', '%s')", uri))
-    click("get_logs")
+    runjs(sprintf("Shiny.onInputChange('get_logs', %i)", ifelse(length(input$get_logs) == 0, 0, input$get_logs + 1L)))
+    # shinyjs::click("get_logs")
   })
 })
 

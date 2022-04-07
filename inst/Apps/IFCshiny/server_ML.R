@@ -343,7 +343,8 @@ obs_ML <- list(
       Q = checknames.IFCml(model_react)
       max_events = sum(!is.na(model_react$data[,Q$is_clust,drop=TRUE]))
       updateNumericInput(session = session, inputId = "training_sampling_dimred", label = paste0("number of events used for dimension reduction [max=",max_events,"]"), max = max_events, value = min(max_events, 4000))
-      click("training_go")
+      runjs(sprintf("Shiny.onInputChange('training_go', %i)", ifelse(length(input$training_go) == 0, 0, input$training_go + 1L)))
+      # shinyjs::click("training_go")
     }, error = function(e) {
       updateTabsetPanel(session = session, "navbar_ML", selected = "ML_inputs")
       runjs(code = "$('#navbar_ML [data-value=\"ML_inputs\"]').trigger('click');")
@@ -367,7 +368,8 @@ obs_ML <- list(
          input$MetaClustering_go)
   }, suspended = TRUE,{
     if(input$navbar_ML != "ML_training") return(NULL)
-    if(length(model_react$config$pops) != 0) click("training_go")
+    if(length(model_react$config$pops) != 0) runjs(sprintf("Shiny.onInputChange('training_go', %i)", ifelse(length(input$training_go) == 0, 0, input$training_go + 1L)))
+      # shinyjs::click("training_go")
   }),
   # Control visibility of sampling parameters
   # it will be visible only when supervised ML is used
@@ -424,7 +426,8 @@ obs_ML <- list(
       updateNumericInput(session=session, inputId = "training_sampling_dimred", value=1)
       return(NULL)
     } 
-    click("training_go")
+    runjs(sprintf("Shiny.onInputChange('training_go', %i)", ifelse(length(input$training_go) == 0, 0, input$training_go + 1L)))
+    # shinyjs::click("training_go")
   }),
   # observer to control the visibility of current algorithm hyper-parameter
   observeEvent(input$training_param, suspended = TRUE,{
@@ -458,7 +461,8 @@ obs_ML <- list(
     sapply(match_model(), FUN = function(x) reset(id = x))
     # we need to postpone going to training go to ensure that all model parameters havec been cleared
     if(length(model_react$config$pops) != 0) onFlushed(once = TRUE, fun = function() {
-      click("training_go")
+      runjs(sprintf("Shiny.onInputChange('training_go', %i)", ifelse(length(input$training_go) == 0, 0, input$training_go + 1L)))
+      # shinyjs::click("training_go")
     })
   }),
   # observer on clustering algorithm used
@@ -598,7 +602,8 @@ obs_ML <- list(
       if(old_l > length(obj_react$obj$graphs)) obj_react$obj = reinit_layout(obj_react$obj)
     }, error = function(e) {
       obj_react$obj = obj_back
-      click("training_param_reset")
+      runjs(sprintf("Shiny.onInputChange('training_param_reset', %i)", ifelse(length(input$training_param_reset) == 0, 0, input$training_param_reset + 1L)))
+      # shinyjs::click("training_param_reset")
       mess_global(title = "building model", msg = c("Can't fit data with input parameters:", e$message,
                                                     "Tips: Try to tweak model parameters",
                                                     "Tips: Try to include more cells",
@@ -645,7 +650,8 @@ obs_ML <- list(
                         obj_react$obj <- compare(nv$obj, obj_react$obj)
                       }, error = function(e) {
                         obj_react$obj = obj_back
-                        click("training_param_reset")
+                        runjs(sprintf("Shiny.onInputChange('training_param_reset', %i)", ifelse(length(input$training_param_reset) == 0, 0, input$training_param_reset + 1L)))
+                        # shinyjs::click("training_param_reset")
                         mess_global(title = "creating metaclustering", msg = c("Can't create metaclusters:", e$message), type = "stop")
                       })
                     }))

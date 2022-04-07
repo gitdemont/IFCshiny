@@ -324,7 +324,8 @@ obs_pop <- list(
         }
         pops_react$new = FALSE
         pops_react$revert = obj_react$obj$pops[[input$pop_def_name]]
-        click("pop_close")
+        runjs(sprintf("Shiny.onInputChange('pop_close', %i)", ifelse(length(input$pop_close) == 0, 0, input$pop_close + 1L)))
+        # shinyjs::click("pop_close")
       }
       if((pops_react$revert$type == "T") && any(obj_react$back$info$found)) {
         nam = pops_react$revert$name

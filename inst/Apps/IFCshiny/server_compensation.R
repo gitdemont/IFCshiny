@@ -151,7 +151,8 @@ obs_comp <- list(
       return(NULL)
     } else {
       comp_react$pre[i_row, i_col] <- value
-      click("comp_compute")
+      runjs(sprintf("Shiny.onInputChange('comp_compute', %i)", ifelse(length(input$comp_compute) == 0, 0, input$comp_compute + 1L)))
+      # shinyjs::click("comp_compute")
     }
     if(!input$comp_manager_visible) return(NULL)
     if(i_row == input$comp_plot_2 &&
