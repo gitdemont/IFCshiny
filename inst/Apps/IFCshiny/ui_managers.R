@@ -26,7 +26,7 @@
 # You should have received a copy of the GNU General Public License            #
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
-
+allowedCols = tolower(unname(unique(unlist(paletteIFC("palette_R")))))
 list(hidden(absolutePanel(id = "comp_manager",
                           width = "500px", height = "500px",
                           draggable = TRUE, top = 0, left = 0, right = 0, bottom = 0,
@@ -160,12 +160,12 @@ hidden(absolutePanel(id = "reg_manager", class = "panel panel-default", fixed = 
                                                          tags$div(style = "position:absolute; top: 12px;",
                                                                   actionButton(class="reg_def_reset undo transparent", inputId = "reg_color_light_reset", label = NULL, icon = icon("undo", lib = "font-awesome"))),
                                                          colourpicker::colourInput(inputId = "reg_color_light", label = "Light Mode Color", showColour = "background", value = "Red",
-                                                                                   returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = unique(unlist(paletteIFC()[,  c("color_R",  "lightModeColor_R")])))),
+                                                                                   returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols)),
                                                 tags$div(style = "display: inline-block; vertical-align: super; width:48%;",
                                                          tags$div(style = "position:absolute; top: 12px;",
                                                                   actionButton(class="reg_def_reset undo transparent", inputId = "reg_color_dark_reset", label = NULL, icon = icon("undo", lib = "font-awesome"))),
                                                          colourpicker::colourInput(inputId = "reg_color_dark", label = "Dark Mode Color", showColour = "background", value = "Red",
-                                                                                   returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = unique(unlist(paletteIFC()[,  c("color_R",  "lightModeColor_R")])))))),
+                                                                                   returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols)))),
                               tags$div(class = "reg_def_table",
                                        tags$div(class = "reg_def_feedback",
                                                 style="text-align: left;", 
@@ -293,12 +293,12 @@ hidden(absolutePanel(id = "pop_manager", class = "panel panel-default", fixed = 
                                                 tags$div(style = "position:absolute; top: 12px;",
                                                          actionButton(class="pop_def_reset undo transparent", inputId = "pop_color_light_reset", label = NULL, icon = icon("undo", lib = "font-awesome"))),
                                                 colourpicker::colourInput(inputId = "pop_color_light", label = "Light Mode Color", showColour = "background", value = "Red",
-                                                                          returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = unique(unlist(paletteIFC()[,  c("color_R",  "lightModeColor_R")])))),
+                                                                          returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols)),
                                        tags$div(style = "display: inline-block; vertical-align: super; width:48%;",
                                                 tags$div(style = "position:absolute; top: 12px;",
                                                          actionButton(class="pop_def_reset undo transparent", inputId = "pop_color_dark_reset", label = NULL, icon = icon("undo", lib = "font-awesome"))),
                                                 colourpicker::colourInput(inputId = "pop_color_dark", label = "Dark Mode Color", showColour = "background", value = "Red",
-                                                                          returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = unique(unlist(paletteIFC()[,  c("color_R",  "lightModeColor_R")]))))))),
+                                                                          returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols))))),
                      tags$div(id = "pop_def_edit",
                               style="position:relative; display:inline-block;",
                               tags$div(class = "pop_def_sel",
@@ -416,7 +416,7 @@ hidden(absolutePanel(id = "img_manager", class = "panel panel-default", fixed = 
                                        tags$div(style = "position:absolute; top:-8px; text-align:right; width:14%",
                                                 actionButton(class="controls_c_resets undo transparent", inputId = "reset_color", label = NULL, icon = icon("undo", lib = "font-awesome"))),
                                        colourpicker::colourInput(inputId = "chan_color", label = "Color", showColour = "background", value = "Red",
-                                                                 returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = unique(unlist(paletteIFC()[,  c("color_R",  "lightModeColor_R")]))))),
+                                                                 returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols))),
                      tags$div(class="ctrl_btn",
                               style="position:absolute; top:10px; right:10px;",
                               # tags$div(style = "display: inline-block; vertical-align: middle;",

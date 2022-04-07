@@ -350,7 +350,7 @@ pop_def = function(x = "") {
 }
 
 # function to check validity of region definition and display information about element edition
-reg_def = function(reg, reg_back, all_names, check = "valid", session = getDefaultReactiveDomain()) {
+reg_def = function(reg, reg_back, all_names, check = "both", session = getDefaultReactiveDomain()) {
   if(length(reg$name) == 0) return(structure(rep(FALSE, 6), names = c("label", "light", "dark", "cx", "cy", "table")))
   type = check
   if(check == "info") {

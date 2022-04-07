@@ -48,7 +48,6 @@ reinit_managers <- function(what = c("reg", "pop", "img", "cell", "graph", "comp
   }
   if("reg" %in% what) {
     runjs("Shiny.onInputChange('reg_manager_visible', false)")
-    regions_react$pre = list()
     regions_react$back = FALSE
   }
   if("cell" %in% what) {
@@ -221,16 +220,24 @@ observeEvent(input$reg_manager_visible, {
   add_log(sprintf("Region Manager Visible: %s", input$reg_manager_visible))
   N = names(obj_react$obj$regions)
   if(input$reg_manager_visible) {
-    if(any(input$reg_selection %in% N)) {
-      reg_back = obj_react$obj$regions[[input$reg_selection]]
-      reg_back$cx = signif(reg_back$cx, digits = 3)
-      reg_back$cy = signif(reg_back$cy, digits = 3)
-      reg_back$x = signif(reg_back$x, digits = 3)
-      reg_back$y = signif(reg_back$y, digits = 3)
-      if((length(regions_react$pre) == 0) || !(regions_react$pre$name %in% N)) regions_react$pre = reg_back
-      regions_react$pre$name = input$reg_selection
-      reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both", session = getDefaultReactiveDomain())
+    if(length(N) <= 0) {
+      runjs("Shiny.onInputChange('reg_manager_visible', false)")
+      return(NULL)
     }
+    updateSelectInput(session = session, inputId = "reg_selection", choices = N, selected = N[1])
+    reg = obj_react$obj$regions[[N[1]]]
+    reg$cx = signif(reg$cx, digits = 3)
+    reg$cy = signif(reg$cy, digits = 3)
+    reg$x = signif(reg$x, digits = 3)
+    reg$y = signif(reg$y, digits = 3)
+    updateNumericInput(session = session, inputId = "reg_def_cx", value = reg$cx)
+    updateNumericInput(session = session, inputId = "reg_def_cy", value = reg$cy)
+    colourpicker::updateColourInput(session = session, inputId = "reg_color_light", value = tolower(reg$lightcolor))
+    colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = tolower(reg$color))
+    updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
+    regions_react$pre = reg
+    regions_react$pre$name = N[1]
+    reg_def(reg = regions_react$pre, reg_back = reg, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain())
     runjs(sprintf("Shiny.onInputChange('reg_manager_visible', %s)", names(check_managers(alw="reg"))))
     lapply(obs_reg, FUN = function(x) x$resume())
     runjs(code="$('html, body').animate({scrollTop: '0px' }, 300);")

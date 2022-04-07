@@ -599,8 +599,8 @@ obs_cell <- list(
     hideElement(selector = "#pop_def_edit, .pop_def_feedback")
     hideElement("pop_remove")
     updateSelectInput(session = session, inputId = "pop_symbol", selected = "Simple Dot")
-    colourpicker::updateColourInput(session = session, inputId = "pop_color_light", value = "Black")
-    colourpicker::updateColourInput(session = session, inputId = "pop_color_dark", value = "White")
+    colourpicker::updateColourInput(session = session, inputId = "pop_color_light", value = "black")
+    colourpicker::updateColourInput(session = session, inputId = "pop_color_dark", value = "white")
     updateTextInput(session = session, inputId = "pop_def_name", value = "")
     obj = unique(as.integer(unlist(input$IFCshiny_getTaggedSelection_ret$obj)))
     pops_react$revert = list(name = NULL, style = 20, color = "White",

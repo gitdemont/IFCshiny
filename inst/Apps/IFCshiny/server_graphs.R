@@ -232,24 +232,30 @@ obs_plot <- list(
       reg$y = signif(reg$y, digits = 3)
       updateNumericInput(session = session, inputId = "reg_def_cx", value = reg$cx)
       updateNumericInput(session = session, inputId = "reg_def_cy", value = reg$cy)
-      colourpicker::updateColourInput(session = session, inputId = "reg_color_light", value = reg$lightcolor)
-      colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = reg$color)
+      colourpicker::updateColourInput(session = session, inputId = "reg_color_light", value = tolower(reg$lightcolor))
+      colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = tolower(reg$color))
       updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
       regions_react$pre = reg
       regions_react$pre$name = input$reg_selection
+      reg_def(reg = regions_react$pre, reg_back = reg, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain())
     } else {
       regions_react$back = FALSE
     }
   }),
   observeEvent(input$reg_validate, suspended = TRUE,{
     N = names(obj_react$obj$regions)
-    reg_back = obj_react$obj$regions[[regions_react$pre$name]]
+    R = regions_react$pre$name
+    if(!any(R %in% N)) {
+      mess_global(title = "Region Validate", msg = c("Can't find region:", R), type = "error", duration = 10)
+      return(NULL)
+    }
+    reg_back = obj_react$obj$regions[[R]]
     reg_back$cx = signif(reg_back$cx, digits = 3)
     reg_back$cy = signif(reg_back$cy, digits = 3)
     reg_back$x = signif(reg_back$x, digits = 3)
     reg_back$y = signif(reg_back$y, digits = 3)
     if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both", session = getDefaultReactiveDomain()))) {
-      toredraw = data_rm_regions(obj = obj_react$obj, regions = regions_react$pre$name, list_only = TRUE, session=session)
+      toredraw = data_rm_regions(obj = obj_react$obj, regions = R, list_only = TRUE, session=session)
       names(obj_react$obj$graphs)[toredraw$graphs] <- NA
       N = names(obj_react$obj$graphs)
       if(length(N) > 0) {
@@ -259,10 +265,11 @@ obs_plot <- list(
         })
       }
       obj_react$obj = data_modify_regions(obj = obj_react$obj,
-                                          regions = structure(list(regions_react$pre), names = regions_react$pre$name),
+                                          regions = structure(list(regions_react$pre), names = R),
                                           display_progress = TRUE,
                                           title = "recomputing populations",
                                           session = session)
+      updateSelectInput(session = session, inputId = "reg_selection", selected = regions_react$pre$label)
     }
   }),
   observeEvent(input$plot_base, suspended = TRUE, {
@@ -424,8 +431,8 @@ obs_plot <- list(
     hideElement(selector = "#pop_def_edit, .pop_def_feedback")
     hideElement("pop_remove")
     updateSelectInput(session = session, inputId = "pop_symbol", selected = "Simple Dot")
-    colourpicker::updateColourInput(session = session, inputId = "pop_color_light", value = "Black")
-    colourpicker::updateColourInput(session = session, inputId = "pop_color_dark", value = "White")
+    colourpicker::updateColourInput(session = session, inputId = "pop_color_light", value = "black")
+    colourpicker::updateColourInput(session = session, inputId = "pop_color_dark", value = "white")
     updateTextInput(session = session, inputId = "pop_def_name", value = "")
     obj = unique(as.integer(unlist(input$IFCshiny_get3DSelection_ret$obj)))
     pops_react$revert = list(name = NULL, style = 20, color = "White",
@@ -962,7 +969,7 @@ obs_plot <- list(
                                               textInput(inputId = "plot_region_create_name", label = "name", value = "")),
                                      tags$div(style = "display:inline-block; vertical-align:top; width:34%",
                                               colourpicker::colourInput(inputId = "plot_region_create_color", label = "Color", showColour = "background", returnName = TRUE, value  = "Red",
-                                                                        allowTransparent = FALSE, palette = "limited", allowedCols = unique(unlist(paletteIFC()[,  c("color_R",  "lightModeColor_R")]))))),
+                                                                        allowTransparent = FALSE, palette = "limited", allowedCols = tolower(unique(unname(unlist(paletteIFC("palette_R")))))))),
                             footer = list(actionButton(inputId = "plot_region_create_ok", label = "Create"),
                                           actionButton(inputId = "plot_region_create_abort", label = "Cancel")),
                             easyClose = FALSE), 
@@ -981,8 +988,8 @@ obs_plot <- list(
         updateSelectInput(session = session, inputId = "reg_selection", selected = regions_react$pre$name)
         updateNumericInput(session = session, inputId = "reg_def_cx", value = reg$cx)
         updateNumericInput(session = session, inputId = "reg_def_cy", value = reg$cy)
-        colourpicker::updateColourInput(session = session, inputId = "reg_color_light", value = reg$lightcolor)
-        colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = reg$color)
+        colourpicker::updateColourInput(session = session, inputId = "reg_color_light", value = tolower(reg$lightcolor))
+        colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = tolower(reg$color))
         updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
         reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain())
         click("plot_sel_init")
