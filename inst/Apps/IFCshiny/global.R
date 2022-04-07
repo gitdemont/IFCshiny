@@ -436,6 +436,7 @@ panel_pair = function(x, y, ...) {
 # function to match IFC color
 match_col <- function(x) {
   alw = unique(unlist(paletteIFC()[,  c("color_R",  "lightModeColor_R")]))
+  if(all(x == "darkcyan")) return("Cyan4")
   return(alw[tolower(x) == tolower(alw)])
 }
 
