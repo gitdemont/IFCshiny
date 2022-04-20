@@ -504,7 +504,7 @@ obs_plot <- list(
                plot_hover <- "init"
                D = plot_react$plot$input$data
                if(plot_react$plot$input$type %in% c("count", "percent")) {
-                 br = do.breaks(plot_react$plot$input$xlim, plot_react$plot$input$bin)
+                 br = lattice::do.breaks(plot_react$plot$input$xlim, plot_react$plot$input$bin)
                  interval = findInterval(D$x2, br)
                  dx = diff(plot_react$plot$input$xlim)
                  dy = diff(plot_react$plot$input$ylim)
