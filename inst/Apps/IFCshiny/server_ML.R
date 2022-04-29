@@ -460,8 +460,9 @@ obs_ML <- list(
     # model parameters are reset to their default values every time training model selection is changed
     sapply(match_model(), FUN = function(x) reset(id = x))
     # we need to postpone going to training go to ensure that all model parameters havec been cleared
+    k = input$training_go
     if(length(model_react$config$pops) != 0) onFlushed(once = TRUE, fun = function() {
-      runjs(sprintf("Shiny.onInputChange('training_go', %i)", ifelse(length(input$training_go) == 0, 0, input$training_go + 1L)))
+      runjs(sprintf("Shiny.onInputChange('training_go', %i)", ifelse(length(k) == 0, 0L, k + 1L)))
       # shinyjs::click("training_go")
     })
   }),
