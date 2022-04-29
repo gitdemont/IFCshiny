@@ -670,7 +670,8 @@ fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
   } else {
     args = c(args, param[!(names(param) %in% names(args))])
     args = args[sapply(args, length) != 0]
-    fit = do.call(what = eval(parse(text=method_fun)), args = args)
+    sp = strsplit(method_fun, split = "::", fixed = TRUE)[[1]]
+    fit = do.call(what = get(x = sp[1], envir = asNamespace(sp[2])), args = args)
   }
   
   attr(fit, "id") = attr(model$idx, "id")
