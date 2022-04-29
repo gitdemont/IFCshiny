@@ -96,7 +96,7 @@ ui <- fluidPage(
                                    tags$div(style = "display:inline-block; vertical-align:top; width:24%",
                                             materialSwitch(inputId = "use_example", label = "examples", value = FALSE, status = "primary")),
                                    tags$div(style = "display:inline-block; vertical-align:top; width:74%",
-                                            checkboxGroupInput(inputId = "example_file", label = "", choices = c("rif","cif","daf"), selected = c("cif", "daf"), inline = TRUE))),
+                                            disabled(checkboxGroupInput(inputId = "example_file", label = "", choices = c("rif","cif","daf"), selected = c("cif", "daf"), inline = TRUE)))),
                           hidden(selectInput(inputId = "population", label = "Population to display", choices = list(), multiple = FALSE)),
                           hidden(selectInput(inputId = "pop_clicked", label = "hidden clicked pop", choices = list(), multiple = FALSE)),
                  )),
