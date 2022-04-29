@@ -671,7 +671,6 @@ fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
     args = c(args, param[!(names(param) %in% names(args))])
     args = args[sapply(args, length) != 0]
     sp = strsplit(method_fun, split = "::", fixed = TRUE)[[1]]
-    browser()
     fit = do.call(what = get(x = sp[2], envir = asNamespace(sp[1])), args = args)
   }
   
