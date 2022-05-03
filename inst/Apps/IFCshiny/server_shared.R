@@ -274,7 +274,7 @@ observeEvent(input$report_graph_dblclick, {
   runjs(code = "Shiny.onInputChange('plot_unlock', false);")
   
   updateSelectInput(session=session, inputId="plot_x_feature", selected=g$f1)
-  maxpoints = plot_react$g$maxpoints
+  maxpoints <- as.numeric(plot_react$g$maxpoints)
   onFlushed(once = TRUE, fun = function() {
     plot_react$zoomed <- TRUE
     updatePrettySwitch(session=session, inputId="plot_unlock", value=FALSE)
