@@ -150,7 +150,7 @@ observeEvent(input$graph_manager_visible, {
         plot_react$g$BasePop[[1]]$densitytrans <- plot_react$densitytrans
       } else {
         if("default" %in% input$plot_dens_feature) {
-          plot_react$g$BasePop[[1]]$densitytrans <- asinh
+          plot_react$g$BasePop[[1]]$densitytrans <- "asinh"
         } else {
           plot_react$g$BasePop[[1]]$densitytrans <- input$plot_dens_feature
         }
