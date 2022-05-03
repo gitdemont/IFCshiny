@@ -112,8 +112,9 @@ output$ML_save_btn <- downloadHandler(
         }
         switch(input$ML_save_type, 
                "daf" = {
+                 fullname = FALSE #foo$info$found && !input$use_example && file.exists(foo$fileName_image)
                  suppressWarnings(data_to_DAF(obj = foo, write_to = tmpfile, overwrite = TRUE,
-                                              fullname = !input$use_example, viewing_pop = "ML_subset", binary = TRUE, 
+                                              fullname = fullname, viewing_pop = "ML_subset", binary = TRUE, 
                                               display_progress = TRUE, session = session))
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
@@ -125,10 +126,11 @@ output$ML_save_btn <- downloadHandler(
                  tmpdr = session_react$dir
                  short = short_name(obj_react$back$fileName)
                  if(length(obj_react$back$description$FCS) == 0) {
+                   fullname = FALSE #foo$info$found && !input$use_example && file.exists(foo$fileName_image)
                    files = suppressWarnings(data_to_DAF(obj = foo, 
                                                         write_to = file.path(tmpdr, paste0("%s_", model_react$method,".%e")),
                                                         overwrite = TRUE,
-                                                        fullname = !input$use_example, viewing_pop = "ML_subset", binary = TRUE, 
+                                                        fullname = fullname, viewing_pop = "ML_subset", binary = TRUE, 
                                                         display_progress = TRUE, session = session))
                  } else {
                    files = ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$method,".fcs")), overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(sp))
@@ -259,8 +261,9 @@ output$daf_save_btn <- downloadHandler(
       tryCatch({
         switch(input$daf_save_type, 
                "daf" = {
+                 fullname = FALSE #foo$info$found && !input$use_example && file.exists(foo$fileName_image)
                  suppressWarnings(data_to_DAF(obj = foo, write_to = tmpfile, overwrite = TRUE,
-                                              fullname = !input$use_example, viewing_pop = "ML_subset", binary = TRUE, 
+                                              fullname = fullname, viewing_pop = "ML_subset", binary = TRUE, 
                                               display_progress = TRUE, session = session))
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
