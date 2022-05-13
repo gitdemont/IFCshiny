@@ -1539,10 +1539,10 @@ obs_plot <- list(
                  tryCatch({
                    g = do.call(what = buildGraph, args = args)
                  # level/density
-                 if(input$plot_type_2D_option01 == "level") {
-                   g$BasePop[[1]]$densitylevel = paste(ifelse(input$plot_level_fill,"true","false"),
-                                                       ifelse(input$plot_level_lines,"true","false"),
-                                                       input$plot_level_nlevels,input$plot_level_lowest,sep="|")
+                   if(input$plot_type_2D_option01 == "level") {
+                     g$BasePop[[1]]$densitylevel = paste(ifelse(input$plot_level_fill,"true","false"),
+                                                         ifelse(input$plot_level_lines,"true","false"),
+                                                         input$plot_level_nlevels,input$plot_level_lowest,sep="|")
                  }
                  if(g$type == "density") {
                    # if(!plot_react$param_ready) {
@@ -1553,9 +1553,7 @@ obs_plot <- list(
                    plot_react$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
                    plot_react$densitycolorslightmode_selected = "initial"
                    plot_react$densitytrans_selected = "initial"
-                   if(input$plot_dens_order %% 2) runjs(sprintf("Shiny.onInputChange('plot_dens_order', %i)", ifelse(length(input$plot_dens_order) == 0, 0, input$plot_dens_order + 1L)))
-                     # shinyjs::click("plot_dens_order")
-                   # }
+                   isolate({if(input$plot_dens_order %% 2) runjs(sprintf("Shiny.onInputChange('plot_dens_order', %i)", ifelse(length(input$plot_dens_order) == 0, 0, input$plot_dens_order + 1L)))})
                    g$BasePop[[1]]$densitycolorslightmode <- plot_react$g$BasePop[[1]]$densitycolorslightmode
                    if(input$plot_type_2D_option01 != "level") g$BasePop[[1]]$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
                  }
