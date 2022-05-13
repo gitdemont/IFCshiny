@@ -33,6 +33,114 @@ observeEvent(obj_react$obj$haschanged_objects, {
   if(length(obj_react$obj$haschanged_objects) != 0) obj_react$syncbatch <- TRUE
 })
 
+obs_batch_report = list(
+  observeEvent(list(input$batch_grid,input$batch_rows), suspended = TRUE, {
+    L = length(input$batch_grid)
+    if(L < 1) return(NULL)
+    k = input$batch_cols
+    k = na.omit(k[is.finite(k)])
+    o = input$batch_rows
+    o = na.omit(o[is.finite(o)])
+    if((length(k)==0) || (L < 1)) {
+      updateNumericInput(session=session, inputId="batch_cols",value=1)
+      return(NULL)
+    }
+    if((length(o)==0) || (L < 1)) {
+      updateNumericInput(session=session, inputId="batch_rows",value=1)
+      return(NULL)
+    }
+    if(o > L) updateNumericInput(session=session, inputId="batch_rows",value=L, max=L)
+    if(L > (k * input$batch_rows)) updateNumericInput(session=session, inputId="batch_cols", value=k + 1L)
+  }),
+  observeEvent(list(input$batch_grid,input$batch_cols), suspended = TRUE, {
+    L = length(input$batch_grid)
+    if(L < 1) return(NULL)
+    k = input$batch_rows
+    k = na.omit(k[is.finite(k)])
+    o = input$batch_cols
+    o = na.omit(o[is.finite(o)])
+    if(length(k)==0) {
+      updateNumericInput(session=session, inputId="batch_rows",value=1)
+      return(NULL)
+    }
+    if(length(o)==0) {
+      updateNumericInput(session=session, inputId="batch_cols",value=1)
+      return(NULL)
+    }
+    if(o > L) updateNumericInput(session=session, inputId="batch_cols",value=L, max=L)
+    if(L > (k * input$batch_cols)) updateNumericInput(session=session, inputId="batch_rows", value=k + 1L)
+  }),
+  observeEvent(list(input$batch_layout,input$batch_grid), suspended = TRUE, {
+    lay = input$batch_layout
+    n_col = length(unique(sapply(lay, FUN = function(l) l$position$left)))
+    n_row = length(unique(sapply(lay, FUN = function(l) l$position$top)))
+    ids = sapply(lay, FUN = function(i) i$id)
+    M = matrix(as.integer(ids), ncol=n_col, nrow=n_row, byrow = TRUE)
+    if(n_col > 1) updateNumericInput(session=session, inputId="batch_cols", max=ifelse(all(is.na(M[, n_col])),n_col,n_col + 1L))
+    if(n_row > 1) updateNumericInput(session=session, inputId="batch_rows", max=ifelse(all(is.na(M[n_row, ])),n_row,n_row + 1L))
+  }),
+  observeEvent(list(input$batch_grid, input$batch_cols, input$batch_rows), suspended = TRUE, {
+    L = length(input$batch_grid)
+    if(length(L) == 0) return(NULL)
+    img_pad = 5
+    img_siz = 100
+    N = names(na.omit(obj_react$obj$graphs))
+    removeUI("#batch_placeholder>#batch_grid", multiple = FALSE, immediate = TRUE, session = session)
+    k = input$batch_rows * input$batch_cols * L
+    k = na.omit(k[is.finite(k)])
+    if((length(N) > 0) && (length(k) > 0) && (k > 0)) {
+      if(L > (input$batch_rows * input$batch_cols)) return(NULL)
+      insertUI("#batch_placeholder", where = "afterBegin", multiple = FALSE, immediate = TRUE, session = session,
+               ui = tags$div(id = "batch_grid", style="position:relative"))
+      # initialize batch muuri obj
+      shinyjs::runjs(code = "IFCshiny.batch = new Muuri('#batch_placeholder>#batch_grid',{ dragEnabled: true });
+                           IFCshiny.batch.on('layoutEnd', function (items) {
+                             var out = {};
+                             for(var i = 0; i < items.length; i++) {
+                               var item = items[i];
+                               out[i] = { 'id': item.getElement().getAttribute('data-graph'), 'position': item.getPosition() };
+                             }
+                             Shiny.onInputChange('batch_layout', out);
+                           });")
+      # fill batch muuri with nodes
+      lapply(1:(input$batch_rows * input$batch_cols), FUN = function(i) {
+        id = ""
+        i_graph = ""
+        if(i <= L) {
+          i_graph = na.omit(c(plot_react$layout))[as.integer(input$batch_grid[i])]
+          id = N[i_graph]
+          tile = list(tags$p(input$batch_grid[i],style = "position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                      font-weight:bold; font-size:xx-large; -webkit-font-smoothing:antialiased;
+                      color:#fff; text-shadow:#000 0px 0px 5px"),
+                      tags$img('data-id' = id, style="max-width:-webkit-fill-available"))
+        } else {
+          tile = tags$p("")
+        }
+        insertUI("#batch_placeholder>#batch_grid", where = "beforeEnd", multiple = FALSE, immediate = TRUE, session = session,
+                 ui = tags$div(class = "batch_item",
+                               'data-id' = id,
+                               'data-graph' = i_graph,
+                               style = sprintf("display:block; position:absolute; width:%spx; height:%spx; margin:%spx; z-index:1; background:#8c8c8c; color:#fff;",img_siz,img_siz,img_pad),
+                               tags$div(class = "batch_item-content", tile)
+                 )
+        )
+        # copy img from report to batch
+        if(i <= L) {
+          runjs(code = sprintf("var foo = $('#report_placeholder').find('[data-id=\"%s\"]').find('img').attr('src');
+                              var bar = $('#batch_placeholder>#batch_grid').find('[data-id=\"%s\"]').find('img').attr('src', foo)", id, id))
+        }
+        shinyjs::runjs(code = sprintf("IFCshiny.batch.add($('#batch_placeholder>#batch_grid').children().last()[0], { index: %i, layout: false } );", i - 1))
+      })
+      runjs(code = sprintf("$('#batch_placeholder>#batch_grid').width('%ipx')", img_pad + input$batch_cols * (img_siz + 2 * img_pad)))
+      runjs(code = sprintf("$('#batch_placeholder>#batch_grid').height('%ipx')", img_pad + input$batch_rows * (img_siz + 2 * img_pad)))
+      runjs(code = "IFCshiny.batch.refreshItems().layout();")
+      if(length(obj_react$batch) > 0) enable("batch_report_save_btn")
+    } else {
+      disable("batch_report_save_btn")
+    }
+  })
+)
+
 obs_batch = list(
   observeEvent(obj_react$syncbatch, {
     if(obj_react$syncbatch) {
@@ -77,20 +185,22 @@ obs_batch = list(
                                                            display_progress = TRUE, 
                                                            force_header = TRUE, session = session)))
           to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
-          obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE, session = session)
-          tryCatch({
-            # apply ML in 'mode'="predict_norm"
-            nv = apply.IFCml(model = model_, obj = obj, mode = "predict_norm", 
-                             newdata = "all",
-                             session = session, verbose = FALSE)
-            # force to keep new tagged populations (included new ML_ ones)
-            to_keep = names(nv$obj$pops)[sapply(nv$obj$pops, FUN = function(p) p$type == "T")]
-            # apply the initial gating strategy with eventually ML_ features and pops 
-            obj <- applyGatingStrategy(nv$obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
-          }, error = function(e) {
-            mess_global(title = "file batch", msg = c(paste0("can't apply model on ",basename(obj$fileName)), e$message), type = "error")
-            return(obj)
-          })
+          if(input$apply_gating) {
+            obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE, session = session)
+            tryCatch({
+              # apply ML in 'mode'="predict_norm"
+              nv = apply.IFCml(model = model_, obj = obj, mode = "predict_norm", 
+                               newdata = "all",
+                               session = session, verbose = FALSE)
+              # force to keep new tagged populations (included new ML_ ones)
+              to_keep = names(nv$obj$pops)[sapply(nv$obj$pops, FUN = function(p) p$type == "T")]
+              # apply the initial gating strategy with eventually ML_ features and pops 
+              obj <- applyGatingStrategy(nv$obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
+            }, error = function(e) {
+              mess_global(title = "file batch", msg = c(paste0("can't apply model on ",basename(obj$fileName)), e$message), type = "error")
+              return(obj)
+            })
+          }
           obj
         })
       } else {
@@ -101,25 +211,16 @@ obs_batch = list(
                                                            display_progress = TRUE,
                                                            force_header = TRUE, session = session)))
           to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
-          obj <- applyGatingStrategy(obj = obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
+          if(input$apply_gating) obj <- applyGatingStrategy(obj = obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
           obj
         })
       }
-      if(L == 0) { # should not happen since batch list with initial file is created when batch tab is clicked
-        # add current obj_react$obj in 1st position of the batch list
-        id1 = random_name(special = NULL, forbidden = ids)
-        file_b = c(paste0(id1, " _ ", basename(obj_react$obj$fileName)), file_b)
-        obj_react$obj$fileName <- file_b[1]
-        obj_react$back <- obj_react$obj
-        obj_react$curr = id1
-        obj_react$batch = c(list(obj_react$obj), batch)
-      } else {
-        # add new uploaded files to previous obj_react$batch list
-        file_b = c(unname(sapply(obj_react$batch, FUN = function(b) basename(b$fileName))), file_b)
-        obj_react$batch = c(obj_react$batch, batch)
-      }
+      N = names(obj_react$batch)
+      # add new uploaded files to previous obj_react$batch list
+      file_b = c(unname(sapply(obj_react$batch, FUN = function(b) basename(b$fileName))), file_b)
+      obj_react$batch = c(obj_react$batch, batch)
       # set names to obj_react$batch
-      names(obj_react$batch) <- sapply(strsplit(file_b, split = " _ ", fixed = TRUE), FUN = function(x) x[1])
+      names(obj_react$batch) <- c(N, ids)
       # update selector
       updateSelectInput(session = session, inputId = "file_main", choices = file_b, selected = file_b[1])
       # udpate ridge space
@@ -139,6 +240,7 @@ obs_batch = list(
   observeEvent(input$file_main, {
     if(length(input$file_main) == 0 || input$file_main == "") return(NULL)
     add_log(paste0("moving to batch file: '", input$file_main, "'"))
+    updateSelectInput(session=session, inputId="batch_grid", choices=character(), selected=NULL)
     new_main = strsplit(input$file_main, split = " _ ", fixed = TRUE)[[1]][1]
     obj_react$batch[[obj_react$curr]] <- obj_react$obj
     obj_react$obj <- compare(reinit_app(obj_react$batch[[new_main]]), obj_react$obj, session=session) 
@@ -178,33 +280,78 @@ obs_batch = list(
     file_react$id = random_name(n = 20)
     if(length(obj_react$batch) <= 1) shinyjs::disable(id = "remove_main")
   }),
-  observeEvent(input$navbar_batch, suspended = TRUE, ignoreInit = FALSE, {
+  observeEvent(list(input$navbar,input$navbar_batch), suspended = TRUE, ignoreInit = FALSE, {
     if(input$navbar != "tab7") return(NULL)
+    lapply(obs_batch_report, FUN = function(x) x$suspend())
     hideElement("batch_feature")
     hideElement("violin_controls")
     hideElement("ridge_controls")
     hideElement("volcano_controls")
     hideElement("heatmap_controls")
     hideElement("stack_controls")
-    showElement("batch_population")
+    hideElement("batch_report_controls")
+    hideElement("batch_population")
+    hideElement("batch_plot_controls")
+    if(length(obj_react$obj$graphs) > 0) {
+      showElement(selector = "#navbar_batch [data-value='Report']")
+    } else {
+      hideElement(selector = "#navbar_batch [data-value='Report']")
+    }
     switch(input$navbar_batch, 
            "Violin" = {
+             showElement("batch_population")
              showElement("batch_feature")
+             showElement("batch_plot_controls")
              showElement("violin_controls")
            }, 
            "Ridge" = {
+             showElement("batch_population")
              showElement("batch_feature")
+             showElement("batch_plot_controls")
              showElement("ridge_controls")
            }, 
            "Volcano" = {
+             showElement("batch_population")
+             showElement("batch_plot_controls")
              showElement("volcano_controls")
            },
            "Heatmap" = {
+             showElement("batch_population")
+             showElement("batch_plot_controls")
              showElement("heatmap_controls")
            },
            "Stack" = {
-             hideElement("batch_population")
              showElement("stack_controls")
+             showElement("batch_plot_controls")
+           },
+           "Report" = {
+             if(length(obj_react$obj$graphs) == 0) {
+               runjs(code = "$('#navbar_batch [data-value=\"Violin\"]').trigger('click');" )
+               runjs(code = "Shiny.onInputChange('#navbar_batch', 'Violin');")
+               return(NULL)
+             }
+             lapply(obs_batch_report, FUN = function(x) x$resume())
+             if(!any(input$report_ready)) {
+               if(length(obj_react$obj$graphs) > 0) {
+                 runjs("document.getElementById('msg_busy_txt2').innerText = 'updating batch graphs';")
+                 runjs("document.getElementById('msg_busy_ctn2').style.display = 'block';")
+                 tryCatch({
+                   runjs(code = "$('#navbar [data-value=\"tab6\"]').trigger('click');" )
+                   runjs(code = "Shiny.onInputChange('navbar', 'tab6');")
+                   observeEvent(input$report_ready, once = TRUE, autoDestroy = TRUE, ignoreInit = TRUE, {
+                     updateSelectInput(session=session, inputId="batch_grid",
+                                       choices=as.character(seq_along(obj_react$obj$graphs)),
+                                       selected=as.character(seq_along(obj_react$obj$graphs)))
+                     runjs(code = "$('#navbar [data-value=\"tab7\"]').trigger('click');" )
+                     runjs(code = "Shiny.onInputChange('navbar', 'tab7');")
+                   })
+                 },
+                 finally = {
+                   runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
+                 })
+               }
+             }
+             showElement("batch_report_controls")
            })
   }),
   observeEvent(input$plot_batch_height, suspended = TRUE, ignoreInit = FALSE, ignoreNULL = TRUE, {

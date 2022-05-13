@@ -69,7 +69,8 @@ observeEvent(input$navbar,{
   lapply(obs_report, FUN = function(x) x$suspend())
   lapply(obs_cells, FUN = function(x) x$suspend())
   lapply(obs_ML, FUN = function(x) x$suspend())
-  lapply(obs_batch, FUN = function(x) x$resume())
+  lapply(obs_batch, FUN = function(x) x$suspend())
+  lapply(obs_batch_report, FUN = function(x) x$suspend())
   updateTabsetPanel(session = session, "navbar_ML", selected = "ML_inputs")
   runjs(code = "$('#navbar_ML [data-value=\"ML_inputs\"]').trigger('click');")
   # updateTabsetPanel(session = session, "navbar_batch", selected = "Violin")
@@ -143,7 +144,14 @@ observeEvent(input$navbar,{
            if((length(N) == 0) || !any(N %in% input$file_main)) {
              id1 = random_name(special = NULL)
              file_b = paste0(id1, " _ ", basename(obj_react$obj$fileName))
-             obj_react$obj$fileName <- file_b[1]
+             # place files in batch_raw dir
+             dir.create(file.path(session_react$dir, "batch_raw"), showWarnings = FALSE)
+             # define new names
+             new_names = file.path(session_react$dir, "batch_raw", file_b)
+             # copy input$file_batch
+             file.copy(from = obj_react$obj$fileName, to = new_names)
+             
+             obj_react$obj$fileName <- new_names
              obj_react$back <- obj_react$obj
              obj_react$curr = id1
              obj_react$batch = list(obj_react$obj)
@@ -151,10 +159,8 @@ observeEvent(input$navbar,{
              N = file_b
              sel = N
              hideElement("batch_save")
-             hideElement("batch_plot_controls")
            } else {
              showElement("batch_save")
-             showElement("batch_plot_controls")
            }
            showElement("batch_side_inputs")
            updateSelectInput(session = session, inputId = "file_main", choices = N, selected = sel)

@@ -255,12 +255,19 @@ init_grid : function(message) {
   });
   // on layout changes we pass the layout info to R
   // so that we can compute the new graph positions
+  IFCshiny.grid.on('add', function (items) {
+    Shiny.onInputChange('report_ready', false);
+  });
+  IFCshiny.grid.on('remove', function (items) {
+    Shiny.onInputChange('report_ready', false);
+  });
   IFCshiny.grid.on('layoutEnd', function (items) {
     var out = {};
     for(var i = 0; i < items.length; i++) {
       var item = items[i];
       out[i] = { 'id': item.getElement().getAttribute('data-id'), 'position': item.getPosition() };
     }
+    Shiny.onInputChange('report_ready', false);
     Shiny.onInputChange('report_layout', out);
   });
   // we also modify opacity of empty item during drag action so that they can be easily identified

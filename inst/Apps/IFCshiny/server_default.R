@@ -54,7 +54,7 @@ reinit_default <- function(reset = FALSE, x, not = NULL, env = shinyEnv) {
                                param_ready = FALSE, densitytrans = NULL, densitycolorslightmode = "-16776961|-13447886|-256|-23296|-65536|",
                                densitytrans_selected = "initial", densitycolorslightmode_selected = "initial",
                                allowed_regions = NULL, allowed_siblings = NULL,
-                               layout = matrix(ncol=1, nrow=0),
+                               layout = matrix(integer(), ncol=0, nrow=0),
                                region = data.frame(matrix(NA, ncol = 4, nrow = 0, dimnames = list(NULL, c("x", "y", "css_x", "css_y"))))),
              regions_react = list(pre = list(), back = FALSE),
              feat_react = list(selected = NULL, best_length = 5),

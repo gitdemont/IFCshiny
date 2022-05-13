@@ -208,7 +208,7 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
   }
   # we reinit report layout
   session$sendCustomMessage("init_grid", "")
-  plot_react$layout = matrix(ncol=1, nrow=0)
+  plot_react$layout = matrix(integer(), ncol=0, nrow=0)
   obj = reinit_layout(obj)
   
   # we reinit plot
@@ -232,7 +232,7 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
   updateSelectInput(session = session, inputId = "channels", selected = NULL)
   disable(selector = "#channels input[type='checkbox']")
   
-  # we update sliders
+  # we update inputs
   updateSelectInput(session, "sel_left", choices = sort(names(obj$features)), selected = names(obj$features))
   sel = tolower(obj$fileName)
   names(sel) = remove_ext(basename(sel))
@@ -296,7 +296,6 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
       sel = sel[1]
     }
     updateSelectInput(session=session, inputId = "plot_3D_draw_chan", choices = foo, selected = sprintf("%02i",sel))
-    
     updateCheckboxInput(session = session, inputId = "channels", value = foo)
     updateRadioButtons(session = session, inputId = "chan_type", choices = c("img", "msk")[1:((param_react$param$XIF_test == 1) + 1L)])
     updateSelectInput(session=session, inputId = "chan_sel", choices = foo, selected = sprintf("%02i",sel))
@@ -492,7 +491,7 @@ network_ok = observeEvent(input$import_ok, suspended = TRUE, {
     plot_react$shown = NULL
     plot_react$order = NULL
     session$sendCustomMessage("init_grid", "")
-    plot_react$layout = matrix(ncol=1, nrow=0)
+    plot_react$layout = matrix(integer(), ncol=0, nrow=0)
     obj_react$obj = reinit_layout(obj_react$obj)
   })
 })

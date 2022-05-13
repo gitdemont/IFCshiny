@@ -47,7 +47,7 @@ reinit_layout <- function(obj, recover = TRUE) {
       return(d)
     })
     lay=do.call("rbind", c(lay, make.row.names=FALSE))
-    plot_react$layout = ftable(by(lay$N, lay[,c("y","x")], FUN=function(x) x))
+    plot_react$layout = unclass(ftable(by(lay$N, lay[,c("y","x")], FUN=function(x) x)))
     names(obj$graphs) = rep(NA, L)
     for(id in 1:L) {
       pos = which(id == plot_react$layout, arr.ind = TRUE)
@@ -64,6 +64,7 @@ reinit_layout <- function(obj, recover = TRUE) {
     }
     hideElement(selector = "#navbar [data-value='tab6']")
   }
+  runjs(code = "Shiny.onInputChange('report_ready', false)")
   if(recover) runjs(sprintf("Shiny.onInputChange('report_recover', %i)", ifelse(length(input$report_recover) == 0, 0, input$report_recover + 1L)))
   return(obj)
 }
@@ -79,7 +80,7 @@ obs_report <- list(
              "}",
              "$('#report_placeholder').children().remove();"))
     session$sendCustomMessage("init_grid", "")
-    plot_react$layout = matrix(ncol=1, nrow=0)
+    plot_react$layout = matrix(integer(), ncol=0, nrow=0)
     obj_react$obj = reinit_layout(obj_react$obj, recover = FALSE)
     if(input$navbar == "tab6") runjs(sprintf("Shiny.onInputChange('report_draw', %i)", input$report_draw + 1L))
   }),
@@ -187,7 +188,10 @@ obs_report <- list(
                                                   i_height = input$report_size,
                                                   blink = FALSE,
                                                   layout = TRUE))
-    
+    updateSelectInput(session=session, inputId="batch_grid",
+                      choices=as.character(seq_along(obj_react$obj$graphs)),
+                      selected=NULL)
+    runjs(code = "Shiny.onInputChange('report_ready', true)")
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
   }),
   
@@ -195,7 +199,10 @@ obs_report <- list(
   # it is dedicated to recompute new position of tiles (empty images or plot)
   # and to store these information in plot_react
   observeEvent(input$report_layout, suspended = TRUE,{
-    if(length(input$report_layout)==0) return(NULL)
+    if(length(input$report_layout)==0) {
+      updateSelectInput(session=session, inputId="batch_grid", choices=character(), selected=NULL)
+      return(NULL)
+    }
     graph_size = na.omit(as.integer(input$report_size))
     if(length(graph_size) == 0) return(NULL)
     tile_size = graph_size + 10
@@ -204,7 +211,7 @@ obs_report <- list(
     n_row = sapply(lay, FUN = function(l) l$position$top)
     ids = sapply(lay, FUN = function(i) i$id)
     names(lay) = ids
-    plot_react$layout = matrix(NA, ncol=length(unique(n_col)), nrow=length(unique(n_row)))
+    plot_react$layout = matrix(NA_integer_, ncol=length(unique(n_col)), nrow=length(unique(n_row)))
     for(id in ids) {
       if(is.na(id)) next
       if(id == "") next
@@ -219,13 +226,14 @@ obs_report <- list(
     }
     # row with only empty images will be dropped
     # we allow only one extra row
-    # so we need to indentify them and to remove them from grid layout
+    # so we need to identify them and to remove them from grid layout
     extra_row = apply(plot_react$layout, 1, FUN = function(row) all(is.na(row)))
     extra_row = extra_row[-length(extra_row)]
     if(any(extra_row)) {
       to_remove = c()
       i_tile = -1
       for(i_row in 1:(nrow(plot_react$layout)-1)) {
+        if(i_row <= 0) next
         for(i_col in 1:ncol(plot_react$layout)) {
           i_tile = i_tile + 1
           if(extra_row[i_row]) {
@@ -249,12 +257,12 @@ obs_report <- list(
                                                   layout = FALSE))
     # we inspect the -1 last column, if it is empty we trigger a last column removal
     n_col = ncol(plot_react$layout)
-    if(n_col > 2) if(all(is.na(plot_react$layout[, n_col:(n_col-1)]))) runjs(sprintf("Shiny.onInputChange('report_col_rm', %i)", ifelse(length(input$report_col_rm) == 0, 0, input$report_col_rm + 1L)))
-      # shinyjs::click("report_col_rm")
+    if(n_col > 2) if(all(is.na(plot_react$layout[, n_col:(n_col-1), drop=TRUE]))) runjs(sprintf("Shiny.onInputChange('report_col_rm', %i)", ifelse(length(input$report_col_rm) == 0, 0, input$report_col_rm + 1L)))
+    # shinyjs::click("report_col_rm")
     # finally, if there is no more graphs stored after user action
     # we exit report tab and hide it
     if(length(obj_react$obj$graphs) == 0) {
-      plot_react$layout = matrix(NA, ncol=1, nrow=0)
+      plot_react$layout = matrix(integer(), ncol=0, nrow=0)
       runjs(code = "IFCshiny.grid.remove(IFCshiny.grid.getItems().filter(function (item) { return item._element.classList.contains('empty_tile') }), { removeElements: true, layout: false })")
       runjs(code = "IFCshiny.grid.refreshItems().layout()")
       hideElement(selector = "#navbar [data-value='tab6']")
@@ -286,7 +294,7 @@ obs_report <- list(
       mess_global(title = "change report layout", msg = "can't add row when the last one is empty", type = "info", duration = 5)
       return(NULL)
     } 
-    plot_react$layout = rbind(plot_react$layout, rep(NA, ncol(plot_react$layout)))
+    plot_react$layout = rbind(plot_react$layout, rep(NA_integer_, ncol(plot_react$layout)))
     i_tile = -1
     for(i_row in 1:nrow(plot_react$layout)) {
       for(i_col in 1:ncol(plot_react$layout)) {
@@ -321,12 +329,13 @@ obs_report <- list(
   
   # observer to remove an empty row at the bottom of the grid
   observeEvent(input$report_row_rm, suspended = TRUE,{
-    if(nrow(plot_react$layout) != 0) if(!all(is.na(plot_react$layout[nrow(plot_react$layout),]))) {
+    n_row = nrow(plot_react$layout)
+    if(n_row != 0) if(!all(is.na(plot_react$layout[n_row,]))) {
       mess_global(title = "change report layout", msg = "can't remove row when the last one is not empty", type = "info", duration = 5)
       return(NULL)
     } 
     runjs(code = sprintf("IFCshiny.grid.remove(IFCshiny.grid.getItems().filter(function(item) { return item.getPosition().top === %i }), { removeElements: true, layout: false });", (nrow(plot_react$layout) - 1) * (input$report_size + 10)))
-    if(is.null(nrow(plot_react$layout))) plot_react$layout = matrix(plot_react$layout, nrow = 1)
+    if(is.null(n_row)) plot_react$layout = matrix(plot_react$layout, nrow=1)
     session$sendCustomMessage('resize_grid', list(eleId = 'report_placeholder',
                                                   width = 5 + (input$report_size + 10) * ncol(plot_react$layout),
                                                   height = 5 + (input$report_size + 10) * nrow(plot_react$layout),
@@ -343,7 +352,7 @@ obs_report <- list(
       mess_global(title = "change report layout", msg = "can't add col when the last one is empty", type = "info", duration = 5)
       return(NULL)
     } 
-    plot_react$layout = cbind(plot_react$layout, rep(NA, nrow(plot_react$layout)))
+    plot_react$layout = cbind(plot_react$layout, rep(NA_integer_, nrow(plot_react$layout)))
     i_tile = -1
     o_tile = -1
     for(i_row in 1:nrow(plot_react$layout)) {
@@ -380,12 +389,13 @@ obs_report <- list(
   }),
   # observe to remove the last column if it is empty
   observeEvent(input$report_col_rm, suspended = TRUE,{
-    if(ncol(plot_react$layout) != 0) if(!all(is.na(plot_react$layout[, ncol(plot_react$layout)]))) {
+    n_col = ncol(plot_react$layout)
+    if(n_col != 0) if(!all(is.na(plot_react$layout[, n_col]))) {
       mess_global(title = "change report layout", msg = "can't remove col when the last one is not empty", type = "info", duration = 5)
       return(NULL)
     } 
     runjs(code = sprintf("IFCshiny.grid.remove(IFCshiny.grid.getItems().filter(function(item) { return item.getPosition().left === %i }), { removeElements: true, layout: false });", (ncol(plot_react$layout) - 1) * (input$report_size + 10)))
-    plot_react$layout = plot_react$layout[, -ncol(plot_react$layout)]
+    plot_react$layout = plot_react$layout[, -n_col, drop=FALSE]
     if(is.null(ncol(plot_react$layout))) plot_react$layout = matrix(plot_react$layout, ncol = 1)
     session$sendCustomMessage('resize_grid', list(eleId = 'report_placeholder',
                                                   width = 5 + (input$report_size + 10) * ncol(plot_react$layout),

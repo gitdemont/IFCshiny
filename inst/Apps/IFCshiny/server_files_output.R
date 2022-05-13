@@ -375,15 +375,27 @@ output$graph_save_btn <- downloadHandler(
   })
 output$report_save_btn <- downloadHandler(
   filename = function() {
-    ans = specialr(paste0(remove_ext(basename(obj_react$back$fileName)), "_report.pdf"))
+    ans = specialr(paste0(remove_ext(basename(obj_react$back$fileName)),"_report.", input$report_save_type))
     ans
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting graphs", reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
     tryCatch({
-      suppressMessages(ExportToReport(obj = obj_react$obj, write_to = tmpfile, onepage = TRUE, display_progress = TRUE, session = session))
-      if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
+      if(input$report_save_type != "zip") {
+        tmpfile = file.path(session_react$dir, basename(file))
+        suppressMessages(ExportToReport(obj = obj_react$obj, write_to = tmpfile, onepage = TRUE, display_progress = TRUE, session = session))
+        if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
+      } else {
+        tmpdr = session_react$dir
+        bname = specialr(short_name(obj_react$back$fileName))
+        files = suppressMessages(ExportToReport(obj = obj_react$obj, 
+                                                write_to = file.path(tmpdr, bname, paste0(bname, c(".pdf",".csv"))),
+                                                onepage = TRUE, display_progress = TRUE, session = session))
+        to_rm = files
+        old_dir = getwd(); setwd(tmpdr); on.exit({setwd(old_dir); file.remove(to_rm)}, add = TRUE)
+        files = short_path(files, tmpdr)
+        suppressMessages(zip::zip(zipfile = file, files = files, compression_level = 0, recurse = TRUE))
+      }
     },
     error = function(e) {
       mess_global(title = "exporting report", msg = e$message, type = "error", duration = 10)
@@ -596,8 +608,9 @@ output$example_save_btn <- downloadHandler(
   })
 output$batch_save_obj_btn <- downloadHandler(
   filename = function() {
-    f = names(obj_react$batch)[1]
-    ans = specialr(paste0(remove_ext(substr(f,3,nchar(f))), ".", input$batch_save_obj_type))
+    f = basename(obj_react$batch[[obj_react$curr]]$fileName)
+    f = paste0(strsplit(f, split = " _ ", fixed = TRUE)[[1]][-1], collapse="")
+    ans = specialr(paste0(remove_ext(f), ".", input$batch_save_obj_type))
     ans
   },
   content = function(file) {
@@ -652,42 +665,44 @@ output$batch_save_obj_btn <- downloadHandler(
       mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
     })
   })
-output$batch_save_pdf_btn <- downloadHandler(
+output$batch_report_save_btn <- downloadHandler(
   filename = function() {
-    f = names(obj_react$batch)[1]
-    ans = specialr(paste0(remove_ext(substr(f,3,nchar(f))), "_batch.", input$batch_save_pdf_type))
+    ans = specialr(paste0(remove_ext(basename(obj_react$back$fileName)), "_batch-report.", input$batch_report_save_type))
     ans
   },
   content = function(file) {
-    mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting Batch Report", reset = FALSE)
-    graphs = lapply(obj_react$batch, FUN = function(obj) {
-      CreateGraphReport(obj = obj, display_progress = TRUE, onepage = TRUE)
-    })
-    r_max = 0
-    c_max = 0
-    for(i_graph in seq_along(graphs)) {
-      r_max = max(r_max, nrow(graphs[[i_graph]]$matrix), na.rm = TRUE)
-      c_max = max(c_max, ncol(graphs[[i_graph]]$matrix), na.rm = TRUE)
-    }
-    
-    pdf(file=file, height=3*r_max*2.54, width=3*c_max*2.54)
-    on.exit(dev.off(), add = TRUE)
-    pb = newPB(session = session, title = obj_react$batch[[1]]$fileName,
-               label = "creating batch report",
-               min = 1, max = length(obj_react$batch), initial = 0, style = 3)
+    mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting graphs", reset = FALSE)
     tryCatch({
-      for(i_graph in seq_along(graphs)) {
-        setPB(pb, value = i_graph, title = title_progress, label = "creating batch report")
-        title_progress = basename(as.character(obj_react$batch[[i_graph]]$fileName))
-        grid.arrange(grobs = graphs[[i_graph]]$grobs[graphs[[i_graph]]$layout$N],
-                     top = title_progress, newpage = TRUE, layout_matrix = graphs[[i_graph]]$matrix, as.table = FALSE)
+      lay = input$batch_layout
+      n_col = sapply(lay, FUN = function(l) l$position$left)
+      n_row = sapply(lay, FUN = function(l) l$position$top)
+      ids = sapply(lay, FUN = function(i) i$id)
+      names(lay) = ids
+      sel = matrix(as.integer(ids), ncol=length(unique(n_col)), nrow=length(unique(n_row)), byrow = TRUE)
+      args = list(obj = obj_react$batch, selection = sel,
+                  byrow = input$batch_byrows, times = as.integer(input$batch_times),
+                  display_progress = TRUE, session = session)
+      if(input$batch_gating) args = c(list(gating = suppressMessages(readGatingStrategy(writeGatingStrategy(obj_react$obj, write_to = file.path(session_react$dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))), args)
+      if(input$batch_report_save_type != "zip") {
+        tmpfile = file.path(session_react$dir, basename(file))
+        args = c(list(write_to = tmpfile), args)
+        suppressMessages(do.call(what = BatchReport, args = args))
+        if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file) 
+      } else  {
+        tmpdr = session_react$dir
+        bname = specialr(short_name(obj_react$back$fileName))
+        args = c(list(write_to = file.path(tmpdr, bname, paste0(bname, c(".pdf",".csv")))), args)
+        files = suppressMessages(do.call(what = BatchReport, args = args))
+        to_rm = files
+        old_dir = getwd(); setwd(tmpdr); on.exit({setwd(old_dir); file.remove(to_rm)}, add = TRUE)
+        files = short_path(files, tmpdr)
+        suppressMessages(zip::zip(zipfile = file, files = files, compression_level = 0, recurse = TRUE))
       }
     },
     error = function(e) {
-      mess_global(title = "exporting batch report", msg = e$message, type = "error", duration = 10)
+      mess_global(title = "exporting report", msg = e$message, type = "error", duration = 10)
     },
     finally = {
-      endPB(pb)
       mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
     })
   })

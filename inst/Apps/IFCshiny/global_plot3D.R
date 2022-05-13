@@ -72,7 +72,8 @@ updateToggle3D <- function(session,
                            value = NULL,
                            widgetId = NULL,
                            objIds = NULL) {
-  message <- shiny:::dropNulls(list(eleId = inputId, label = label, value = value, widgetId = widgetId, objIds = unname(unlist(objIds))))
+  message <- list(eleId = inputId, label = label, value = value, widgetId = widgetId, objIds = unname(unlist(objIds)))
+  message <- message[sapply(message, length) != 0]
   session$sendCustomMessage("updateToggle3D", message)
 }
 

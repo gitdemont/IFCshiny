@@ -66,7 +66,6 @@ observeEvent(input$compute_go, {
     do_par = TRUE
   }
   tryCatch({
-    # debugonce(IFCip::ExtractFeatures)
     extra_feat <- IFCip::ExtractFeatures(fileName = obj_react$back$fileName,
                                          offsets = obj_react$back$offsets,
                                          display_progress = TRUE,

@@ -1043,7 +1043,6 @@ apply.IFCml <- function(model, obj, mode = c("self", "predict", "predict_norm", 
       n_model$meta_fun <- model$meta_fun
       n_model$meta_args <- model$meta_args
     }
-    # debugonce(predict.IFCml_fit)
     n_model = do.call(what = predict.IFCml_fit, args = c(list(model = n_model, newdata = newdata), ...))
   }
   # remove former ML features / pops

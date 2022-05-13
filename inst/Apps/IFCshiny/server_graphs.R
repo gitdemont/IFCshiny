@@ -1758,7 +1758,8 @@ obs_plot <- list(
       # return(NULL)
     }
     tryCatch({
-      plot_react$layout = rbind(plot_react$layout, rep(NA, ncol(plot_react$layout)))
+      if(length(plot_react$layout) == 0) plot_react$layout = matrix(NA_integer_, ncol=1,nrow=0)
+      plot_react$layout = rbind(plot_react$layout, rep(NA_integer_, ncol(plot_react$layout)))
       plot_react$layout[nrow(plot_react$layout), 1] <- length(obj_react$obj$graphs) + 1
       plot_react$g$xsize <- input$report_size
       plot_react$g$ysize <- input$report_size
