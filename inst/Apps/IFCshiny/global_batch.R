@@ -281,7 +281,7 @@ batch_stats <- function(batch, pop = "All", feat, method = c("wilcox","t","none"
     fun = c("asinh","smoothLinLog")
     d = batch[[i_batch]]$features[batch[[i_batch]]$pops[[pop]]$obj, feat, drop = FALSE]
     if(nrow(d) == 0) return(matrix(NA, nrow=1, ncol=1+length(feat), dimnames = list(NULL, c(feat,""))))
-    int_to_tra = colnames(d)[grepl(pat[k], colnames(d))]
+    int_to_tra = colnames(d)[grepl(pat[k], colnames(d), perl=TRUE)]
     if(length(int_to_tra) != 0) d[, int_to_tra] <- sapply(int_to_tra, FUN = function(i_trans) do.call(what = fun[k], args = list(x = d[,i_trans])))
     cbind(d, rep(i_batch, nrow(d)))
   })
