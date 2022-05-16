@@ -146,7 +146,7 @@ server <- function(input, output, session) {
     source(file.path(.rundir, "server_msg.R"), local = TRUE, echo = FALSE, verbose = FALSE)
     # log javascript 
     showLog()
-    # add_log("App started")
+    add_log("App started")
     
     source(file.path(.rundir, "server_auth.R"), local = TRUE, echo = FALSE, verbose = FALSE)
     
