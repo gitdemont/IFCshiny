@@ -146,7 +146,7 @@ server <- function(input, output, session) {
     source(file.path(.rundir, "server_msg.R"), local = TRUE, echo = FALSE, verbose = FALSE)
     # log javascript 
     showLog()
-    add_log("App started")
+    # add_log("App started")
     
     source(file.path(.rundir, "server_auth.R"), local = TRUE, echo = FALSE, verbose = FALSE)
     
@@ -697,7 +697,7 @@ server <- function(input, output, session) {
   finally = {
     onSessionEnded(session = session, function() {
       unlink(sessiondir, recursive = TRUE, force = TRUE)    # empty temp files
-      cat(paste0("[",sessionid,"] App stopped\n"))          # goodbye message
+      cat(paste0(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " [",sessionid,"] App stopped\n"))          # goodbye message
       if(exists(".only_once")) {
         if(identical(as.logical(.only_once), TRUE)) {
           stopApp()
