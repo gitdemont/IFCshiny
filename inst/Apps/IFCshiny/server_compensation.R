@@ -171,9 +171,9 @@ output$comp_graphs <- renderPlot({
   raw = decompensate(obj_react$obj$features_comp[comp_react$sub2, ], spillover = comp_react$spillover)
   if(inherits(x = raw, what = "try-error")) return(NULL)
   raw = cbind(data.frame(raw, stringsAsFactors =  FALSE), type = "raw")
-  colnames(raw) = c(param_react$param$channels$name, "type")
+  colnames(raw) = c(param_react$param$comp_names, "type")
   int = cbind(data.frame(obj_react$obj$features_comp[comp_react$sub2, ], stringsAsFactors =  FALSE), type = "comp")
-  colnames(int) = c(param_react$param$channels$name, "type")
+  colnames(int) = c(param_react$param$comp_names, "type")
   df = rbind(raw, int, deparse.level = 0, make.row.names = FALSE)
   df$type = factor(df$type, levels = c("raw", "comp"))
   hyper = 1000
@@ -217,11 +217,11 @@ output$comp_plot <- renderPlot({
   raw = decompensate(obj_react$obj$features_comp[comp_react$sub1, ], spillover = comp_react$spillover)
   rec = compensate(raw, spillover = comp_react$pre)
   raw = cbind(data.frame(raw, stringsAsFactors =  FALSE), type = "raw")
-  names(raw) = c(param_react$param$channels$name, "type")
+  names(raw) = c(param_react$param$comp_names, "type")
   int = cbind(data.frame(obj_react$obj$features_comp[comp_react$sub1, ], stringsAsFactors =  FALSE), type = "comp")
-  names(int) = c(param_react$param$channels$name, "type")
+  names(int) = c(param_react$param$comp_names, "type")
   rec = cbind(data.frame(rec, stringsAsFactors =  FALSE), type = "rec")
-  names(rec) = c(param_react$param$channels$name, "type")
+  names(rec) = c(param_react$param$comp_names, "type")
   df = rbind(raw, int, rec)
   df$type = factor(df$type, levels = c("raw", "comp", "rec"))
   hyper = 1000
@@ -233,9 +233,9 @@ output$comp_plot <- renderPlot({
          paste0(c("#",sprintf("%02X", col2rgb(x)),"FF"),collapse = "")
        })[as.integer(df$type)],
        ylab = #colnames(df)[input$comp_plot_2],
-       param_react$param$channels$name[input$comp_plot_1],
+       param_react$param$comp_names[input$comp_plot_1],
        xlab = #colnames(df)[input$comp_plot_1] 
-       param_react$param$channels$name[input$comp_plot_2]
+       param_react$param$comp_names[input$comp_plot_2]
   )
   try({
   Xlim = (range(df[, input$comp_plot_2], na.rm = TRUE))
@@ -257,7 +257,7 @@ output$comp_table <- DT::renderDT({
   if(length((obj_react$obj$features_comp)) == 0) return(NULL)
   if(length(comp_react$spillover) == 0) return(NULL)
   foo = comp_react$pre
-  colnames(foo) <- gsub("^(.*) <.*>$", "\\1", param_react$param$channels$name)
+  colnames(foo) <- gsub("^(.*) <.*>$", "\\1", param_react$param$comp_names)
   DT::formatRound(DT::datatable(foo,
                                 editable = TRUE,
                                 rownames = FALSE, #extensions = 'Buttons',

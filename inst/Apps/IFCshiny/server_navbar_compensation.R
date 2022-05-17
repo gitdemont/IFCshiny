@@ -94,7 +94,7 @@ if(length(obj_react$obj$features_comp) == 0) {
             paste0(foo[-c(1,2)],collapse="")
         }))
         obj_react$obj$features_comp = obj_react$obj$features[, names(is_intensity)]
-        param_react$param = list(channels = data.frame(name = img_names))
+        param_react$param$comp_names = img_names
       }
       spillover = info$CrossTalkMatrix[which(info$in_use), which(info$in_use)]
       colnames(spillover) = sprintf("Ch%02i",info$Images$physicalChannel) #info$Images$name
@@ -181,7 +181,7 @@ if(length(obj_react$obj$features_comp) == 0) {
         rownames(obj_react$obj$description$spillover) = rownames(spillover)
         
         obj_react$obj$features_comp = obj_react$obj$features[, is_intensity]
-        param_react$param = list(channels = data.frame(name = is_intensity))
+        param_react$param$comp_names = is_intensity
         
         shinyjs::runjs(sprintf("Shiny.onInputChange('comp_plot_1', %i)", 0))
         shinyjs::runjs(sprintf("Shiny.onInputChange('comp_plot_2', %i)", 0))
