@@ -38,6 +38,7 @@ if(length(obj_react$obj$features_comp) == 0) {
     tryCatch({
       if(!is.matrix(obj_react$back$info$CrossTalkMatrix) || (length(obj_react$back$info$CrossTalkMatrix) == 0)) obj_react$back$info$CrossTalkMatrix = getInfo(obj_react$back$fileName)$CrossTalkMatrix
       info = obj_react$back$info
+      if(length(param_react$param) != 0) info$Images <- param_react$param$channels
       is_intensity = unlist(sapply(obj_react$obj$features_def, FUN = function(i_feat) {
         if(i_feat$type == "single" && i_feat$userfeaturetype == "Mask and Image") {
           foo = strsplit(i_feat$def, split = "|", fixed = TRUE)[[1]]

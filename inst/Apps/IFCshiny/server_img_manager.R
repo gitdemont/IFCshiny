@@ -131,6 +131,12 @@ obs_img <- list(
       }
     }
     param_react$param$channels$name[[selected]] <- name
+    if(length(param_react$param$comp_names) != 0) {
+      param_react$param$comp_names[selected] <- name
+      foo = rev(rev(strsplit(names(param_react$param$comp_names)[selected], split = "_", fixed = TRUE)[[1]])[-1])
+      foo = c(foo, name)
+      names(param_react$param$comp_names)[selected] <- paste(foo, collapse = "_")
+    }
   }),
   observeEvent(input$chan_color, suspended = TRUE,  {
     if(is.null(input$chan_color)) return(NULL)
