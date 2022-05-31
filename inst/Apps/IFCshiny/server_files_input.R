@@ -38,7 +38,9 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   
   fileinfo <- lapply(files, unlist)
   fileName <- file.path(dirname(unlist(fileinfo$datapath)), unlist(fileinfo$name))
-  file.rename(from = unlist(fileinfo$datapath), to = fileName)
+  f_from <- unlist(fileinfo$datapath)
+  f_to <- fileName
+  if(sum(f_from != f_to) > 0) file.rename(from = f_from[f_from != f_to], to = f_to[f_from != f_to])
   
   # process input
   # check extension
