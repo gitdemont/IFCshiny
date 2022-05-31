@@ -42,14 +42,29 @@ observeEvent(input$use_parallelization, ignoreInit = TRUE, {
 # extra features computation from images with multi-thread capability
 # It relies on IFCip package to extract Zernike, Hu and Haralick features
 observeEvent(input$compute_go, {
-  if(!requireNamespace(package = "IFCip", quietly = TRUE)) {
+  if(!requireNamespace(package = "IFCip", quietly = TRUE) ||
+     packageVersion("IFCip") < "0.0.6") {
     disable(id = "compute_features")
     msg_react$queue = c(msg_react$queue, "IFCip")
     updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
     return(NULL)
   }
-  if(length(input$zernike) == 0) return(NULL)
-  if(length(input$haralick) == 0) return(NULL)
+  if(input$extra_zernike) {
+    zmax = na.omit(as.integer(isolate(input$zernike)))
+  } else {
+    zmax = -1L
+  }
+  if(input$extra_haralick) {
+    granularity = na.omit(as.integer(isolate(input$haralick)))
+  } else {
+    granularity = -1L
+  }
+  if((length(granularity) == 0 )|| (length(zmax) == 0)) {
+    mess_global(title = "computing extra features", 
+                msg = c("bad value for Haralick / Zernike"), 
+                type = "error", duration = 10)
+    return(NULL)
+  }
   add_log("compute_features")
   mess_global(title = "computing extra features", 
               msg = c("Be aware that you are creating extra features",
@@ -71,8 +86,8 @@ observeEvent(input$compute_go, {
                                          display_progress = TRUE,
                                          batch = input$batch,
                                          parallel = do_par,
-                                         nmax = na.omit(as.integer(isolate(input$zernike))),
-                                         granularity = na.omit(as.integer(isolate(input$haralick))),
+                                         zmax = zmax,
+                                         granularity = granularity,
                                          session = session)
     attr(extra_feat, "channel_names") <- sapply(as.integer(attr(extra_feat, "channel_id")), FUN = function(i_chan) obj_react$obj$description$Images$name[obj_react$obj$description$Images$physicalChannel == i_chan])
     extra_feat <- IFCip::as_IFC_features(extra_feat)[[2]]
