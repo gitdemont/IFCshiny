@@ -334,13 +334,26 @@ obs_plot <- list(
                                     width: 100%")
                          }))))
   }),
+  observeEvent(list(input$plot_type_2D_main_option03,input$plot_shown), suspended = TRUE, {
+    if(input$plot_type != "2D") return(NULL)
+    if(length(input$plot_shown) == 0) return(NULL)
+    if(input$plot_type_2D_main_option03 == 0) updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value=1)
+    sub = fastAny(lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj))
+    n_sub = sum(sub) 
+    n_cells = as.integer(n_sub * input$plot_type_2D_main_option03 / 100)
+    if(n_cells == n_sub) {
+      disable("plot_type_2D_main_option01")
+    } else {
+      enable("plot_type_2D_main_option01")
+    }
+    runjs(code = sprintf("document.getElementById('plot_type_2D_main_option03-count').innerHTML='%s'", paste0("n = ", n_cells, "/", n_sub)))
+  }),
   observeEvent(list(input$plot_type_3D_option03,input$plot_type_3D_option01,input$plot_shown), suspended = TRUE, {
     if(length(input$plot_shown) == 0) return(NULL)
     if(input$plot_type_3D_option03 == 0) {
       updateSliderInput(session=session, inputId = "plot_type_3D_option03", value=1)
       return(NULL)
     }
-    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
     sub = fastAny(lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj))
     n_sub = sum(sub) 
     n_cells = as.integer(n_sub * input$plot_type_3D_option03 / 100)
@@ -353,7 +366,6 @@ obs_plot <- list(
     shown = rev(input$plot_shown)
     plot_react$shown = shown
     plot_react$order = shown
-    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
     sub = fastAny(lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj))
     sub[-sample(x = which(sub), size = sum(sub) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
     plot_react$subset = sub
@@ -364,19 +376,34 @@ obs_plot <- list(
       p$style
     }))
   }),
-  observeEvent(list(input$plot_type_2D_main_option03,input$plot_shown), suspended = TRUE, {
-    if(length(input$plot_shown) == 0) return(NULL)
-    if(input$plot_type_2D_main_option03 == 0) updateSliderInput(session=session, inputId = "plot_type_2D_main_option03", value=1)
-    # sub = apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj)), 2, any)
-    sub = fastAny(lapply(obj_react$obj$pops[input$plot_shown], FUN = function(p) p$obj))
-    n_sub = sum(sub) 
-    n_cells = as.integer(n_sub * input$plot_type_2D_main_option03 / 100)
-    if(n_cells == n_sub) {
-      disable("plot_type_2D_main_option01")
-    } else {
-      enable("plot_type_2D_main_option01")
+  observeEvent(list(input$plot_base,input$plot_shown,plot_react$order,input$plot_type_3D_option03), suspended = TRUE, {
+    if(length(input$file) == 0) return(NULL)
+    if(input$plot_type != "3D") return(NULL)
+    if(length(input$plot_base) < 1) return(NULL)
+    if(input$plot_type_3D_option03 == 0) return(NULL)
+    over = plot_react$order
+    if(length(over) == 0) return(NULL)
+    sub = plot_react$subset
+    plot_react$color = (sapply(obj_react$obj$pops[over], FUN = function(p) {
+      p$lightModeColor
+    }))
+    plot_react$symbol = (sapply(obj_react$obj$pops[over], FUN = function(p) {
+      p$style
+    }))
+    if(length(over) != 0 && all(c(over %in% input$plot_base, over %in% input$plot_shown, input$plot_base %in% over, input$plot_shown %in% over))) {
+      alw = isolate(fastAny(lapply(obj_react$obj$pops[over], FUN = function(p) p$obj)))
+      if((length(sub) == 0) || any(sub & !alw)) {
+        alw[-sample(x = which(alw), size = sum(alw) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
+        plot_react$subset = alw
+      }
     }
-    runjs(code = sprintf("document.getElementById('plot_type_2D_main_option03-count').innerHTML='%s'", paste0("n = ", n_cells, "/", n_sub)))
+    else {
+      plot_react$shown = NULL
+      updateSelectInput(session=session, inputId="plot_shown", selected = NULL)
+      onFlushed(once = TRUE, fun = function() {
+        updateSelectInput(session=session, inputId="plot_shown", selected = (isolate(input$plot_base)))
+      })
+    }
   }),
   observeEvent(input$plot_3D_mouse_ctrl, suspended = TRUE, {
     if(length(input$plot_3D_mouse_ctrl) == 0) return(NULL)
@@ -384,41 +411,6 @@ obs_plot <- list(
     session$sendCustomMessage("refresh", "plot_3D")
     shinyGetPar3d(parameters = "mouseMode", tag = "mouse_mode_chg", session = session)
   }),
-  observeEvent({
-    list(input$plot_base,
-         input$plot_shown,
-         plot_react$order,
-         input$plot_type_3D_option03)}, suspended = TRUE, {
-           if(length(input$file) == 0) return(NULL)
-           if(input$plot_type != "3D") return(NULL)
-           if(length(input$plot_base) < 1) return(NULL)
-           if(input$plot_type_3D_option03 == 0) return(NULL)
-           over = plot_react$order
-           if(length(over) == 0) return(NULL)
-           
-           sub = plot_react$subset
-           plot_react$color = (sapply(obj_react$obj$pops[over], FUN = function(p) {
-             p$lightModeColor
-           }))
-           plot_react$symbol = (sapply(obj_react$obj$pops[over], FUN = function(p) {
-             p$style
-           }))
-           if(length(over) != 0 && all(c(over %in% input$plot_base, over %in% input$plot_shown, input$plot_base %in% over, input$plot_shown %in% over))) {
-             # alw = isolate(apply(do.call(what = rbind, args = lapply(obj_react$obj$pops[over], FUN = function(p) p$obj)), 2, any))
-             alw = isolate(fastAny(lapply(obj_react$obj$pops[over], FUN = function(p) p$obj)))
-             if((length(sub) == 0) || any(sub & !alw)) {
-               alw[-sample(x = which(alw), size = sum(alw) * input$plot_type_3D_option03 / 100, replace = FALSE)] <- FALSE
-               plot_react$subset = alw
-             }
-           }
-           else {
-             plot_react$shown = NULL
-             updateSelectInput(session=session, inputId="plot_shown", selected = NULL)
-             onFlushed(once = TRUE, fun = function() {
-               updateSelectInput(session=session, inputId="plot_shown", selected = (isolate(input$plot_base)))
-             })
-           }
-         }),
   observeEvent(input$plot_3D_create_pop,suspended = TRUE,  {
     session$sendCustomMessage("get3DSelection", "plot_3D")
   }),
@@ -1129,11 +1121,14 @@ obs_plot <- list(
     if(type >= 3) {
       updateSelectInput(session=session, inputId = "plot_z_feature", selected = "Object Number")
       updateTextInput(session = session, inputId = "plot_z_transform", value = "P")
-      # } else {
-      #   updateSelectInput(session = session, inputId = "plot_font_main", selected = plot_react$g$graphtitlefontsize)
-      #   updateSelectInput(session = session, inputId = "plot_font_axis_lab", selected = plot_react$g$axislabelsfontsize)
-      #   updateSelectInput(session = session, inputId = "plot_font_tick_lab", selected = plot_react$g$axistickmarklabelsfontsize)
-      #   updateSelectInput(session = session, inputId = "plot_font_region", selected = plot_react$g$regionlabelsfontsize)
+    } else {
+      plot_react$graphtitlefontsize = "12"
+      plot_react$axislabelsfontsize = "10"
+      plot_react$axistickmarklabelsfontsize = "10"
+      plot_react$regionlabelsfontsize = "10"
+      plot_react$title = ""
+      plot_react$xlabel = ""
+      plot_react$ylabel = ""
     }
     plot_react$zoomed = FALSE
     runjs(code = "Shiny.onInputChange('plot_shown', null)")
@@ -1405,6 +1400,7 @@ obs_plot <- list(
   }),
   observeEvent(input$plot_x_feature, suspended = TRUE,{
     plot_react$x_feat = input$plot_x_feature
+    plot_react$xlabel = plot_react$x_feat
     if(input$plot_unlock) plot_react$zoomed = FALSE
   }),
   observeEvent(input$plot_x_transform, suspended = TRUE,{
@@ -1413,6 +1409,7 @@ obs_plot <- list(
   }),
   observeEvent(input$plot_y_feature, suspended = TRUE,{
     plot_react$y_feat = input$plot_y_feature
+    plot_react$ylabel = plot_react$y_feat
     if(input$plot_unlock) plot_react$zoomed = FALSE
   }),
   observeEvent(input$plot_y_transform,suspended = TRUE, {
@@ -1604,7 +1601,7 @@ obs_plot <- list(
                             "regionlabelsfontsize", "xlabel", "ylabel",
                             "xmin", "ymin",
                             "xmax", "ymax")) {
-                   g[[i]] <- plot_react[[i]]
+                   if((length(plot_react[[i]]) != 0) && (plot_react[[i]] != "")) g[[i]] <- plot_react[[i]]
                  }
                  # maxpoints
                  input$plot_type_2D_main_option01 # allows to trigger resampling

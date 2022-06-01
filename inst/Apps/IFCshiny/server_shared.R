@@ -350,13 +350,18 @@ observeEvent(input$report_graph_dblclick, {
          (r$ylogrange == g$ylogrange)) return(r$label)
     }
   })
+  
+  for(i in c("regionlabelsfontsize",
+             "graphtitlefontsize","title",
+             "axislabelsfontsize","axistickmarklabelsfontsize",
+             "xlabel","ylabel")) plot_react[[i]] <- g[[i]]
   # updateSelectInput(session = session, inputId = "plot_font_main", selected = g$graphtitlefontsize)
   # updateSelectInput(session = session, inputId = "plot_font_axis_lab", selected = g$axislabelsfontsize)
   # updateSelectInput(session = session, inputId = "plot_font_tick_lab", selected = g$axistickmarklabelsfontsize)
   # updateSelectInput(session = session, inputId = "plot_font_region", selected = g$regionlabelsfontsize)
-  # updateSelectInput(session = session, inputId = "plot_lab_main", selected = g$title)
-  # updateSelectInput(session = session, inputId = "plot_lab_x", selected = g$xlabel)
-  # updateSelectInput(session = session, inputId = "plot_lab_y", selected = g$ylabel)
+  # updateTextInput(session = session, inputId = "plot_lab_main", value = g$title)
+  # updateTextInput(session = session, inputId = "plot_lab_x", value = g$xlabel)
+  # updateTextInput(session = session, inputId = "plot_lab_y", value = g$ylabel)
   
   plot_react$allowed_regions = sort(unname(unique(unlist(allowed_regions)), force = TRUE))
   updateSelectInput(session=session, inputId="plot_base", selected=sapply(g$BasePop, FUN = function(p) p$name))
