@@ -200,74 +200,26 @@ data_modify_pops <- function(obj, pops, display_progress = TRUE, compare_with = 
                             paste0(paste(paste0(mutation[!tmp], " [", type1[!tmp], "]"),
                                          paste0(names(mutation)[!tmp], " [", type2[!tmp], "]"), sep = " -> "),
                                    collapse = "\n\t- ")), call. = FALSE)
-  
-  ans = obj
-  # pops modification
+  # rename pops
+  ans = popsRename(obj, mutation[mutation != names(mutation)], names(mutation)[mutation != names(mutation)])
+  # apply other modifications
   K = class(ans$pops)
-  ans$pops = lapply(ans$pops, FUN = function(p) {
-    found = mutation %in% p$name
-    if(any(found)) {
-      # it should be unique !
-      if(sum(found) > 1) stop(paste0("duplicated pops found: ", names(mutation[found]), call. = FALSE))
-      p$name <- names(mutation[found])
-      p$color <- P[[p$name]]$color
-      p$lightModeColor <- P[[p$name]]$lightModeColor
-      p$style <- P[[p$name]]$style
-      if(p$type == "T") p$obj = P[[p$name]]$obj
-    }
-    found = mutation %in% p$names
-    if(any(found)) p$names[p$names %in% mutation[found]] <- names(mutation[found])
-    found = mutation %in% p$split
-    if(any(found)) {
-      p$split[p$split %in% mutation[found]] <- names(mutation[found])
-      p$definition = paste0(p$split, collapse = "|")
+  ans$pops[names(mutation)] = lapply(names(mutation), FUN = function(i_p) {
+    p = ans$pops[[i_p]]
+    p$color <- P[[i_p]]$color
+    p$lightModeColor <- P[[i_p]]$lightModeColor
+    p$style <- P[[i_p]]$style
+    if(p$type == "T") p$obj = P[[i_p]]$obj
+    if(p$type == "C") {
+      operators = c("And", "Or", "Not", "(", ")")
+      p$definition = P[[i_p]]$definition
+      p$split = splitn(definition = p$definition, all_names = names(ans$pops), operators = operators)
+      p$names = setdiff(p$split, operators)
     }
     return(p)
   })
   names(ans$pops) = sapply(ans$pops, FUN = function(p) p$name)
   class(ans$pops) <- K
-  
-  # graphs modification
-  N = names(ans$graphs)
-  K = class(ans$graphs)
-  G = lapply(ans$graphs, FUN = function(g) {
-    g$BasePop = lapply(g$BasePop, FUN = function(p) {
-      found = mutation %in% p$name
-      if(any(found)) p$name <- names(mutation[found])
-      return(p)
-    })
-    g$GraphRegion = sapply(g$GraphRegion, FUN = function(r) {
-      foo = sapply(ans$pops,
-                   FUN = function(p) {
-                     bar = (p$type == "G") &&
-                       (p$region == r$name) &&
-                       (p$base %in% unique(unlist(lapply(g$BasePop, FUN = function(b) b$name)))) &&
-                       (g$f1 == p$fx)
-                     if(ans$regions[[r$name]]$type != "line") bar = bar && (g$f2 == p$fy)
-                     return(bar)
-                   })
-      return(list(c(r, list(def = names(which(foo))))))
-    })
-    g$ShownPop = lapply(g$ShownPop, FUN = function(p) {
-      found = mutation %in% p$name
-      if(any(found)) p$name <- names(mutation[found])
-      return(p)
-    })
-    
-    b_names = unlist(lapply(g$BasePop, FUN=function(x) x$name))
-    g_names = unlist(lapply(g$GraphRegion, FUN=function(x) x$def))
-    s_names = unlist(lapply(g$ShownPop, FUN=function(x) x$name))
-    
-    operators = c("And","Or","Not","(",")")
-    g$order = splitn(definition = g$order, all_names = c(b_names, g_names, s_names, "Selected Bin"), operators = operators)
-    g$order = paste0(setdiff(g$order, "Selected Bin"), collapse = "|")
-    
-    g$xstatsorder = splitn(definition = g$xstatsorder, all_names = c(b_names, g_names, s_names, "Selected Bin"), operators = operators)
-    g$xstatsorder = paste0(setdiff(g$xstatsorder, "Selected Bin"), collapse = "|")
-    return(g)
-  })
-  names(ans$graphs) = N
-  class(ans$graphs) <- K
   
   ans$pops <- popsCompute(pops = ans$pops,
                           regions = ans$regions,

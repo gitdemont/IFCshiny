@@ -222,6 +222,10 @@ getImagesValues <- getFromNamespace("getImagesValues", "IFC")
 #' @keywords internal
 splitn <- getFromNamespace("splitn", "IFC")
 
+#' @name popsRename
+#' @keywords internal
+popsRename <- getFromNamespace("popsRename", "IFC")
+
 #' @name popsWithin
 #' @keywords internal
 popsWithin <- getFromNamespace("popsWithin", "IFC")
