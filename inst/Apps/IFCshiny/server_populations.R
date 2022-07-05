@@ -266,10 +266,11 @@ obs_pop <- list(
         }
         
         # we apply the modification
-        obj_react$obj = data_modify_pops(obj = obj_react$obj,
-                                         pops = structure(list(new_pop), names = pops_react$revert$name), 
-                                         display_progress = TRUE,
-                                         session = session)
+        msg <- capture.output({obj_react$obj = data_modify_pops(obj = obj_react$obj,
+                                                                pops = structure(list(new_pop), names = pops_react$revert$name), 
+                                                                display_progress = TRUE,
+                                                                session = session)}, type = "message", split = FALSE)
+        mess_global(title = "population modification", msg = msg, type = "info", duration = 10)
         
         # if edited population was used for the current graph we modify the graph styling
         if(pops_react$revert$name %in% names(plot_react$color)) {

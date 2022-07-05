@@ -220,7 +220,6 @@ data_modify_pops <- function(obj, pops, display_progress = TRUE, compare_with = 
   })
   names(ans$pops) = sapply(ans$pops, FUN = function(p) p$name)
   class(ans$pops) <- K
-  
   ans$pops <- popsCompute(pops = ans$pops,
                           regions = ans$regions,
                           features = ans$features,
