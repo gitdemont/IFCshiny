@@ -29,15 +29,9 @@
 
 # multi-thread is disabled on shinyapps.io
 observeEvent(input$use_parallelization, ignoreInit = TRUE, {
-  if(!requireNamespace("parallel", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "parallel")
-  if(!requireNamespace("doParallel", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "doParallel")
-  if(!requireNamespace("foreach", quietly = TRUE)) msg_react$queue = c(msg_react$queue, "foreach")
   if(Sys.getenv('SHINY_PORT') != "") msg_react$queue = c(msg_react$queue, "shiny_multi_thread")
   updateSelectInput(session = session, inputId = "msg_once", choices = msg_react$queue, selected = msg_react$queue)
-  if(!requireNamespace("parallel", quietly = TRUE) ||
-     !requireNamespace("doParallel", quietly = TRUE) ||
-     !requireNamespace("foreach", quietly = TRUE) ||
-     (.no_cores <= 1) || (Sys.getenv('SHINY_PORT') != "")) updateMaterialSwitch(session=session, inputId = "use_parallelization", value = FALSE)
+  if((.no_cores <= 1) || (Sys.getenv('SHINY_PORT') != "")) updateMaterialSwitch(session=session, inputId = "use_parallelization", value = FALSE)
 })
 # extra features computation from images with multi-thread capability
 # It relies on IFCip package to extract Zernike, Hu and Haralick features
@@ -71,21 +65,12 @@ observeEvent(input$compute_go, {
                       "IDEAS will not be able to use it for applying on other files"), 
               type = "warning", duration = 10)
   mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Computing extra features", reset = FALSE)
-  do_par = FALSE
-  if(requireNamespace("parallel", quietly = TRUE) &&
-     requireNamespace("doParallel", quietly = TRUE) && 
-     requireNamespace("foreach", quietly = TRUE) && 
-     (.no_cores > 1) && input$use_parallelization) {
-    cl <- parallel::makePSOCKcluster(.no_cores)
-    doParallel::registerDoParallel(cl)
-    do_par = TRUE
-  }
-  tryCatch({
+  tryCatch(progressr::withProgressShiny(inputs = list(detail="non_sticky_message", message="sticky_message"), {
     extra_feat <- IFCip::ExtractFeatures(fileName = obj_react$back$fileName,
                                          offsets = obj_react$back$offsets,
-                                         display_progress = TRUE,
+                                         display_progress = FALSE,
                                          batch = input$batch,
-                                         parallel = do_par,
+                                         parallel = (.no_cores > 1) && input$use_parallelization,
                                          zmax = zmax,
                                          granularity = granularity,
                                          session = session)
@@ -115,13 +100,9 @@ observeEvent(input$compute_go, {
     hideElement(id = "compute_features")
     updateTabsetPanel(session = session, "navbar_ML", selected = "ML_inputs")
     runjs(code = "$('#navbar_ML [data-value=\"ML_inputs\"]').trigger('click');")
-  }, error = function(e) {
+  }), error = function(e) {
     mess_global(title = "features extraction", msg = e$message, type = "stop")
   }, finally = {
-    if(do_par) {
-      parallel::stopCluster(cl)
-      foreach::registerDoSEQ()
-    }
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "", reset = TRUE)
   })
 })

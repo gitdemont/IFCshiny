@@ -141,8 +141,6 @@ suppressMessages(suppressWarnings({
   require(plotly, quietly = TRUE, warn.conflicts = FALSE)
   
   #' parallelization
-  # require(parallel, quietly = TRUE, warn.conflicts = FALSE)
-  # require(doParallel, quietly = TRUE, warn.conflicts = FALSE)
   require(utils, quietly = TRUE, warn.conflicts = FALSE)
 }))
 

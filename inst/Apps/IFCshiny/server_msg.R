@@ -142,9 +142,6 @@ observeEvent(input$msg_once, ignoreInit = TRUE, {
     if("xgb" %in% to_show) mess_global(title = "package required", msg = c("'xgboost' package can't be found", "Please install 'xgboost' for eXtreme Gradient Boosting Training"), type = "info", duration = 100)
     if("em" %in% to_show) mess_global(title = "package required", msg = c("'mclust' package can't be found", "Please install 'mclsut' for Gaussian Mixture Modelling for Model-Based Clustering"), type = "info", duration = 100)
     # parallel
-    if("parallel" %in% to_show) mess_global(title = "package required", msg = c("'parallel' package is required for parallelization", "Parallelization will not be available"), type = "info", duration = 100)
-    if("doParallel" %in% to_show) mess_global(title = "package required", msg = c("'doParallel' package is required for parallelization", "Parallelization will not be available"), type = "info", duration = 100)
-    if("foreach" %in% to_show) mess_global(title = "package required", msg = c("'foreach' package is required for parallelization", "Parallelization will not be available"), type = "info", duration = 100)
     if("shiny_multi_thread" %in% to_show) mess_global(title = "ShinyApps.io", msg = c("Using parallelization is not possible on shinyapp.io"), type = "info", duration = 100)
     msg_react$done = c(msg_react$done, input$msg_once)
     msg_react$queue = setdiff(msg_react$queue, msg_react$done)
