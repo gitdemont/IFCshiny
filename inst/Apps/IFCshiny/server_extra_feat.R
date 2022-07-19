@@ -65,10 +65,10 @@ observeEvent(input$compute_go, {
                       "IDEAS will not be able to use it for applying on other files"), 
               type = "warning", duration = 10)
   mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Computing extra features", reset = FALSE)
-  tryCatch(progressr::withProgressShiny(inputs = list(detail="non_sticky_message", message="sticky_message"), {
+  tryCatch({
     extra_feat <- IFCip::ExtractFeatures(fileName = obj_react$back$fileName,
                                          offsets = obj_react$back$offsets,
-                                         display_progress = FALSE,
+                                         display_progress = TRUE,
                                          batch = input$batch,
                                          parallel = (.no_cores > 1) && input$use_parallelization,
                                          zmax = zmax,
@@ -100,7 +100,7 @@ observeEvent(input$compute_go, {
     hideElement(id = "compute_features")
     updateTabsetPanel(session = session, "navbar_ML", selected = "ML_inputs")
     runjs(code = "$('#navbar_ML [data-value=\"ML_inputs\"]').trigger('click');")
-  }), error = function(e) {
+  }, error = function(e) {
     mess_global(title = "features extraction", msg = e$message, type = "stop")
   }, finally = {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "", reset = TRUE)

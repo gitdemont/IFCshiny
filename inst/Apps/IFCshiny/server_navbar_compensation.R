@@ -59,14 +59,11 @@ if(length(obj_react$obj$features_comp) == 0) {
       if(length(is_intensity) != 0) is_intensity = sort(is_intensity[is_intensity >= 0])
       if(length(is_intensity) != ncol(info$CrossTalkMatrix)) {
         if(requireNamespace("IFCip", quietly = TRUE)) {
-          basic_feat = progressr::withProgressShiny(inputs = list(detail="non_sticky_message", message="sticky_message"),
-                                                    expr = {
-                                                      IFCip::ExtractBasic(info = info,
-                                                                          offsets = obj_react$obj$offsets,
-                                                                          removal = "MC",
-                                                                          display_progress = FALSE,
-                                                                          session = session)
-                                                    })
+          basic_feat = IFCip::ExtractBasic(info = info,
+                                           offsets = obj_react$obj$offsets,
+                                           removal = "MC",
+                                           display_progress = TRUE,
+                                           session = session)
           comp_feat = IFCip::as_IFC_features(basic_feat)
           obj_react$obj$basic$features = comp_feat$features
           obj_react$obj$basic$features_def = comp_feat$features_def
