@@ -45,3 +45,25 @@ recompensate <- function(val, spill_dec, spill_comp) {
   try({colnames(ans) <- colnames(val)}, silent = TRUE)
   return(ans)
 }
+
+get_intensity_channels <- function(obj, info) {
+  foo = unlist(sapply(obj$features_def, FUN = function(i_feat) {
+    if(i_feat$type == "single" && i_feat$userfeaturetype == "Mask and Image") {
+      foo = strsplit(i_feat$def, split = "|", fixed = TRUE)[[1]]
+      if((foo[1] == "Intensity") && (foo[2] == "MC")) {
+        bar = info$Images$physicalChannel[paste0(foo[-c(1,2)],collapse="") == info$Images$name]
+        if(length(bar) == 0) {
+          return(info$Images$physicalChannel[paste0(foo[-c(1,2)],collapse="") == sprintf("Ch%02i", info$Images$physicalChannel)])
+        } else {
+          return(bar)
+        }
+      } else {
+        return(-1)
+      }
+    } else {
+      return(-1)
+    }
+  }))
+  if(length(foo) == 0) return(foo)
+  sort(foo[foo >= 0])
+}

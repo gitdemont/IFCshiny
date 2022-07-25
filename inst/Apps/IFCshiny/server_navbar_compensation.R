@@ -39,24 +39,7 @@ if(length(obj_react$obj$features_comp) == 0) {
       if(!is.matrix(obj_react$back$info$CrossTalkMatrix) || (length(obj_react$back$info$CrossTalkMatrix) == 0)) obj_react$back$info$CrossTalkMatrix = getInfo(obj_react$back$fileName)$CrossTalkMatrix
       info = obj_react$back$info
       if(length(param_react$param) != 0) info$Images <- param_react$param$channels
-      is_intensity = unlist(sapply(obj_react$obj$features_def, FUN = function(i_feat) {
-        if(i_feat$type == "single" && i_feat$userfeaturetype == "Mask and Image") {
-          foo = strsplit(i_feat$def, split = "|", fixed = TRUE)[[1]]
-          if((foo[1] == "Intensity") && (foo[2] == "MC")) {
-            bar = info$Images$physicalChannel[paste0(foo[-c(1,2)],collapse="") == info$Images$name]
-            if(length(bar) == 0) {
-              return(info$Images$physicalChannel[paste0(foo[-c(1,2)],collapse="") == sprintf("Ch%02i", info$Images$physicalChannel)])
-            } else {
-              return(bar)
-            }
-          } else {
-            return(-1)
-          }
-        } else {
-          return(-1)
-        }
-      }))
-      if(length(is_intensity) != 0) is_intensity = sort(is_intensity[is_intensity >= 0])
+      is_intensity = get_intensity_channels(obj_react$obj, info)
       if(length(is_intensity) != ncol(info$CrossTalkMatrix)) {
         if(requireNamespace("IFCip", quietly = TRUE)) {
           basic_feat = IFCip::ExtractBasic(info = info,
@@ -81,6 +64,7 @@ if(length(obj_react$obj$features_comp) == 0) {
           # we sort the features by name
           obj_react$obj$features <- structure(obj_react$obj$features[, order(names(obj_react$obj$features))], class = c("data.frame", "IFC_features"))
           obj_react$obj$features_def <- structure(obj_react$obj$features_def[order(names(obj_react$obj$features_def))], class = c("list", "IFC_features_def"))
+          is_intensity = get_intensity_channels(obj_react$obj, info)
           # when extra features have been computed we can show new tabs (if they are not already displayed)
           showElement(selector = "#navbar [data-value='tab1']")
           showElement(selector = "#navbar [data-value='tab2']")
@@ -93,14 +77,14 @@ if(length(obj_react$obj$features_comp) == 0) {
           updateSelectInput(session=session, inputId = "sel_left", choices = feat_n, selected = feat_n)
           hideElement(id = "compute_features")
         }
-      } else {
-       img_names = unlist(sapply(obj_react$obj$features_def[names(is_intensity)], FUN = function(i_feat) {
-            foo = strsplit(i_feat$def, split = "|", fixed = TRUE)[[1]]
-            paste0(foo[-c(1,2)],collapse="")
-        }))
-        obj_react$obj$features_comp = obj_react$obj$features[, names(is_intensity)]
-        param_react$param$comp_names = img_names
-      }
+        
+      } 
+      img_names = unlist(sapply(obj_react$obj$features_def[names(is_intensity)], FUN = function(i_feat) {
+        foo = strsplit(i_feat$def, split = "|", fixed = TRUE)[[1]]
+        paste0(foo[-c(1,2)],collapse="")
+      }))
+      obj_react$obj$features_comp = obj_react$obj$features[, names(is_intensity)]
+      param_react$param$comp_names = img_names
       spillover = info$CrossTalkMatrix[which(info$in_use), which(info$in_use)]
       colnames(spillover) = sprintf("Ch%02i",info$Images$physicalChannel) #info$Images$name
       rownames(spillover) = names(is_intensity)
