@@ -34,6 +34,7 @@ shiny::onStop(fun = function() {
   # recover options
   options(.cleanup$options)
   if(!("shiny.maxRequestSize" %in% names(.cleanup$options))) options("shiny.maxRequestSize"=NULL)
+  if(!("shiny.error" %in% names(.cleanup$options))) options("shiny.error"=NULL)
   # recover Environment Variables
   sapply(names(.cleanup$sysenv), FUN = function(x) {
     args = list(.cleanup$sysenv[[x]])

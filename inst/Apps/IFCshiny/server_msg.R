@@ -28,18 +28,16 @@
 ################################################################################
 
 # function to create logs
-add_log = function(mess = ", ", dir = session_react$dir, id = session_react$id) {
-  observe({
+add_log = function(mess = ", ", dir = session_dir, id = session_id, to_console = TRUE) {
     msg = paste(paste0(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " [",id,"]"), mess, sep = " ")
     # LOGS.txt
     cat(msg, sep = "\n", append = TRUE, file = file.path(dir, "LOGS.txt"))
     # stdout
-    cat(msg, sep = "\n")
-  })
+    if(to_console) cat(msg, sep = "\n")
 }
 
 # variation of shinyjs::showLog to store logs and show JS console output
-showLog = function(dir = session_react$dir, id = session_react$id) {
+showLog = function(dir = session_dir, id = session_id) {
   if(!is.null(attr(session, "shinyjs_showLog"))) return()
   attr(session, "shinyjs_showLog") <- TRUE
   insertUI("head", "beforeEnd", {
@@ -47,23 +45,26 @@ showLog = function(dir = session_react$dir, id = session_react$id) {
   }, immediate = TRUE)
   observeEvent(session$input[["shinyjs-showLog"]], {
     # LOGS.txt
-    cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " [",session_react$id,"] JS: ",
+    cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " [",session_id,"] JS: ",
         jsonlite::toJSON(session$input[["shinyjs-showLog"]], auto_unbox = TRUE), "\n", sep = "", append = TRUE, file = file.path(dir, "LOGS.txt"))
     # stdout
-    cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " [",session_react$id,"] JS: ",
+    cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " [",session_id,"] JS: ",
         jsonlite::toJSON(session$input[["shinyjs-showLog"]], auto_unbox = TRUE), "\n", sep = "")
   })
 }
 
 # download logs on app error
-observeEvent(once = TRUE, session_react$dir, {
-  options(shiny.error = function(dir = session_react$dir, id = session_react$id) {
-    uri = paste0("data:text/plain;base64,",
-                 cpp_base64_encode(charToRaw(paste0(c(readLines(file.path(dir, "LOGS.txt")), geterrmessage()), collapse="\n"))))
-    runjs(code = sprintf("$('#get_logs').attr('href', '%s')", uri))
-    runjs(sprintf("Shiny.onInputChange('get_logs', %i)", ifelse(length(input$get_logs) == 0, 0, input$get_logs + 1L)))
-    # shinyjs::click("get_logs")
-  })
+options(shiny.error = function(dir = session_dir, id = session_id) {
+  add_log(c("<<<<<<<< shiny.error beg >>>>>>>>", 
+            "error:", geterrmessage(),
+            "trace:",
+            unlist(traceback(3)),
+            "<<<<<<<< shiny.error end >>>>>>>>"))
+  uri = paste0("data:text/plain;base64,",
+               cpp_base64_encode(charToRaw(paste0(readLines(file.path(dir, "LOGS.txt"), warn = FALSE, n = -1L, skipNul = TRUE), collapse="\n"))))
+  runjs(code = sprintf("$('#get_logs').attr('href', '%s')", uri))
+  shinyjs::click("get_logs")
+  shiny::stopApp()
 })
 
 # display and log busy message

@@ -31,19 +31,17 @@
 server <- function(input, output, session) {
   # generate unique session id + unique temp directory
   shinyEnv = environment()
+  set.seed(NULL)
   while(TRUE) {
-    sessionid <- paste0(sample(x = c(sample(x = 1:9, size = 20, replace = TRUE),
+    session_id <- paste0(sample(x = c(sample(x = 1:9, size = 20, replace = TRUE),
                                                            sample(x = LETTERS, size = 26, replace = TRUE),
                                                            sample(x = letters, size = 26, replace = TRUE)),
                                                      size = 20, replace = FALSE), collapse = "", sep = "")
-    if(!dir.exists(file.path(tempdir(check = FALSE), sessionid))) break
+    if(!dir.exists(file.path(tempdir(check = FALSE), session_id))) break
   }
-  dir_tmp = file.path(tempdir(check = TRUE), sessionid)
+  dir_tmp = file.path(tempdir(check = TRUE), session_id)
   dir.create(path = dir_tmp, recursive = TRUE)
-  sessiondir =normalizePath(dir_tmp, winslash = "/", mustWork = TRUE)
-  
-  # function to record LOGS + trigger LOGS download on app error
-  session_react <- reactiveValues(id = sessionid, dir = sessiondir)
+  session_dir = normalizePath(dir_tmp, winslash = "/", mustWork = TRUE)
   
   # we use shiny:outputinvalidated to show/hide msg_busy_ctn on training_plot because it can be long
   # TODO find something to test if webgl is available for interaction once rgl has sent scene to javascript
@@ -687,7 +685,7 @@ server <- function(input, output, session) {
     }))
     output$logs <- renderPrint({
       if(input$navbar != "tab8") return(NULL)
-      lines = readLines(file.path(session_react$dir, "LOGS.txt"))
+      lines = readLines(file.path(session_dir, "LOGS.txt"))
       L = length(lines)
       if(L >= 20) lines = c("...", lines[L - (19:0)])
       cat(lines, sep = "\n")
@@ -696,8 +694,8 @@ server <- function(input, output, session) {
   },
   finally = {
     onSessionEnded(session = session, function() {
-      unlink(sessiondir, recursive = TRUE, force = TRUE)    # empty temp files
-      cat(paste0(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " [",sessionid,"] App stopped\n"))          # goodbye message
+      unlink(session_dir, recursive = TRUE, force = TRUE)                                              # empty temp files
+      cat(paste0(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " [",session_id,"] App stopped\n"))          # goodbye message
       if(exists(".only_once")) {
         if(identical(as.logical(.only_once), TRUE)) {
           stopApp()

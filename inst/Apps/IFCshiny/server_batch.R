@@ -160,9 +160,9 @@ obs_batch = list(
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Batching files", reset = FALSE)
     tryCatch({
       # place files in batch_raw dir
-      dir.create(file.path(session_react$dir, "batch_raw"), showWarnings = FALSE)
+      dir.create(file.path(session_dir, "batch_raw"), showWarnings = FALSE)
       # define new names
-      new_names = file.path(session_react$dir, "batch_raw", file_b)
+      new_names = file.path(session_dir, "batch_raw", file_b)
       # rename input$file_batch
       file.rename(from = input$file_batch$datapath, to = new_names)
       
@@ -170,13 +170,13 @@ obs_batch = list(
       # TODO extract gs without writing a file
       # read files and apply gating strategy 
       obj1 = obj_react$obj
-      gs_ML <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_react$dir, "batch_raw", "batch_gating_ML.xml"), overwrite = TRUE)))
+      gs_ML <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_dir, "batch_raw", "batch_gating_ML.xml"), overwrite = TRUE)))
       if(length(model_react$fit) != 0) {       # we need to remove "ML" from current obj because "ML" features may not be present in input files
         check = grep("^ML_", names(obj1$features), value = TRUE)
         obj1 = suppressWarnings(data_rm_features(obj = obj1, features = check, list_only = FALSE, session=session))
         check = grep("^ML_", names(obj1$pops), value = TRUE)
         obj1 = suppressWarnings(data_rm_pops(obj = obj1, pops = check, list_only = FALSE, session=session))
-        gs <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_react$dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))
+        gs <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))
         model_ = reactiveValuesToList(x = model_react)
         batch = lapply(1:length(new_names), FUN = function(i_file) {
           obj <- suppressMessages(suppressWarnings(readIFC(new_names[i_file], extract_features = TRUE, 

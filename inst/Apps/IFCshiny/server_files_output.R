@@ -86,7 +86,7 @@ output$ML_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting DAF with model", reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
+    tmpfile = file.path(session_dir, basename(file))
     tryCatch({
       # add image values in obj_react (if not already extracted)
       if((length(obj_react$back$description$FCS) == 0) && (getFileExt(obj_react$back$fileName) != "daf") && (length(obj_react$obj$images) == 0)) {
@@ -123,7 +123,7 @@ output$ML_save_btn <- downloadHandler(
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
                "zip" = {
-                 tmpdr = session_react$dir
+                 tmpdr = session_dir
                  short = short_name(obj_react$back$fileName)
                  if(length(obj_react$back$description$FCS) == 0) {
                    fullname = FALSE #foo$info$found && !input$use_example && file.exists(foo$fileName_image)
@@ -181,7 +181,7 @@ output$comp_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", "Exporting compensation matrix", reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
+    tmpfile = file.path(session_dir, basename(file))
     tryCatch({
       info = obj_react$back$info
       control_args = list()
@@ -241,7 +241,7 @@ output$daf_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = paste0("Exporting ", ifelse(length(obj_react$back$description$FCS) == 0, "DAF", "FCS")), reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
+    tmpfile = file.path(session_dir, basename(file))
     tryCatch({
       # add image values in obj_react (if not already extracted)
       if((length(obj_react$back$description$FCS) == 0) && (getFileExt(obj_react$back$fileName) != "daf") && (length(obj_react$obj$images) == 0)) {
@@ -322,7 +322,7 @@ output$graph_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = paste0("Exporting ",input$plot_type," plot"), reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
+    tmpfile = file.path(session_dir, basename(file))
     if(input$plot_type == "3D") {
       tryCatch({
         imgs = character()
@@ -382,11 +382,11 @@ output$report_save_btn <- downloadHandler(
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting graphs", reset = FALSE)
     tryCatch({
       if(input$report_save_type != "zip") {
-        tmpfile = file.path(session_react$dir, basename(file))
+        tmpfile = file.path(session_dir, basename(file))
         suppressMessages(ExportToReport(obj = obj_react$obj, write_to = tmpfile, onepage = TRUE, display_progress = TRUE, session = session))
         if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
       } else {
-        tmpdr = session_react$dir
+        tmpdr = session_dir
         bname = specialr(short_name(obj_react$back$fileName))
         files = suppressMessages(ExportToReport(obj = obj_react$obj, 
                                                 write_to = file.path(tmpdr, bname, paste0(bname, c(".pdf",".csv"))),
@@ -411,7 +411,7 @@ output$network_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting population network", reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
+    tmpfile = file.path(session_dir, basename(file))
     tryCatch({
       switch(input$network_save_type, 
              "html" = { 
@@ -464,7 +464,7 @@ output$pop_indices_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", "Exporting population indices", reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
+    tmpfile = file.path(session_dir, basename(file))
     tryCatch({
       oo = rep(NA, as.integer(obj_react$obj$description$ID$objcount))
       idx = do.call(what = "cbind", args = lapply(obj_react$obj$pops, FUN = function(p) {
@@ -495,7 +495,7 @@ output$cells_save_btn <- downloadHandler(
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting images", reset = FALSE)
     tryCatch({
-      tmpdr = session_react$dir
+      tmpdr = session_dir
       param = param_react$param
       param$overwrite = TRUE
       switch(input$cells_save_type,
@@ -572,7 +572,7 @@ output$example_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting example files", reset = FALSE)
-    tmpdr = session_react$dir
+    tmpdr = session_dir
     olddir = getwd()
     suppressWarnings(dir.create(file.path(tmpdr, "example")))
     files = list.files(path = system.file(package = "IFCdata", "extdata"), all.files = FALSE, full.names = TRUE, include.dirs = FALSE)
@@ -615,7 +615,7 @@ output$batch_save_obj_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting Batch files", reset = FALSE)
-    tmpdr = session_react$dir
+    tmpdr = session_dir
     suppressWarnings(dir.create(file.path(tmpdr, "batch")))
     N = names(obj_react$batch)
     L = length(N)
@@ -682,14 +682,14 @@ output$batch_report_save_btn <- downloadHandler(
       args = list(obj = obj_react$batch, selection = sel,
                   byrow = input$batch_byrows, times = as.integer(input$batch_times),
                   display_progress = TRUE, session = session)
-      if(input$batch_gating) args = c(list(gating = suppressMessages(readGatingStrategy(writeGatingStrategy(obj_react$obj, write_to = file.path(session_react$dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))), args)
+      if(input$batch_gating) args = c(list(gating = suppressMessages(readGatingStrategy(writeGatingStrategy(obj_react$obj, write_to = file.path(session_dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))), args)
       if(input$batch_report_save_type != "zip") {
-        tmpfile = file.path(session_react$dir, basename(file))
+        tmpfile = file.path(session_dir, basename(file))
         args = c(list(write_to = tmpfile), args)
         suppressMessages(do.call(what = BatchReport, args = args))
         if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file) 
       } else  {
-        tmpdr = session_react$dir
+        tmpdr = session_dir
         bname = specialr(short_name(obj_react$back$fileName))
         args = c(list(write_to = file.path(tmpdr, bname, paste0(bname, c(".pdf",".csv")))), args)
         files = suppressMessages(do.call(what = BatchReport, args = args))
@@ -713,7 +713,7 @@ output$features_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting features", reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
+    tmpfile = file.path(session_dir, basename(file))
     tryCatch({
       all_pops = do.call(what = cbind, args = lapply(obj_react$obj$pops, FUN = function(p) p$obj))
       colnames(all_pops) = names(obj_react$obj$pops)
@@ -742,7 +742,7 @@ output$stats_save_btn <- downloadHandler(
   },
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting stats", reset = FALSE)
-    tmpfile = file.path(session_react$dir, basename(file))
+    tmpfile = file.path(session_dir, basename(file))
     tryCatch({
       stats = extractStats(obj = obj_react$obj, feat_name = input$stats_feature, trans = input$stats_transform)
       switch(input$stats_save_type, 
@@ -764,7 +764,7 @@ output$logs_save_btn <- downloadHandler(
   content = function(file) {
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Exporting logs", reset = FALSE)
     tryCatch({
-      file.copy(from = file.path(session_react$dir, "LOGS.txt"), to = file)
+      file.copy(from = file.path(session_dir, "LOGS.txt"), to = file)
     },
     error = function(e) {
       mess_global("exporting logs", msg = e$message, type = "error", duration = 10)

@@ -145,9 +145,9 @@ observeEvent(input$navbar,{
              id1 = random_name(special = NULL)
              file_b = paste0(id1, " _ ", basename(obj_react$obj$fileName))
              # place files in batch_raw dir
-             dir.create(file.path(session_react$dir, "batch_raw"), showWarnings = FALSE)
+             dir.create(file.path(session_dir, "batch_raw"), showWarnings = FALSE)
              # define new names
-             new_names = file.path(session_react$dir, "batch_raw", file_b)
+             new_names = file.path(session_dir, "batch_raw", file_b)
              # copy input$file_batch
              file.copy(from = obj_react$obj$fileName, to = new_names)
              

@@ -31,7 +31,7 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   # reinit values
   reinit_default(TRUE)
   reinit_app(list())
-  unlink(file.path(session_react$dir, "batch_raw"), recursive = TRUE, force = TRUE)
+  unlink(file.path(session_dir, "batch_raw"), recursive = TRUE, force = TRUE)
   file_react$input <- files
   file_react$id = random_name(n = 20)
   if(length(files) == 0) return(NULL)
