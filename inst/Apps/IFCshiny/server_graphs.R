@@ -1281,7 +1281,7 @@ obs_plot <- list(
   }),
   hover_3D = observeEvent(input$rgl_3D_hover, suspended = TRUE, {
     if(length(input$rgl_3D_hover) == 0) return(NULL)
-    if(packageVersion("rgl") < '0.106.19') {
+    if(TRUE) { #packageVersion("rgl") < '0.106.19') {
       foo = as.integer(unlist(input$rgl_3D_hover)[3])
       if(plot_react$closest != foo) {
         plot_react$closest <- foo

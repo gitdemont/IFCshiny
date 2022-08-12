@@ -649,7 +649,7 @@ server <- function(input, output, session) {
             if(length(par_defaults) == 5) nam_defaults <- c("none", nam_defaults)
             names(par_defaults) <- nam_defaults
             if(input$run_on_mobile) { par_defaults["left"] <- "none"; par_defaults["right"] <- "trackball" }
-            if(packageVersion("rgl") >= "0.106.19") par_defaults["none"] <- "user"
+            # if(packageVersion("rgl") >= "0.106.19") par_defaults["none"] <- "user"
             shinySetPar3d(mouseMode = as.list(par_defaults), session = session)
           })
           session$sendCustomMessage("refresh", "plot_3D")
@@ -663,7 +663,8 @@ server <- function(input, output, session) {
         mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", reset = TRUE)
       })
     })
-    if(packageVersion("rgl") < "0.106.19") session$sendCustomMessage("hover3D", list(widgetId = 'plot_3D', with_img = FALSE))
+    # if(packageVersion("rgl") < "0.106.19") 
+    session$sendCustomMessage("hover3D", list(widgetId = 'plot_3D', with_img = FALSE))
     output$stats <- suppressWarnings(renderPrint({
       if(length(obj_react$back$info$in_use) == 0) return(NULL)
       if(any(input$population=="")) return(NULL)
