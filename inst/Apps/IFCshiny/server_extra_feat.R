@@ -66,10 +66,12 @@ observeEvent(input$compute_go, {
               type = "warning", duration = 10)
   mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Computing extra features", reset = FALSE)
   tryCatch({
+    do_par = (.no_cores > 1) && input$use_parallelization
+    chunks = ifelse(do_par, as.integer(obj_react$back$info$objcount / .no_cores), 20L)
     extra_feat <- IFCip::ExtractFeatures(fileName = obj_react$back$fileName,
                                          offsets = obj_react$back$offsets,
                                          display_progress = TRUE,
-                                         batch = input$batch,
+                                         batch = chunks,
                                          parallel = (.no_cores > 1) && input$use_parallelization,
                                          zmax = zmax,
                                          granularity = granularity,
