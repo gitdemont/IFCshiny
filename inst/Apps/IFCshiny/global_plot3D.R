@@ -313,7 +313,7 @@ plot_obj3D = function(obj3D, scaling = 1.7,
   
   # creates hover for use with setUserCallbacks
   hov = list()
-  if(FALSE) {#packageVersion("rgl") >= '0.106.19') {
+  if(packageVersion("rgl") >= '0.106.19') {
     hov$pts = pch3d(x=xx, y=yy, z=zz,
                     polygon_offset = 0, radius=4 * obj3D$pt_size * obj3D$pt_ratio,
                     pch = 13, color = "#F5AA2200", alpha=1, lit=FALSE)
@@ -339,20 +339,6 @@ plot_obj3D = function(obj3D, scaling = 1.7,
        if(Object.values(subscene.par3d.mouseMode).indexOf("selecting") < 0) {
        x = x/this.canvas.width;
        y = y/this.canvas.height;
-       console.log(this);
-       this.dotprod = function(a, b) {
-         return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-       };
-       this.vlen = function(v) {
-         return Math.sqrt(this.dotprod(v, v));
-       };
-       this.multVM = function(v, M) {
-        return [ M.m11 * v[0] + M.m21 * v[1] + M.m31 * v[2] + M.m41 * v[3],
-                 M.m12 * v[0] + M.m22 * v[1] + M.m32 * v[2] + M.m42 * v[3],
-                 M.m13 * v[0] + M.m23 * v[1] + M.m33 * v[2] + M.m43 * v[3],
-                 M.m14 * v[0] + M.m24 * v[1] + M.m34 * v[2] + M.m44 * v[3]
-               ];
-       };
        for(var [key, value] of Object.entries(idverts)) {
          obj = this.getObj(parseInt(value));
          //if(obj != null)
@@ -362,7 +348,7 @@ plot_obj3D = function(obj3D, scaling = 1.7,
            pt[0] = x - pt[0];
            pt[1] = y - pt[1];
            pt[2] = 0;
-           newdist = this.vlen(pt);
+           newdist = rglwidgetClass.vlen(pt);
            if (newdist < dist) {
              dist = newdist;
              newclosest = [key, i + ""];
@@ -380,7 +366,7 @@ plot_obj3D = function(obj3D, scaling = 1.7,
 
          // convert to normalized coords
          var v = pt.concat(1);
-         var w = this.multVM(v, this.prmvMatrix);
+         var w = rglwidgetClass.multVM(v, this.prmvMatrix);
          var xx = w[0]/w[3], yy = w[1]/w[3]
          //var zz = w[2]/w[3];
 
@@ -405,7 +391,7 @@ plot_obj3D = function(obj3D, scaling = 1.7,
 
          // convert to data unit
          this.prmvMatrix.invert();
-         pt_adj = this.multVM([xx, yy, w[2], w[3]], this.prmvMatrix);
+         pt_adj = rglwidgetClass.multVM([xx, yy, w[2], w[3]], this.prmvMatrix);
 
          pts.vertices[0] = txt.vertices[0] = pt;
          img.vertices[0] = pt_adj.slice(0, 3);

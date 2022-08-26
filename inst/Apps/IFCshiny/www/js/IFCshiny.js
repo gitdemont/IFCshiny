@@ -409,13 +409,6 @@ hover3D: function(message) {
     rgl.setprmvMatrix();
     objids = subscene.objects; 
     m_dist = Number.POSITIVE_INFINITY;
-    multVM = function(v, M) {
-        return [ M.m11 * v[0] + M.m21 * v[1] + M.m31 * v[2] + M.m41 * v[3],
-                 M.m12 * v[0] + M.m22 * v[1] + M.m32 * v[2] + M.m42 * v[3],
-                 M.m13 * v[0] + M.m23 * v[1] + M.m33 * v[2] + M.m43 * v[3],
-                 M.m14 * v[0] + M.m24 * v[1] + M.m34 * v[2] + M.m44 * v[3]
-               ];
-    };
     for (var i = 0, j, id, keys, obj; i < objids.length; i++) {
       id = objids[i];
       j = rgl.scene.crosstalk.id.indexOf(id);
@@ -424,7 +417,7 @@ hover3D: function(message) {
         obj = rgl.getObj(id);
         for (var k = 0, x, y, z, v, w, dist; k < keys.length; k++) {
           v = [].concat(obj.vertices[k]).concat(1.0);
-          w = multVM(v, rgl.prmvMatrix);
+          w = rglwidgetClass.multVM(v, rgl.prmvMatrix);
           x = w[0]/w[3];
           y = w[1]/w[3];
           z = w[2]/w[3];
