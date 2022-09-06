@@ -239,6 +239,12 @@ server <- function(input, output, session) {
         print(obj_react$back$description$masks[, c("name","def")])
       }
     })
+    output$keywords <- renderTable({
+      if(length(obj_react$back$Keywords) == 0) return(NULL)
+      foo <- cbind(names(obj_react$back$Keywords), obj_react$back$Keywords)
+      colnames(foo) <- c("keyword","value")
+      foo
+    })
     output$table <- DT::renderDataTable(server = TRUE, expr = {
       if(length(obj_react$back$info$in_use) == 0) return(NULL)
       if(any(input$population=="")) return(NULL)
@@ -433,7 +439,6 @@ server <- function(input, output, session) {
       h = hist(x, breaks=br, plot = FALSE)
       h$counts = h$counts / max(h$counts)
       h$density = h$density / max(h$density)
-      
       html(id = "controls_cell", add = FALSE,
            objectExtract(ifd = IFD,  info = info,
                          mode = "rgb", export = "base64", write_to = "%o_%c.png",

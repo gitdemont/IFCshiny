@@ -333,6 +333,7 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
     updateRadioButtons(session=session, inputId = "features_inm", selected = "LinLog", inline = TRUE)
     updateRadioButtons(session=session, inputId = "daf_save_type", choiceNames = c("daf", "fcs"), choiceValues = c("daf", "fcs") , selected = "daf", inline = TRUE)
     updateRadioButtons(session=session, inputId = "ML_save_type", choiceNames = c("daf only", "daf + R"), choiceValues = c("daf", "zip") , selected = "zip", inline = TRUE)
+    hideElement(id = "keywords")
     showElement(id = "features_pre_daf")
   } else {
     runjs(code = "document.getElementById('features_inp').parentNode.parentNode.setAttribute('title', 'regular expression to select intensity to lin/log transform. The default is to select all except FS and SS and already LOG transformed parameters')")
@@ -340,6 +341,7 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
     updateRadioButtons(session=session, inputId = "features_inm", selected = "Arcsinh", inline = TRUE)
     updateRadioButtons(session=session, inputId = "daf_save_type", choiceNames = c("fcs", "fcs + xml"), choiceValues = c("fcs", "zip") , selected = "zip", inline = TRUE)
     updateRadioButtons(session=session, inputId = "ML_save_type", choiceNames = c("fcs only", "fcs + xml + R"), choiceValues = c("fcs", "zip") , selected = "zip", inline = TRUE)
+    showElement(id = "keywords")
     hideElement(id = "features_pre_daf")
   }
   obj
