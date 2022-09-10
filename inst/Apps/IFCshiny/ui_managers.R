@@ -54,11 +54,11 @@ list(hidden(absolutePanel(id = "comp_manager",
                           tags$div(class="ctrl_btn",
                                    style="position:absolute; top:10px; left:10px;",
                                    # tags$div(style = "display: inline-block; vertical-align: middle;",
-                                   # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome"), class = "red")),
+                                   # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome", verify_fa=FALSE), class = "red")),
                                    # tags$div(style = "display: inline-block; vertical-align: middle;",
-                                   # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome"), class = "max")), #"\u2610"
+                                   # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome", verify_fa=FALSE), class = "max")), #"\u2610"
                                    tags$div(style = "display: inline-block; vertical-align: middle;",
-                                            actionButton(style="color:red;", inputId = "comp_close", label = NULL, icon = icon("window-close", lib = "font-awesome"), class = "clo")))
+                                            actionButton(style="color:red;", inputId = "comp_close", label = NULL, icon = icon("window-close", lib = "font-awesome", verify_fa=FALSE), class = "clo")))
 )),
 hidden(absolutePanel(id = "cell_manager", class = "panel panel-default", fixed = FALSE,
                      style = "z-index:99; width:500px; height:290px; padding:10px 10px 10px 10px;",
@@ -74,7 +74,7 @@ hidden(absolutePanel(id = "cell_manager", class = "panel panel-default", fixed =
                                                 tags$div(style = "display:inline-block; vertical-align:sub; width:80%",
                                                          selectInput(inputId = "cell_feature", label = "Feature value", choices = "Object Number", multiple = FALSE)),
                                                 tags$div(style = "display:inline-block; vertical-align:text-bottom; left:81%; width:10%",
-                                                         actionButton(inputId = "cell_feature_sort", label = "", icon = icon(name="sort-amount-down-alt", lib="font-awesome")))
+                                                         actionButton(inputId = "cell_feature_sort", label = "", icon = icon(name="sort-amount-down-alt", lib="font-awesome", verify_fa=FALSE)))
                                        ),
                                        tags$div(style = "text-align: left;",
                                                 # tags$div(style = "display: inline-block; width:25%; vertical-align:middle;",
@@ -84,7 +84,7 @@ hidden(absolutePanel(id = "cell_manager", class = "panel panel-default", fixed =
                                                 tags$div(style = "display: inline-block; width:25%; vertical-align:baseline;",
                                                          numericInput(inputId = "cell_grid", label = "Grid", min = 1, max = 7, step = 1, value = 7)),
                                                 tags$div(style = "text-align: right; display: inline-block; width:10%; vertical-align:2px;",
-                                                         actionButton(inputId = "cell_settings", label = NULL, icon = icon(name="adjust", lib="font-awesome")))
+                                                         actionButton(inputId = "cell_settings", label = NULL, icon = icon(name="adjust", lib="font-awesome", verify_fa=FALSE)))
                                        )
                                        
                               )),
@@ -103,12 +103,12 @@ hidden(absolutePanel(id = "cell_manager", class = "panel panel-default", fixed =
                                                                          tags$div(style="display:inline-block; text-align:left; position:relative; top:-20px; width:80%;",
                                                                                   selectInput(inputId="cell_pop_tagged", label = "", choices = list(), multiple = FALSE)),
                                                                          tags$div(style="display:inline-block; text-align:left; position:relative; vertical-align:top; width:18%;",
-                                                                                  actionButton(inputId = "cell_modify", label = "", icon = icon("share-square", lib = "font-awesome"))))),
+                                                                                  actionButton(inputId = "cell_modify", label = "", icon = icon("share-square", lib = "font-awesome", verify_fa=FALSE))))),
                                                          (tags$div(id = "cell_pop_create",
                                                                    tags$div(style="display:inline-block; ",
                                                                             tags$b("Create new"),
                                                                             tags$div(style="display:inline-block; ",
-                                                                                     actionButton(inputId = "cell_create", label = "", icon = icon("plus-circle", lib = "font-awesome"))))))
+                                                                                     actionButton(inputId = "cell_create", label = "", icon = icon("plus-circle", lib = "font-awesome", verify_fa=FALSE))))))
                                        ))
                               ))),
                      tags$div(style="display:inline-block; text-align:left; position:absolute; top:12px; left:130px; width:200px;",
@@ -116,11 +116,11 @@ hidden(absolutePanel(id = "cell_manager", class = "panel panel-default", fixed =
                      tags$div(class="ctrl_btn",
                               style="position:absolute; top:10px; right:10px;",
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome"), class = "red")),
+                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome", verify_fa=FALSE), class = "red")),
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome"), class = "max")), #"\u2610"
+                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome", verify_fa=FALSE), class = "max")), #"\u2610"
                               tags$div(style = "display: inline-block; vertical-align: middle;",
-                                       actionButton(style="color:red;", inputId = "cell_close", label = NULL, icon = icon("window-close", lib = "font-awesome"), class = "clo")))
+                                       actionButton(style="color:red;", inputId = "cell_close", label = NULL, icon = icon("window-close", lib = "font-awesome", verify_fa=FALSE), class = "clo")))
 )),
 hidden(absolutePanel(id = "reg_manager", class = "panel panel-default", fixed = FALSE,
                      style = "z-index:99; width:500px; height:max-content; padding:10px 10px 10px 10px;",
@@ -158,12 +158,12 @@ hidden(absolutePanel(id = "reg_manager", class = "panel panel-default", fixed = 
                                        tags$div(class="reg_colors",
                                                 tags$div(style = "display: inline-block; vertical-align: super; width:48%;",
                                                          tags$div(style = "position:absolute; top: 12px;",
-                                                                  actionButton(class="reg_def_reset undo transparent", inputId = "reg_color_light_reset", label = NULL, icon = icon("undo", lib = "font-awesome"))),
+                                                                  actionButton(class="reg_def_reset undo transparent", inputId = "reg_color_light_reset", label = NULL, icon = icon("undo", lib = "font-awesome", verify_fa=FALSE))),
                                                          colourpicker::colourInput(inputId = "reg_color_light", label = "Light Mode Color", showColour = "background", value = "Red",
                                                                                    returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols)),
                                                 tags$div(style = "display: inline-block; vertical-align: super; width:48%;",
                                                          tags$div(style = "position:absolute; top: 12px;",
-                                                                  actionButton(class="reg_def_reset undo transparent", inputId = "reg_color_dark_reset", label = NULL, icon = icon("undo", lib = "font-awesome"))),
+                                                                  actionButton(class="reg_def_reset undo transparent", inputId = "reg_color_dark_reset", label = NULL, icon = icon("undo", lib = "font-awesome", verify_fa=FALSE))),
                                                          colourpicker::colourInput(inputId = "reg_color_dark", label = "Dark Mode Color", showColour = "background", value = "Red",
                                                                                    returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols)))),
                               tags$div(class = "reg_def_table",
@@ -183,11 +183,11 @@ hidden(absolutePanel(id = "reg_manager", class = "panel panel-default", fixed = 
                      tags$div(class="ctrl_btn",
                               style="position:absolute; top:10px; right:10px;",
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome"), class = "red")),
+                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome", verify_fa=FALSE), class = "red")),
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome"), class = "max")), #"\u2610"
+                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome", verify_fa=FALSE), class = "max")), #"\u2610"
                               tags$div(style = "display: inline-block; vertical-align: middle;",
-                                       actionButton(style="color:red;", inputId = "reg_close", label = NULL, icon = icon("window-close", lib = "font-awesome"), class = "clo")))
+                                       actionButton(style="color:red;", inputId = "reg_close", label = NULL, icon = icon("window-close", lib = "font-awesome", verify_fa=FALSE), class = "clo")))
 )),
 hidden(absolutePanel(id = "graph_manager", class = "panel panel-default", fixed = FALSE,
                      style = "z-index:99; width:500px; height:max-content; padding:10px 10px 10px 10px;",
@@ -207,7 +207,7 @@ hidden(absolutePanel(id = "graph_manager", class = "panel panel-default", fixed 
                                                             choices = na.omit(c("initial",ifelse(rep(requireNamespace("viridisLite", quietly = TRUE), 8), c("cividis","inferno","magma","mako","plasma","rocket","turbo","viridis"), rep(NA, 8)),
                                                                         rownames(RColorBrewer::brewer.pal.info))), selected = "initial", multiple = FALSE)),
                                        tags$div(style="display:inline-block;vertical-align:text-bottom; width:18%;",
-                                                actionButton(inputId = "plot_dens_order", label = NULL, icon = icon("exchange-alt", lib = "font-awesome")))),
+                                                actionButton(inputId = "plot_dens_order", label = NULL, icon = icon("exchange-alt", lib = "font-awesome", verify_fa=FALSE)))),
                               tags$div(id="plot_fonts",
                                        tags$div(tags$h4("Font sizes")),
                                        tags$div(tags$div(selectInput(inputId = "plot_font_main", label = "Title", choices = c(8,9,10,11,12,14,16,18,20,22,24,26,28), selected = 12, multiple = FALSE)),
@@ -250,11 +250,11 @@ hidden(absolutePanel(id = "graph_manager", class = "panel panel-default", fixed 
                      tags$div(class="ctrl_btn",
                               style="position:absolute; top:10px; right:10px;",
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome"), class = "red")),
+                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome", verify_fa=FALSE), class = "red")),
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome"), class = "max")), #"\u2610"
+                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome", verify_fa=FALSE), class = "max")), #"\u2610"
                               tags$div(style = "display: inline-block; vertical-align: middle;",
-                                       actionButton(style="color:red;", inputId = "graph_close", label = NULL, icon = icon("window-close", lib = "font-awesome"), class = "clo")))
+                                       actionButton(style="color:red;", inputId = "graph_close", label = NULL, icon = icon("window-close", lib = "font-awesome", verify_fa=FALSE), class = "clo")))
 )),
 hidden(absolutePanel(id = "pop_manager", class = "panel panel-default", fixed = FALSE,
                      style = "z-index:99; width:500px; height:max-content; padding:10px 10px 10px 10px;",
@@ -291,12 +291,12 @@ hidden(absolutePanel(id = "pop_manager", class = "panel panel-default", fixed = 
                                        # style = "display: inline-block; vertical-align: text-bottom; width:20%;",
                                        tags$div(style = "display: inline-block; vertical-align: super; width:48%;",
                                                 tags$div(style = "position:absolute; top: 12px;",
-                                                         actionButton(class="pop_def_reset undo transparent", inputId = "pop_color_light_reset", label = NULL, icon = icon("undo", lib = "font-awesome"))),
+                                                         actionButton(class="pop_def_reset undo transparent", inputId = "pop_color_light_reset", label = NULL, icon = icon("undo", lib = "font-awesome", verify_fa=FALSE))),
                                                 colourpicker::colourInput(inputId = "pop_color_light", label = "Light Mode Color", showColour = "background", value = "Red",
                                                                           returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols)),
                                        tags$div(style = "display: inline-block; vertical-align: super; width:48%;",
                                                 tags$div(style = "position:absolute; top: 12px;",
-                                                         actionButton(class="pop_def_reset undo transparent", inputId = "pop_color_dark_reset", label = NULL, icon = icon("undo", lib = "font-awesome"))),
+                                                         actionButton(class="pop_def_reset undo transparent", inputId = "pop_color_dark_reset", label = NULL, icon = icon("undo", lib = "font-awesome", verify_fa=FALSE))),
                                                 colourpicker::colourInput(inputId = "pop_color_dark", label = "Dark Mode Color", showColour = "background", value = "Red",
                                                                           returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols))))),
                      tags$div(id = "pop_def_edit",
@@ -308,25 +308,25 @@ hidden(absolutePanel(id = "pop_manager", class = "panel panel-default", fixed = 
                                        style="position:relative; vertical-align:middle; display:inline-block; width:64%",
                                        tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Add",
                                                 style="position: relative; display: inline-block;",
-                                                actionButton(inputId = "pop_def_add", label = NULL, icon("angle-double-down", lib = "font-awesome"))),
+                                                actionButton(inputId = "pop_def_add", label = NULL, icon("angle-double-down", lib = "font-awesome", verify_fa=FALSE))),
                                        tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="And",
                                                 style="position: relative; display: inline-block;",
-                                                actionButton(inputId = "pop_def_and", label = NULL, icon("users", lib = "font-awesome"))),
+                                                actionButton(inputId = "pop_def_and", label = NULL, icon("users", lib = "font-awesome", verify_fa=FALSE))),
                                        tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Or",
                                                 style="position: relative; display: inline-block;",
-                                                actionButton(inputId = "pop_def_or", label = NULL, icon("restroom", lib = "font-awesome"))),
+                                                actionButton(inputId = "pop_def_or", label = NULL, icon("restroom", lib = "font-awesome", verify_fa=FALSE))),
                                        tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Not",
                                                 style="position: relative; display: inline-block;",
-                                                actionButton(inputId = "pop_def_not", label = NULL, icon("user-slash", lib = "font-awesome"))),
+                                                actionButton(inputId = "pop_def_not", label = NULL, icon("user-slash", lib = "font-awesome", verify_fa=FALSE))),
                                        tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="(",
                                                 style="position: relative; display: inline-block;",
-                                                actionButton(inputId = "pop_def_bkt1", label = NULL, icon("chevron-left", lib = "font-awesome"))),
+                                                actionButton(inputId = "pop_def_bkt1", label = NULL, icon("chevron-left", lib = "font-awesome", verify_fa=FALSE))),
                                        tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"=")",
                                                 style="position: relative; display: inline-block;",
-                                                actionButton(inputId = "pop_def_bkt2", label = NULL, icon("chevron-right", lib = "font-awesome"))),
+                                                actionButton(inputId = "pop_def_bkt2", label = NULL, icon("chevron-right", lib = "font-awesome", verify_fa=FALSE))),
                                        tags$div("data-toggle"="tooltip", "data-placement"="top", "data-html"="true", "title"="Remove",
                                                 style="position: relative; display: inline-block;",
-                                                actionButton(inputId = "pop_def_rm", label = NULL, icon("backspace", lib = "font-awesome")))
+                                                actionButton(inputId = "pop_def_rm", label = NULL, icon("backspace", lib = "font-awesome", verify_fa=FALSE)))
                               )
                      ),
                      tags$div(class = "pop_def_viz",
@@ -345,11 +345,11 @@ hidden(absolutePanel(id = "pop_manager", class = "panel panel-default", fixed = 
                      tags$div(class="ctrl_btn",
                               style="position:absolute; top:10px; right:10px;",
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome"), class = "red")),
+                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome", verify_fa=FALSE), class = "red")),
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome"), class = "max")), #"\u2610"
+                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome", verify_fa=FALSE), class = "max")), #"\u2610"
                               tags$div(style = "display: inline-block; vertical-align: middle;",
-                                       actionButton(style="color:red;", inputId = "pop_close", label = NULL, icon = icon("window-close", lib = "font-awesome"), class = "clo")))
+                                       actionButton(style="color:red;", inputId = "pop_close", label = NULL, icon = icon("window-close", lib = "font-awesome", verify_fa=FALSE), class = "clo")))
 )),
 hidden(absolutePanel(id = "img_manager", class = "panel panel-default", fixed = FALSE,
                      style = "z-index:99;",
@@ -414,15 +414,15 @@ hidden(absolutePanel(id = "img_manager", class = "panel panel-default", fixed = 
                                        selectInput(inputId = "chan_sel", label = "Channel #", choices = list())),
                               tags$div(style = "display: inline-block; vertical-align: baseline; width:15%; text-align:left; float: right;",
                                        tags$div(style = "position:absolute; top:-8px; text-align:right; width:14%",
-                                                actionButton(class="controls_c_resets undo transparent", inputId = "reset_color", label = NULL, icon = icon("undo", lib = "font-awesome"))),
+                                                actionButton(class="controls_c_resets undo transparent", inputId = "reset_color", label = NULL, icon = icon("undo", lib = "font-awesome", verify_fa=FALSE))),
                                        colourpicker::colourInput(inputId = "chan_color", label = "Color", showColour = "background", value = "Red",
                                                                  returnName = TRUE, allowTransparent = FALSE, palette = "limited", allowedCols = allowedCols))),
                      tags$div(class="ctrl_btn",
                               style="position:absolute; top:10px; right:10px;",
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome"), class = "red")),
+                              # actionButton(inputId = "reduce", label = NULL, icon = icon("window-minimize", lib = "font-awesome", verify_fa=FALSE), class = "red")),
                               # tags$div(style = "display: inline-block; vertical-align: middle;",
-                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome"), class = "max")), #"\u2610"
+                              # actionButton(inputId = "maximize", label =NULL, icon = icon("window-maximize", lib = "font-awesome", verify_fa=FALSE), class = "max")), #"\u2610"
                               tags$div(style = "display: inline-block; vertical-align: middle;",
-                                       actionButton(style="color:red;", inputId = "img_close", label = NULL, icon = icon("window-close", lib = "font-awesome"), class = "clo")))
+                                       actionButton(style="color:red;", inputId = "img_close", label = NULL, icon = icon("window-close", lib = "font-awesome", verify_fa=FALSE), class = "clo")))
 )))

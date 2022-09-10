@@ -76,12 +76,12 @@ mess_busy <- function(id, ctn = paste0(id, "_ctn"), msg = "Please wait", type = 
   } else {
     add_log(sprintf("busy_msg: %s", msg))
     deco = switch(type,
-                  "busy1" = c(icon = "fa fa-spinner fa-pulse fa-3x fa-fw", color = "black"),
-                  "busy2" = c(icon = "fa fa-spinner fa-spin fa-3x fa-fw", color = "black"),
-                  "circle" = c(icon = "fa fa-circle-o-notch fa-spin fa-3x fa-fw", color = "black"),
-                  "refresh" = c(icon = "fa fa-refresh fa-spin fa-3x fa-fw", color = "black"),
-                  "cog" = c(icon = "fa fa-cog fa-spin fa-3x fa-fw", color = "black"),
-                  c(icon = "fa fa-spinner fa-pulse fa-3x fa-fw", color = "black")
+                  "busy1" = c(icon = "fa fa-spinner fa-pulse fa-3x fa-fw", color = "black", verify_fa=FALSE),
+                  "busy2" = c(icon = "fa fa-spinner fa-spin fa-3x fa-fw", color = "black", verify_fa=FALSE),
+                  "circle" = c(icon = "fa fa-circle-o-notch fa-spin fa-3x fa-fw", color = "black", verify_fa=FALSE),
+                  "refresh" = c(icon = "fa fa-refresh fa-spin fa-3x fa-fw", color = "black", verify_fa=FALSE),
+                  "cog" = c(icon = "fa fa-cog fa-spin fa-3x fa-fw", color = "black", verify_fa=FALSE),
+                  c(icon = "fa fa-spinner fa-pulse fa-3x fa-fw", color = "black", verify_fa=FALSE)
     )
     session$output[[id]] <- html(id = id, add = FALSE,
                                  sprintf("<div style='position:absolute;top:50%%;left:0;bottom:0;right:0;display:block;align-items:center;justify-content:center;text-align:center;margin:auto;vertical-align:middle;'>

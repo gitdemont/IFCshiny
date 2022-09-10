@@ -165,7 +165,7 @@ obs_report <- list(
                                                        tags$p("close to remove"))),
                                      tags$div(class="report_item_btn",
                                               onclick = "IFCshiny.report_close(event)",
-                                              icon("window-close", lib = "font-awesome"))))
+                                              icon("window-close", lib = "font-awesome", verify_fa=FALSE))))
               runjs(code = JS("var tile = $('#plot_tile_placeholder>.report_item')[0]",
                               sprintf("IFCshiny.grid.add(tile, { index: %i, layout: false } );", i_tile)))
             }

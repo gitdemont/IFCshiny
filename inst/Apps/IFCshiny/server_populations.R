@@ -382,6 +382,8 @@ obs_pop <- list(
         })
         names(obj_react$obj$graphs)[toredraw$graphs] <- NA
       }
+      # browser()
+      debugonce(IFC:::adjustGraph)
       obj_react$obj = data_rm_pops(obj = obj_react$obj, pops = input$pop_def_name, list_only = FALSE, session=session)
       obj_react$obj = reinit_layout(obj_react$obj)
     },

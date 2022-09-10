@@ -699,10 +699,11 @@ obs_plot <- list(
       #D = plot_react$plot$input$data[plot_react$plot$input$subset, , drop = FALSE]
       idx = which.min(((plot_react$plot$input$data[plot_react$plot$input$subset,"x2"]-input$plot_hover$x)/dx)^2 +
                         ((plot_react$plot$input$data[plot_react$plot$input$subset,"y2"]-input$plot_hover$y)/dy)^2)
-      if(length(idx) != 0) {
-        foo = plot_react$plot$input$data[plot_react$plot$input$subset,c("x2","y2","Object Number"),drop=FALSE][idx,]
-      } else {
+      
+      if(length(idx) == 0) {
         return(NULL)
+      } else {
+        foo = plot_react$plot$input$data[plot_react$plot$input$subset,c("x2","y2","Object Number"),drop=FALSE][idx,]
       }
       if((length(plot_react$closest) != 0) && (plot_react$closest == foo[[3]])) return(NULL)
       plot_react$closest = foo[[3]]

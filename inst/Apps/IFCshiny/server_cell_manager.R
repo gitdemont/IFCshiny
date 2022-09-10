@@ -366,9 +366,9 @@ obs_cell <- list(
     if(input$cell_feature_sort %%2) {
       objects = rev(objects)
       feat = rev(feat)
-      updateActionButton(session = session, inputId = "cell_feature_sort", icon = icon(name="sort-amount-up", lib="font-awesome"))#label="\u21c5 \u21a5")
+      updateActionButton(session = session, inputId = "cell_feature_sort", icon = icon(name="sort-amount-up", lib="font-awesome", verify_fa=FALSE))#label="\u21c5 \u21a5")
     } else {
-      updateActionButton(session = session, inputId = "cell_feature_sort", icon = icon(name="sort-amount-down-alt", lib="font-awesome"))#label="\u21c5 \u21a7")
+      updateActionButton(session = session, inputId = "cell_feature_sort", icon = icon(name="sort-amount-down-alt", lib="font-awesome", verify_fa=FALSE))#label="\u21c5 \u21a7")
     }
     
     i = input$cell_page

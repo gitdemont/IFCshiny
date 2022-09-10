@@ -258,9 +258,9 @@ server <- function(input, output, session) {
         P = 1
         DT_react$loaded = FALSE
         if(DT_react$order) {
-          updateActionButton(session = session, inputId = "table_sort_order", icon = icon(name="sort-amount-up", lib="font-awesome"))#label="\u21c5 \u21a5")
+          updateActionButton(session = session, inputId = "table_sort_order", icon = icon(name="sort-amount-up", lib="font-awesome", verify_fa=FALSE))#label="\u21c5 \u21a5")
         } else {
-          updateActionButton(session = session, inputId = "table_sort_order", icon = icon(name="sort-amount-down-alt", lib="font-awesome"))#label="\u21c5 \u21a7")
+          updateActionButton(session = session, inputId = "table_sort_order", icon = icon(name="sort-amount-down-alt", lib="font-awesome", verify_fa=FALSE))#label="\u21c5 \u21a7")
         }
       }
       if(input$table_sort_feature != DT_react$sort) {

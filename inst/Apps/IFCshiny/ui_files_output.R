@@ -34,7 +34,7 @@ list(
                   tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
                                     radioButtons(inputId = "example_save_type", label = "download as:", choices = c("zip"), selected = "zip", inline = TRUE)),
                            tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%",
-                                    downloadButton("example_save_btn", label = "", icon("download")))),
+                                    downloadButton("example_save_btn", label = "", icon("download", verify_fa=FALSE)))),
                   verbatimTextOutput(outputId = "example_saved_msg"))
   ),
   hidden(tags$div(id="infos_save",
@@ -43,14 +43,14 @@ list(
                   tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
                                     radioButtons(inputId = "infos_save_type", label = "download as:", choices = c("txt"), selected = "txt", inline = TRUE)),
                            tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%",
-                                    downloadButton("infos_save_btn", label = "", icon("download")))),
+                                    downloadButton("infos_save_btn", label = "", icon("download", verify_fa=FALSE)))),
                   verbatimTextOutput(outputId = "infos_saved_msg"),
                   tags$hr(),
                   tags$div(tags$h4("Download DAF")),
                   tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
                                     radioButtons(inputId = "daf_save_type", label = "download as:", choiceNames = c("daf","fcs","fcs + xml"), choiceValues = c("daf","fcs","zip"), selected = "daf", inline = TRUE)),
                            tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%",
-                                    downloadButton("daf_save_btn", label = "", icon("download")))),
+                                    downloadButton("daf_save_btn", label = "", icon("download", verify_fa=FALSE)))),
                   verbatimTextOutput(outputId = "daf_saved_msg"))
   ),
   hidden(tags$div(id="graph_save",
@@ -60,7 +60,7 @@ list(
                     tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
                                       radioButtons(inputId = "graph_save_type", label = "download as:", choices = c("pdf", "html"), selected = "pdf", inline = TRUE)),
                              tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%",   
-                                      downloadButton("graph_save_btn", label="", icon("download")))),
+                                      downloadButton("graph_save_btn", label="", icon("download", verify_fa=FALSE)))),
                     verbatimTextOutput(outputId = "graph_saved_msg")))
   ),
   hidden(tags$div(id="features_save",
@@ -69,7 +69,7 @@ list(
                   tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
                                     radioButtons(inputId = "features_save_type", label = "download as:", choices = c("csv", "xlsx", "fcs"), selected = "csv", inline = TRUE)),
                            tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%",
-                                    downloadButton("features_save_btn", label="",icon("download")))),
+                                    downloadButton("features_save_btn", label="",icon("download", verify_fa=FALSE)))),
                   verbatimTextOutput(outputId = "features_saved_msg"))
   ),
   hidden(tags$div(id="stats_save",
@@ -78,7 +78,7 @@ list(
                   tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
                                     radioButtons(inputId = "stats_save_type", label = "download as:", choices = c("csv", "xlsx"), selected = "csv", inline = TRUE)),
                            tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%",
-                                    downloadButton("stats_save_btn", label="",icon("download")))),
+                                    downloadButton("stats_save_btn", label="",icon("download", verify_fa=FALSE)))),
                   verbatimTextOutput(outputId = "stats_saved_msg"))
   ),
   hidden(tags$div(id="cells_save",
@@ -89,7 +89,7 @@ list(
                                     radioButtons(inputId = "cells_save_type", label = "download as:", choices = c("tiff", "png", "bmp", "jpg", "xif", "npy"), #[1:ifelse(Sys.info()[["user"]] == "shiny",5,6)],
                                                  selected = "tiff", inline = TRUE)),
                            tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%",
-                                    downloadButton("cells_save_btn", label="",icon("download")))),
+                                    downloadButton("cells_save_btn", label="",icon("download", verify_fa=FALSE)))),
                   verbatimTextOutput(outputId = "cells_saved_msg"),
                   hidden(wellPanel(tags$div(tags$p(id = "drop zone",
                                                    class = "addable",
@@ -102,7 +102,7 @@ list(
                   tags$div(tags$div(style = "display:inline-block; vertical-align:baseline; width:80%",
                                     radioButtons(inputId = "logs_save_type", label = "download as:", choices = c("txt"), selected = "txt", inline = TRUE)),
                            tags$div(style = "display:inline-block; vertical-align:text-bottom; width:10%",
-                                    downloadButton("logs_save_btn", label = "", icon("download")))),
+                                    downloadButton("logs_save_btn", label = "", icon("download", verify_fa=FALSE)))),
                   verbatimTextOutput(outputId = "logs_saved_msg"))
   )
 )
