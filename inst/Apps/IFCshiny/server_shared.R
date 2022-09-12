@@ -363,7 +363,8 @@ observeEvent(input$report_graph_dblclick, {
   # updateTextInput(session = session, inputId = "plot_lab_x", value = g$xlabel)
   # updateTextInput(session = session, inputId = "plot_lab_y", value = g$ylabel)
   
-  plot_react$allowed_regions = sort(unname(unique(unlist(allowed_regions)), force = TRUE))
+  allowed_regions = sort(unname(unique(unlist(allowed_regions)), force = TRUE))
+  plot_react$allowed_regions = allowed_regions
   updateSelectInput(session=session, inputId="plot_base", selected=sapply(g$BasePop, FUN = function(p) p$name))
   if(length(g$GraphRegion) != 0) {
     updateSelectInput(session=session, inputId="plot_regions",

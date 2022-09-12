@@ -271,6 +271,16 @@ obs_plot <- list(
                                           display_progress = TRUE,
                                           title = "recomputing populations",
                                           session = session)
+      if(any(reg_back$label %in% input$plot_regions)) {
+        plot_react$allowed_regions[plot_react$allowed_regions == reg_back$label] <- regions_react$pre$label
+        plot_react$allowed_regions = sort(unique(unname(plot_react$allowed_regions, force = TRUE)))
+        sel = input$plot_regions
+        sel[sel == reg_back$label] <- regions_react$pre$label
+        sel = sort(unique(unname(sel, force = TRUE)))
+        updateSelectInput(session = session, inputId = "plot_regions",
+                          choices = plot_react$allowed_regions,
+                          selected = sel)
+      }
       updateSelectInput(session = session, inputId = "reg_selection", selected = regions_react$pre$label)
     }
   }),
@@ -1097,9 +1107,10 @@ obs_plot <- list(
       })
       obj_react$obj = data_add_regions(obj_react$obj, regions = list(reg), session = session)
       obj_react$obj = data_add_pops(obj_react$obj, pops = pop, display_progress = TRUE, session = session)
-      updateSelectInput(session=session, inputId = "plot_regions", choices = sort(c(plot_react$allowed_regions, reg$label)), 
-                        selected = c(input$plot_regions, reg$label))
-      plot_react$allowed_regions = sort(c(plot_react$allowed_regions, reg$label))
+      allowed_regions = sort(unique(unname(c(plot_react$allowed_regions, reg$label), force = TRUE)))
+      plot_react$allowed_regions = allowed_regions
+      updateSelectInput(session=session, inputId = "plot_regions", choices = allowed_regions, 
+                        selected = sort(unique(unname(c(input$plot_regions, reg$label)))))
     }, error = function(e) {
       mess_global(title = "creating region", msg = e$message, type = "error", duration = 10)
       obj_react$obj = obj_back
@@ -1558,8 +1569,17 @@ obs_plot <- list(
                  # treat region
                  g$GraphRegion = list()
                  R = obj_react$obj$regions[input$plot_regions[input$plot_regions %in% allowed_regions]]
-                 if(length(R) > 0) g$GraphRegion = list(list("name" = R[[1]]$label, def = c(R[[1]]$def, names(R)[1])))
-                 if(length(R) > 1) for(i_reg in 2:length(R)) {
+                 # if(length(R) > 0) g$GraphRegion = list(list("name" = R[[1]]$label, def = c(R[[1]]$def, names(R)[1])))
+                 # if(length(R) > 1) for(i_reg in 2:length(R)) {
+                 #   defined = sapply(g$GraphRegion, FUN = function(r) r$name) %in% R[[i_reg]]$label
+                 #   if(any(defined)) {
+                 #     g$GraphRegion[[defined]] = list("name" = R[[i_reg]]$label, def = c(g$GraphRegion[[defined]]$def, names(R)[i_reg]))
+                 #   } else {
+                 #     g$GraphRegion = c(g$GraphRegion, list(list("name" = R[[i_reg]]$label, def = names(R)[i_reg])))
+                 #   }
+                 # }
+                 
+                 for(i_reg in seq_along(R)) {
                    defined = sapply(g$GraphRegion, FUN = function(r) r$name) %in% R[[i_reg]]$label
                    if(any(defined)) {
                      g$GraphRegion[[defined]] = list("name" = R[[i_reg]]$label, def = c(g$GraphRegion[[defined]]$def, names(R)[i_reg]))
