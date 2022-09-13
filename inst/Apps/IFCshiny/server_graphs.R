@@ -1569,20 +1569,11 @@ obs_plot <- list(
                  # treat region
                  g$GraphRegion = list()
                  R = obj_react$obj$regions[input$plot_regions[input$plot_regions %in% allowed_regions]]
-                 # if(length(R) > 0) g$GraphRegion = list(list("name" = R[[1]]$label, def = c(R[[1]]$def, names(R)[1])))
-                 # if(length(R) > 1) for(i_reg in 2:length(R)) {
-                 #   defined = sapply(g$GraphRegion, FUN = function(r) r$name) %in% R[[i_reg]]$label
-                 #   if(any(defined)) {
-                 #     g$GraphRegion[[defined]] = list("name" = R[[i_reg]]$label, def = c(g$GraphRegion[[defined]]$def, names(R)[i_reg]))
-                 #   } else {
-                 #     g$GraphRegion = c(g$GraphRegion, list(list("name" = R[[i_reg]]$label, def = names(R)[i_reg])))
-                 #   }
-                 # }
-                 
                  for(i_reg in seq_along(R)) {
                    defined = sapply(g$GraphRegion, FUN = function(r) r$name) %in% R[[i_reg]]$label
                    if(any(defined)) {
-                     g$GraphRegion[[defined]] = list("name" = R[[i_reg]]$label, def = c(g$GraphRegion[[defined]]$def, names(R)[i_reg]))
+                     defined = which(defined)
+                     g$GraphRegion[defined] = lapply(defined, FUN = function(i) list("name" = R[[i_reg]]$label, def = c(g$GraphRegion[[i]]$def, names(R)[i_reg])))
                    } else {
                      g$GraphRegion = c(g$GraphRegion, list(list("name" = R[[i_reg]]$label, def = names(R)[i_reg])))
                    }

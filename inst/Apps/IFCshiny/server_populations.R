@@ -273,14 +273,54 @@ obs_pop <- list(
         mess_global(title = "population modification", msg = msg, type = "info", duration = 10)
         
         # if edited population was used for the current graph we modify the graph styling
-        if(pops_react$revert$name %in% names(plot_react$color)) {
+        tmp = pops_react$revert$name %in% names(plot_react$color)
+        if(any(tmp)) {
           plot_react$color[pops_react$revert$name] <- new_pop$lightModeColor
-          names(plot_react$color)[names(plot_react$color) == pops_react$revert$name] <- input$pop_def_name
+          names(plot_react$color)[tmp] <- input$pop_def_name
         }
-        if(pops_react$revert$name %in% names(plot_react$symbol)) {
+        tmp = pops_react$revert$name %in% names(plot_react$symbol)
+        if(any(tmp)) {
           plot_react$symbol[pops_react$revert$name] <- new_pop$style 
-          names(plot_react$symbol)[names(plot_react$symbol) == pops_react$revert$name] <- input$pop_def_name
+          names(plot_react$symbol)[tmp] <- input$pop_def_name
         }
+        tmp = plot_react$base == pops_react$revert$name
+        if(any(tmp)) {
+          plot_react$base[tmp] <- input$pop_def_name
+          updateSelectInput(session = session, inputId = "plot_base", selected = plot_react$base)
+          runjs(code = sprintf("Shiny.onInputChange('plot_base', %s );",toJSON(plot_react$base , null = "null")))
+        }
+        tmp = plot_react$shown == pops_react$revert$name
+        if(any(tmp)) {
+          plot_react$shown[tmp] <- input$pop_def_name
+          updateSelectInput(session = session, inputId = "plot_shown", selected = plot_react$shown)
+          runjs(code = sprintf("Shiny.onInputChange('plot_shown', %s );",toJSON(plot_react$shown, null = "null")))
+        }
+        tmp = plot_react$order == pops_react$revert$name
+        if(any(tmp)) {
+          plot_react$order[tmp] <- input$pop_def_name
+          runjs(code = sprintf("Shiny.onInputChange('plot_shown_order', %s );",toJSON(plot_react$order, null = "null")))
+        }
+        
+        if(length(plot_react$g$BasePop) != 0 && length(plot_react$g$BasePop[[1]]) != 0) {
+          plot_react$g$BasePop = lapply(plot_react$g$BasePop, FUN = function(p) {
+            if(p$name == pops_react$revert$name) p$name = input$pop_def_name
+            return(p)
+          })
+        }
+        if(length(plot_react$g$GraphRegion) != 0 && length(plot_react$g$GraphRegion[[1]]) != 0) {
+          plot_react$g$GraphRegion = lapply(plot_react$g$GraphRegion, FUN = function(p) {
+            p$def = gsub(pops_react$revert$name, input$pop_def_name, p$def, fixed = TRUE)
+            return(p)
+          })
+        }
+        if(length(plot_react$g$ShownPop) != 0 && length(plot_react$g$ShownPop[[1]]) != 0) {
+          plot_react$g$ShownPop = lapply(plot_react$g$ShownPop, FUN = function(p) {
+            if(p$name == pops_react$revert$name) p$name = input$pop_def_name
+            return(p)
+          })
+        }
+        plot_react$g$title = gsub(pops_react$revert$name, input$pop_def_name, plot_react$g$title, fixed = TRUE)
+        plot_react$g$order = gsub(pops_react$revert$name, input$pop_def_name, plot_react$g$order, fixed = TRUE)
         
         # everything has been applied and current pop can now be the reference 
         pops_react$revert = obj_react$obj$pops[[input$pop_def_name]]
