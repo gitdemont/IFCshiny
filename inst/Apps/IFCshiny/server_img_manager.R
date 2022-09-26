@@ -239,22 +239,37 @@ obs_img <- list(
   }),
   observeEvent(input$img_close, suspended = TRUE, {
     foo = obj_react$obj
-    if(length(param_react$param$channels) !=0) {
+    if(length(param_react$param$channels) != 0) {
       # check if a channel name has been changed
       # if so object is modified
       N = names(foo$description$Images)
-      sapply(1:length(param_react$param$channels$physicalChannel), FUN = function(i) {
-        foo$description$Images[foo$description$Images$physicalChannel == param_react$param$channels$physicalChannel[i], N] <<- param_react$param$channels[i, N]
-      })
-      if(!all(foo$description$Images$name == obj_react$obj$description$Images$name)) {
-        obj_react$obj = data_redefine(foo, 
+      for(i in seq_along(param_react$param$channels$physicalChannel)) {
+        foo$description$Images[foo$description$Images$physicalChannel == param_react$param$channels$physicalChannel[i], N] <- param_react$param$channels[i, N]
+      }
+      sel = which(foo$description$Images$name != obj_react$obj$description$Images$name)
+      if(length(sel) != 0) {
+        mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Renaming channel", reset = FALSE)
+        tryCatch({
+          obj_react$obj = data_redefine(foo, 
                                       redefine_features_def(foo$features_def,
                                                             foo$description$masks,
                                                             images = obj_react$obj$description$Images,
                                                             force_default = TRUE,
                                                             new_images_names = foo$description$Images$name))
+          runjs(sprintf("Shiny.setInputValue('report_recover', %i)", ifelse(length(input$report_recover)==0, 0L, input$report_recover + 1L)))
+        }, error = function(e) {
+          mess_global(title = "channel renaming", msg = e$message, type = "stop")
+        }, finally = {
+          mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "", reset = TRUE)
+          for(i in param_react$param$channels$physicalChannel) {
+            param_react$param$channels[param_react$param$channels$physicalChannel == i, "name"] <- obj_react$obj$description$Images[obj_react$obj$description$Images$physicalChannel == i, "name"]
+          }
+          selected = as.numeric(input$chan_sel)
+          if(length(na.omit(selected)) != 0) {
+            updateTextInput(session = session, inputId = "chan_name", value = obj_react$obj$description$Images[obj_react$obj$description$Images$physicalChannel == selected, "name"])
+          }
+        })
         # report is reinitialized
-        runjs(sprintf("Shiny.setInputValue('report_recover', %i)", ifelse(length(input$report_recover)==0, 0L, input$report_recover + 1L)))
       }
     }
     runjs("Shiny.onInputChange('img_manager_visible', false)")
