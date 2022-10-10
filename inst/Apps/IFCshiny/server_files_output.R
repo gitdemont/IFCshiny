@@ -720,13 +720,13 @@ output$features_save_btn <- downloadHandler(
       df = cbind(obj_react$obj$features[, setdiff(names(obj_react$obj$features), colnames(all_pops))], all_pops)
       sp = comp_react$spillover
       if(nrow(sp) == 0) {
-        sp = foo$description$FCS$spillover
+        sp = obj_react$obj$description$FCS$spillover
         if(is.list(sp)) sp = sp[sapply(sp, length) != 0]
       }
       switch(input$features_save_type, 
              "csv" = write.csv(x = df, file = tmpfile),
              "xlsx" = write.xlsx(x = df, file = tmpfile),
-             "fcs" = ExportToFCS(obj = foo, write_to = tmpfile, overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(sp))
+             "fcs" = ExportToFCS(obj = obj_react$obj, write_to = tmpfile, overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(sp))
              )
       if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
     },

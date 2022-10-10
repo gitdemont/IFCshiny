@@ -83,158 +83,20 @@ data_add_features <- function(obj, features, compare_with = obj, session = getDe
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_modify_regions <- function(obj, regions, display_progress = TRUE, compare_with = obj, session = getDefaultReactiveDomain(), ...){
-  assert(obj, cla = "IFC_data")
-  mutation = names(regions)
-  if(!all(mutation %in% names(obj$regions))) stop("can't find regions to modify in 'obj'", call. = FALSE)
-  R = lapply(regions, FUN = function(x) {
-    reg = do.call(what = buildRegion, args = x)
-    reg$color = map_color(reg$color)
-    reg$lightcolor = map_color(reg$lightcolor)
-    reg
-  })
-  names(R) = sapply(R, FUN = function(x) x$label)
-  tmp = duplicated(names(R))
-  if(any(tmp)) stop(paste0("duplicated regions found: ", names(regions)[tmp]), call. = FALSE)
-  names(mutation) = names(R)
-  type1 = sapply(obj$regions[mutation], FUN = function(r) r$type)
-  type2 = sapply(R, FUN = function(r) r$type)
-  tmp = type1 == type2
-  if(!all(tmp)) stop(paste0("'type' modification is not allowed:\n\t- ",
-                            paste0(paste(paste0(mutation[!tmp], " [", type1[!tmp], "]"),
-                                         paste0(names(mutation)[!tmp], " [", type2[!tmp], "]"), sep = " -> "),
-                                   collapse = "\n\t- ")), call. = FALSE)
-  
-  ans = obj
-  # regions modification, it can be everything
-  N = names(ans$regions)
-  K = class(ans$regions)
-  ans$regions[mutation] = R
-  names(ans$regions) = sapply(ans$regions, FUN = function(r) r$label)
-  class(ans$regions) <- K
-  
-  # now we can only modify names within pops and regions
-  # so we only keep mutation with names change
-  mutation = mutation[mutation != names(mutation)]
-  
-  if(length(mutation) != 0) {
-    # populations modification, only region names within graphical population definition can be changed
-    N = names(ans$pops)
-    K = class(ans$pops)
-    ans$pops = lapply(ans$pops, FUN = function(p) {
-      if(length(p$region) ==0) return(p)
-      found = mutation %in% p$region
-      if(any(found)) p$region <- names(mutation[found])
-      return(p)
-    })
-    names(ans$pops) = N
-    class(ans$pops) <- K
-    
-    # graphs modification
-    N = names(ans$graphs)
-    K = class(ans$graphs)
-    ans$graphs = lapply(ans$graphs, FUN = function(g) {
-      if(length(g$GraphRegion) == 0) return(g)
-      # check if any GraphRegion is part of modified regions new names
-      found = mutation %in% sapply(g$GraphRegion, FUN = function(r) r$name)
-      # if not we leave
-      if(!any(found)) return(g)
-      # else we need to modify GraphRegion to apply new name
-      g$GraphRegion = sapply(g$GraphRegion, FUN = function(r) {
-        found = mutation %in% r$name
-        if(any(found)) r$name <- names(mutation[found])
-        foo = sapply(ans$pops,
-                     FUN = function(p) {
-                       bar = (p$type == "G") &&
-                         (p$region == r$name) &&
-                         (p$base %in% unique(unlist(lapply(g$BasePop, FUN = function(b) b$name)))) &&
-                         (g$f1 == p$fx)
-                       if(ans$regions[[r$name]]$type != "line") bar = bar && (g$f2 == p$fy)
-                       return(bar)
-                     })
-        return(list(c(r, list(def = names(which(foo))))))
-      })
-      # we need to recompute order
-      operators = c("And","Or","Not","(",")")
-      b_names = unlist(lapply(g$BasePop, FUN=function(x) x$name))
-      g_names = unlist(lapply(g$GraphRegion, FUN=function(x) x$def))
-      s_names = unlist(lapply(g$ShownPop, FUN=function(x) x$name))
-      
-      g$order = splitn(definition = g$order, all_names = c(b_names, g_names, s_names, "Selected Bin"), operators = operators)
-      g$order = paste0(setdiff(g$order, "Selected Bin"), collapse = "|")
-      
-      g$xstatsorder = splitn(definition = g$xstatsorder, all_names = c(b_names, g_names, s_names, "Selected Bin"), operators = operators)
-      g$xstatsorder = paste0(setdiff(g$xstatsorder, "Selected Bin"), collapse = "|")
-      return(g)
-    })
-    names(ans$graphs) = N
-    class(ans$graphs) <- K
-  }
-  
-  # since regions have been changed we need to recompute objects
-  ans$pops <- popsWithin(pops = ans$pops,
-                         regions = ans$regions,
-                         features = ans$features,
-                         session = session,
-                         display_progress = display_progress, ...)
+data_modify_regions <- function(obj, regions, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
+  f = getFromNamespace("data_modify_regions", "IFC")
+  ans = f(obj = obj, regions = regions, session = session, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
-  
-  # if compare was provided, we compare
-  if(any(names(ans$regions) != names(compare_with$regions))) update_regions(session = session, obj = ans)
-  ans$haschanged_objects <- names(ans$pops)[!sapply(names(ans$pops), FUN = function(i_pop) identical(ans$pops[[i_pop]]$obj, compare_with$pops[[i_pop]]$obj))]
-  return(ans)
+  compare(ans, compare_with)
 }
-data_modify_pops <- function(obj, pops, display_progress = TRUE, compare_with = obj, session = getDefaultReactiveDomain(), ...){
-  assert(obj, cla = "IFC_data")
-  mutation = names(pops)
-  if(!all(mutation %in% names(obj$pops))) stop("can't find pops to modify in 'obj'", call. = FALSE)
-  P = lapply(pops, FUN = function(x) do.call(what = buildPopulation, args = x))
-  names(P) = sapply(P, FUN = function(x) x$name)
-  tmp = duplicated(names(P))
-  if(any(tmp)) stop(paste0("duplicated pops found: ", names(pops)[tmp]), call. = FALSE)
-  names(mutation) = names(P)
-  type1 = sapply(obj$pops[mutation], FUN = function(p) p$type)
-  type2 = sapply(P, FUN = function(p) p$type)
-  tmp = type1 == type2
-  if(!all(tmp)) stop(paste0("'type' modification is not allowed:\n\t- ",
-                            paste0(paste(paste0(mutation[!tmp], " [", type1[!tmp], "]"),
-                                         paste0(names(mutation)[!tmp], " [", type2[!tmp], "]"), sep = " -> "),
-                                   collapse = "\n\t- ")), call. = FALSE)
-  # rename pops
-  ans = popsRename(obj, mutation[mutation != names(mutation)], names(mutation)[mutation != names(mutation)])
-  # apply other modifications
-  K = class(ans$pops)
-  ans$pops[names(mutation)] = lapply(names(mutation), FUN = function(i_p) {
-    p = ans$pops[[i_p]]
-    p$color <- P[[i_p]]$color
-    p$lightModeColor <- P[[i_p]]$lightModeColor
-    p$style <- P[[i_p]]$style
-    if(p$type == "T") p$obj = P[[i_p]]$obj
-    if(p$type == "C") {
-      operators = c("And", "Or", "Not", "(", ")")
-      p$definition = P[[i_p]]$definition
-      p$split = splitn(definition = p$definition, all_names = names(ans$pops), operators = operators)
-      p$names = setdiff(p$split, operators)
-    }
-    return(p)
-  })
-  names(ans$pops) = sapply(ans$pops, FUN = function(p) p$name)
-  class(ans$pops) <- K
-  ans$pops <- popsCompute(pops = ans$pops,
-                          regions = ans$regions,
-                          features = ans$features,
-                          session = session,
-                          display_progress = display_progress,
-                          ...)
-  for(i in names(mutation)) attributes(ans$pops[[i]]) <- attributes(pops[[mutation[i]]])
+data_modify_pops <- function(obj, pops, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
+  f = getFromNamespace("data_modify_pops", "IFC")
+  ans = f(obj = obj, pops = pops, session = session, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
-  
-  # if compare was provided, we compare
-  if(any(names(ans$pops) != names(compare_with$pops))) update_pops(session = session, obj = ans)
-  ans$haschanged_objects <- names(ans$pops)[!sapply(names(ans$pops), FUN = function(i_pop) identical(ans$pops[[i_pop]]$obj, compare_with$pops[[i_pop]]$obj))]
-  return(ans)
+  compare(ans, compare_with)
 }
 data_redefine <- function(obj, new_feat_def, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
+  attr(new_feat_def, "map") = list(initial = names(obj$features_def), to = names(new_feat_def$features_def))
   ans = redefine_obj(obj = obj, new_feat_def = new_feat_def, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
