@@ -45,8 +45,7 @@ if(length(obj_react$obj$features_comp) == 0) {
           basic_feat = IFCip::ExtractBasic(info = info,
                                            offsets = obj_react$obj$offsets,
                                            removal = "MC",
-                                           display_progress = TRUE,
-                                           session = session)
+                                           display_progress = TRUE)
           comp_feat = IFCip::as_IFC_features(basic_feat)
           obj_react$obj$basic$features = comp_feat$features
           obj_react$obj$basic$features_def = comp_feat$features_def

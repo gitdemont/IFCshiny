@@ -70,10 +70,9 @@ observeEvent(input$compute_go, {
     extra_feat <- IFCip::ExtractFeatures(fileName = obj_react$back$fileName,
                                          offsets = obj_react$back$offsets,
                                          display_progress = TRUE,
-                                         parallel = (.no_cores > 1) && input$use_parallelization,
+                                         parallel = do_par,
                                          zmax = zmax,
-                                         granularity = granularity,
-                                         session = session)
+                                         granularity = granularity)
     attr(extra_feat, "channel_names") <- sapply(as.integer(attr(extra_feat, "channel_id")), FUN = function(i_chan) obj_react$obj$description$Images$name[obj_react$obj$description$Images$physicalChannel == i_chan])
     extra_feat <- IFCip::as_IFC_features(extra_feat)[[2]]
     if(getFileExt(obj_react$back$fileName) == "daf") {
