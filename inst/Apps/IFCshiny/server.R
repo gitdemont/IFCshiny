@@ -311,7 +311,7 @@ server <- function(input, output, session) {
             ids = NULL
             table_imgs <- objectExtract(ifd = getIFD(param_react$param$fileName_image, trunc_bytes = 1, force_trunc = TRUE,
                                                      offsets = subsetOffsets(obj_react$back$offsets, objects = val$`Object Number`[chunks[[P]]], input$chan_type),
-                                                     verbose = FALSE, display_progress = FALSE, bypass = TRUE, session = session),
+                                                     verbose = FALSE, display_progress = FALSE, bypass = TRUE),
                                         param = param_react$param,
                                         verbose = FALSE,
                                         bypass = TRUE)
@@ -460,7 +460,7 @@ server <- function(input, output, session) {
     output$network <- renderVisNetwork({
       if(input$navbar!="tab2") return(NULL)
       if(length(obj_react$obj$pops) == 0) return(NULL)
-      foo = popsNetwork(obj_react$obj, session = session)
+      foo = popsNetwork(obj_react$obj)
       runjs(sprintf("$('#network').css({'width':'%spx', 'height':'%spx'})", max(300, foo$width), max(300, foo$height)))
       session$sendCustomMessage("reach", "network")
       # disable dragView on mobile device to still be able to scroll screen on touch
@@ -624,7 +624,7 @@ server <- function(input, output, session) {
                                                 symbol = plot_react$symbol, color = plot_react$color, level = 0.68,
                                                 pt_size = input$plot_type_3D_option02),
                            draw_ell = TRUE, draw_pts = TRUE, draw_txt = TRUE,
-                           useNULL = TRUE, session = session)
+                           useNULL = TRUE)
         plot_react$plot = list(plot = obj3D,
                                shared = rglShared(id = text3d(shared[, 1:3], texts = shared[, "Object Number"], adj = -0.5),
                                                   key = key,

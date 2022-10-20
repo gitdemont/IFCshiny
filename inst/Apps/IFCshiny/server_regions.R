@@ -37,7 +37,7 @@ obs_reg <- list(
     reg_back$cy = signif(reg_back$cy, digits = 3)
     reg_back$x = signif(reg_back$x, digits = 3)
     reg_back$y = signif(reg_back$y, digits = 3)
-    reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both", session = getDefaultReactiveDomain())
+    reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both")
   }),
   observeEvent(input$reg_def_label, suspended = TRUE,{
     regions_react$pre$label <- input$reg_def_label
@@ -135,7 +135,7 @@ obs_reg <- list(
     reg_back$cy = signif(reg_back$cy, digits = 3)
     reg_back$x = signif(reg_back$x, digits = 3)
     reg_back$y = signif(reg_back$y, digits = 3)
-    if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain()))) {
+    if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = names(obj_react$obj$regions), check = "both"))) {
       showModal(modalDialog(tags$p("Are you sure you want to discard applied changes in region '", tags$b(R), "' ?"),
                             size = "s",
                             easyClose = FALSE,
@@ -154,7 +154,7 @@ obs_reg <- list(
       return(NULL)
     }
     obs_reg[["confirm"]]$resume()
-    to_remove = data_rm_regions(obj = obj_react$obj, regions = R, list_only = TRUE, session=session)
+    to_remove = data_rm_regions(obj = obj_react$obj, regions = R, list_only = TRUE)
     if((length(to_remove$regions) > 1 ) || (length(to_remove$pops) > 0)) {
       to_remove_msg = list(tags$p("Removing region '", tags$b(R), "' will also induce the removal of"))
       if(length(to_remove$regions) > 1) to_remove_msg = c(to_remove_msg, list(tags$p("- region(s):"), tags$ul(lapply(to_remove$regions[-1], FUN = function(x) tags$li(x)))))
@@ -180,8 +180,8 @@ obs_reg <- list(
       N = names(obj_react$obj$regions)
       R = regions_react$pre$name
       if(!any(R %in% N)) stop("")
-      toredraw = data_rm_regions(obj = obj_react$obj, regions = R, list_only = TRUE, session=session)
-      obj_react$obj = data_rm_regions(obj = obj_react$obj, regions = R, list_only = FALSE, session=session)
+      toredraw = data_rm_regions(obj = obj_react$obj, regions = R, list_only = TRUE)
+      obj_react$obj = data_rm_regions(obj = obj_react$obj, regions = R, list_only = FALSE)
       if(length(toredraw$graph) > 0) obj_react$obj = reinit_layout(obj_react$obj)
       plot_react$param_ready = FALSE
       N =  names(obj_react$obj$regions)
@@ -228,7 +228,7 @@ obs_reg <- list(
     reg_back$cy = signif(reg_back$cy, digits = 3)
     reg_back$x = signif(reg_back$x, digits = 3)
     reg_back$y = signif(reg_back$y, digits = 3)
-    reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both", session = getDefaultReactiveDomain())
+    reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both")
   }),
   observeEvent(input$reg_close_ok, suspended = TRUE,{
     removeModal(session=session)
@@ -266,7 +266,7 @@ obs_reg <- list(
     updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
     regions_react$pre = reg
     regions_react$pre$name = R
-    reg_def(reg = regions_react$pre, reg_back = reg, all_names = N, check = "both", session = getDefaultReactiveDomain())
+    reg_def(reg = regions_react$pre, reg_back = reg, all_names = N, check = "both")
   }))
 
 # output

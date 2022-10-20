@@ -238,7 +238,7 @@ observeEvent(input$reg_manager_visible, {
     updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
     regions_react$pre = reg
     regions_react$pre$name = N[1]
-    reg_def(reg = regions_react$pre, reg_back = reg, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain())
+    reg_def(reg = regions_react$pre, reg_back = reg, all_names = names(obj_react$obj$regions), check = "both")
     runjs(sprintf("Shiny.onInputChange('reg_manager_visible', %s)", names(check_managers(alw="reg"))))
     lapply(obs_reg, FUN = function(x) x$resume())
     runjs(code="$('html, body').animate({scrollTop: '0px' }, 300);")

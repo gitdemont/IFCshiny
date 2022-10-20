@@ -58,7 +58,7 @@ observeEvent(input$pop_sample, suspended = FALSE, {
   while(new_name %in% names(obj_react$obj$pops)) new_name = paste0("sampled_",input$pop_sample_name,"[",random_name(special = "NULL"),"]")
   tryCatch({
     obj_react$obj = data_add_pop_sample(obj = obj_react$obj, pop = input$pop_sample_name,
-                                        size = input$pop_sample_size, new_name = new_name, session = session)
+                                        size = input$pop_sample_size, new_name = new_name)
     mess_global("Population Sampling", msg = c("Sampled pop has been successfully created:", new_name), type = "success")
   }, warning = function(w) {
     mess_global("Population Sampling", msg = c("Sampled pop was not created:", w$message), type = "warning")

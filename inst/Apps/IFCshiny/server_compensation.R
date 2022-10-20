@@ -99,10 +99,9 @@ obs_comp <- list(
         comp_react$last <- comp_react$spillover
         obj_react$obj$features[, colnames(obj_react$obj$features_comp)] <- obj_react$obj$features_comp
         pops = popsCompute(pops = obj_react$obj$pops,
-                                         regions = obj_react$obj$regions,
-                                         features = obj_react$obj$features,
-                                         display_progress = TRUE, 
-                                         session = session)
+                           regions = obj_react$obj$regions,
+                           features = obj_react$obj$features,
+                           display_progress = TRUE)
         obj_react$obj$pops = pops
         stats = data.frame(stringsAsFactors = FALSE, check.rows = FALSE, check.names = FALSE, t(sapply(names(pops), FUN=function(p) {
           count = sum(pops[[p]]$obj)

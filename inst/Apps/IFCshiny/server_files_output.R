@@ -91,20 +91,20 @@ output$ML_save_btn <- downloadHandler(
       # add image values in obj_react (if not already extracted)
       if((length(obj_react$back$description$FCS) == 0) && (getFileExt(obj_react$back$fileName) != "daf") && (length(obj_react$obj$images) == 0)) {
         obj_react$obj$images <- getImagesValues(fileName = obj_react$back$fileName, offsets = obj_react$obj$offsets,
-                                                display_progress = TRUE, fast = TRUE, session = session)
+                                                display_progress = TRUE, fast = TRUE)
       }
       
       # create obj with all the data
       nv = apply.IFCml(model = reactiveValuesToList(model_react), obj = obj_react$obj, 
                        newdata = "all", 
-                       session = session, verbose = FALSE)
+                       verbose = FALSE)
       foo = nv$obj
       if(length(param_react$param$channels) !=0) {
         foo$description$Images <- param_react$param$channels
       }
       tryCatch({
         # add temporary ML pops in obj_react
-        # foo <- suppressWarnings(data_add_pops(foo, pops, display_progress = TRUE, session = session))
+        # foo <- suppressWarnings(data_add_pops(foo, pops, display_progress = TRUE)
         sp = comp_react$spillover
         if(nrow(sp) == 0) {
           sp = foo$description$FCS$spillover
@@ -115,7 +115,7 @@ output$ML_save_btn <- downloadHandler(
                  fullname = FALSE #foo$info$found && !input$use_example && file.exists(foo$fileName_image)
                  suppressWarnings(data_to_DAF(obj = foo, write_to = tmpfile, overwrite = TRUE,
                                               fullname = fullname, viewing_pop = "ML_subset", binary = TRUE, 
-                                              display_progress = TRUE, session = session))
+                                              display_progress = TRUE))
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
                "fcs" = {
@@ -131,10 +131,10 @@ output$ML_save_btn <- downloadHandler(
                                                         write_to = file.path(tmpdr, paste0("%s_", model_react$method,".%e")),
                                                         overwrite = TRUE,
                                                         fullname = fullname, viewing_pop = "ML_subset", binary = TRUE, 
-                                                        display_progress = TRUE, session = session))
+                                                        display_progress = TRUE))
                  } else {
                    files = ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$method,".fcs")), overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(sp))
-                   files = c(files, writeGatingStrategy(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$method,".xml")), overwrite = TRUE, display_progress = TRUE, session = session))
+                   files = c(files, writeGatingStrategy(obj = foo, write_to = file.path(tmpdr, paste0(short, "_", model_react$method,".xml")), overwrite = TRUE, display_progress = TRUE))
                  }
                  model = list()
                  for(i in names(model_react)) model[[i]] = model_react[[i]]
@@ -144,7 +144,7 @@ output$ML_save_btn <- downloadHandler(
                  files = short_path(files, tmpdr)
                  olddir = getwd()
                  setwd(tmpdr)
-                 pb = newPB(session = session, title = basename(obj_react$back$fileName), label = "zipping files", min = 0, max = length(files))
+                 pb = newPB(title = basename(obj_react$back$fileName), label = "zipping files", min = 0, max = length(files))
                  tryCatch({
                    suppressMessages(zip::zip(zipfile = file, files = files[1], compression_level = 0, recurse = TRUE))
                    if(length(files) > 1) sapply(2:length(files), FUN = function(i_file) {
@@ -246,7 +246,7 @@ output$daf_save_btn <- downloadHandler(
       # add image values in obj_react (if not already extracted)
       if((length(obj_react$back$description$FCS) == 0) && (getFileExt(obj_react$back$fileName) != "daf") && (length(obj_react$obj$images) == 0)) {
         obj_react$obj$images <- getImagesValues(fileName = obj_react$back$fileName, offsets = obj_react$obj$offsets,
-                                                display_progress = TRUE, fast = TRUE, session = session)
+                                                display_progress = TRUE, fast = TRUE)
       }
       
       foo = obj_react$obj
@@ -264,7 +264,7 @@ output$daf_save_btn <- downloadHandler(
                  fullname = FALSE #foo$info$found && !input$use_example && file.exists(foo$fileName_image)
                  suppressWarnings(data_to_DAF(obj = foo, write_to = tmpfile, overwrite = TRUE,
                                               fullname = fullname, viewing_pop = "ML_subset", binary = TRUE, 
-                                              display_progress = TRUE, session = session))
+                                              display_progress = TRUE))
                  if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
                },
                "fcs" = {
@@ -273,12 +273,12 @@ output$daf_save_btn <- downloadHandler(
                },
                "zip" = {
                  files = c(ExportToFCS(obj = foo, write_to = file.path(tmpdr, paste0(short,".fcs")), overwrite = TRUE, delimiter = "/", "$SPILLOVER" = convert_spillover(sp)),
-                           writeGatingStrategy(obj = foo, write_to = file.path(tmpdr, paste0(short,".xml")), overwrite = TRUE, display_progress = TRUE, session = session))
+                           writeGatingStrategy(obj = foo, write_to = file.path(tmpdr, paste0(short,".xml")), overwrite = TRUE, display_progress = TRUE))
                  to_rm = files
                  files = short_path(files, tmpdr)
                  olddir = getwd()
                  setwd(tmpdr)
-                 pb = newPB(session = session, title = basename(obj_react$back$fileName), label = "zipping files", min = 0, max = length(files))
+                 pb = newPB(title = basename(obj_react$back$fileName), label = "zipping files", min = 0, max = length(files))
                  tryCatch({
                    suppressMessages(zip::zip(zipfile = file, files = files[1], compression_level = 0, recurse = TRUE))
                    if(length(files) > 1) sapply(2:length(files), FUN = function(i_file) {
@@ -335,7 +335,6 @@ output$graph_save_btn <- downloadHandler(
                                          xlab = input$plot_x_feature, ylab = input$plot_y_feature, zlab = input$plot_z_feature,
                                          fileName = fileName,
                                          selection = as.integer(input$plot_3D_draw_chan),
-                                         session = session,
                                          offsets = obj_react$back$offsets, 
                                          full_range = "full_range" %in% input$chan_force,
                                          force_range = "force_range" %in% input$chan_force),
@@ -383,14 +382,14 @@ output$report_save_btn <- downloadHandler(
     tryCatch({
       if(input$report_save_type != "zip") {
         tmpfile = file.path(session_dir, basename(file))
-        suppressMessages(ExportToReport(obj = obj_react$obj, write_to = tmpfile, onepage = TRUE, display_progress = TRUE, session = session))
+        suppressMessages(ExportToReport(obj = obj_react$obj, write_to = tmpfile, onepage = TRUE, display_progress = TRUE))
         if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
       } else {
         tmpdr = session_dir
         bname = specialr(short_name(obj_react$back$fileName))
         files = suppressMessages(ExportToReport(obj = obj_react$obj, 
                                                 write_to = file.path(tmpdr, bname, paste0(bname, c(".pdf",".csv"))),
-                                                onepage = TRUE, display_progress = TRUE, session = session))
+                                                onepage = TRUE, display_progress = TRUE))
         to_rm = files
         old_dir = getwd(); setwd(tmpdr); on.exit({setwd(old_dir); file.remove(to_rm)}, add = TRUE)
         files = short_path(files, tmpdr)
@@ -415,7 +414,7 @@ output$network_save_btn <- downloadHandler(
     tryCatch({
       switch(input$network_save_type, 
              "html" = { 
-               visSave(popsNetwork(obj_react$obj, session = session), file = tmpfile)
+               visSave(popsNetwork(obj_react$obj), file = tmpfile)
              },
              "txt" = {
                sink(file = tmpfile)
@@ -476,7 +475,7 @@ output$pop_indices_save_btn <- downloadHandler(
              "txt" = write.table(x = idx, file = tmpfile, append = FALSE, row.names = FALSE, col.names = names(obj_react$obj$pops), na = "", sep = "\t", dec = "."),
              "csv" = write.table(x = idx, file = tmpfile, append = FALSE, row.names = FALSE, col.names = names(obj_react$obj$pops), na = "", sep = ",", dec = "."),
              "xlsx" = write.xlsx(x = idx, file = tmpfile),
-             "xml" = writeGatingStrategy(obj = obj_react$obj, write_to = tmpfile, overwrite = TRUE, display_progress = TRUE, verbose = FALSE, session = session)
+             "xml" = writeGatingStrategy(obj = obj_react$obj, write_to = tmpfile, overwrite = TRUE, display_progress = TRUE, verbose = FALSE)
       )
       if(!file.rename(from = tmpfile, to = file)) file.copy(from = tmpfile, to = file)
     },
@@ -522,7 +521,7 @@ output$cells_save_btn <- downloadHandler(
                                                              write_to = paste0(tmpdr, "/%s/%s_", input$population, "_Ch[%c].npy"),
                                                              # write_to = file.path(tmpdr, "%s_Ch[%c].npy"),
                                                              mode = "gray", overwrite = TRUE, 
-                                                             offsets = obj_react$back$offsets, session = session)))
+                                                             offsets = obj_react$back$offsets)))
              },
              "xif" = {
                files = unlist(suppressWarnings(ExportToXIF(fileName = param$fileName_image,
@@ -530,18 +529,18 @@ output$cells_save_btn <- downloadHandler(
                                                            write_to = paste0(tmpdr, "/%s/%s_", input$population,".%e"),
                                                            overwrite = TRUE, 
                                                            display_progress = TRUE,
-                                                           offsets = obj_react$back$offsets, session = session)))
+                                                           offsets = obj_react$back$offsets)))
              },
              { files = unlist(suppressWarnings(ExtractImages_toFile(display_progress = TRUE, param = param, 
                                                                     objects = popsGetObjectsIds(obj_react$obj, pop = input$population),
                                                                     write_to = paste0(tmpdr, "/%s/",input$population,"/%c/%s_%c_%o.",input$cells_save_type),
-                                                                    offsets = obj_react$back$offsets, session = session))) }
+                                                                    offsets = obj_react$back$offsets))) }
       )
       to_rm = files
       files = short_path(files, tmpdr)
       olddir = getwd()
       setwd(tmpdr)
-      pb = newPB(session = session, title = basename(param$fileName_image), label = "zipping files", min = 0, max = length(files))
+      pb = newPB(title = basename(param$fileName_image), label = "zipping files", min = 0, max = length(files))
       tryCatch({
         suppressMessages(zip::zip(zipfile = file, files = files[1], compression_level = 0, recurse = TRUE))
         if(length(files) > 1) sapply(2:length(files), FUN = function(i_file) {
@@ -582,7 +581,7 @@ output$example_save_btn <- downloadHandler(
     files = short_path(files, tmpdr)
     setwd(tmpdr)
     tryCatch({
-      pb = newPB(session = session, title = basename(obj_react$back$fileName_image), label = "zipping files", min = 0, max = length(files))
+      pb = newPB(title = basename(obj_react$back$fileName_image), label = "zipping files", min = 0, max = length(files))
       tryCatch({
         suppressMessages(zip::zip(zipfile = file, files = files[1], compression_level = 0, recurse = TRUE))
         if(length(files) > 1) sapply(2:length(files), FUN = function(i_file) {
@@ -619,14 +618,14 @@ output$batch_save_obj_btn <- downloadHandler(
     suppressWarnings(dir.create(file.path(tmpdr, "batch")))
     N = names(obj_react$batch)
     L = length(N)
-    pb_write = newPB(session = session, title = N[1], label = "exporting files", min = 0, max = L)
+    pb_write = newPB(title = N[1], label = "exporting files", min = 0, max = L)
     tryCatch({
       files = sapply(1:L, FUN = function(i_batch) {
         setPB(pb_write, value = i_batch, title = N[i_batch])
         suppressWarnings(writeIFC(obj_react$batch[[i_batch]],
                                   write_to = file.path(tmpdr, "batch", basename(obj_react$batch[[i_batch]]$fileName)), overwrite = TRUE,
                                   fullname = FALSE, binary = TRUE, 
-                                  display_progress = TRUE, session = session))
+                                  display_progress = TRUE))
       })
     },
     error = function(e) {
@@ -641,7 +640,7 @@ output$batch_save_obj_btn <- downloadHandler(
     files = short_path(files, tmpdr)
     setwd(tmpdr)
     tryCatch({
-      pb = newPB(session = session, title = N[1], label = "zipping files", min = 0, max = L)
+      pb = newPB(title = N[1], label = "zipping files", min = 0, max = L)
       tryCatch({
         suppressMessages(zip::zip(zipfile = file, files = files[1], compression_level = 0, recurse = TRUE))
         if(L > 1) sapply(2:L, FUN = function(i_file) {
@@ -681,7 +680,7 @@ output$batch_report_save_btn <- downloadHandler(
       sel = matrix(as.integer(ids), ncol=length(unique(n_col)), nrow=length(unique(n_row)), byrow = TRUE)
       args = list(obj = obj_react$batch, selection = sel,
                   byrow = input$batch_byrows, times = as.integer(input$batch_times),
-                  display_progress = TRUE, session = session)
+                  display_progress = TRUE)
       if(input$batch_gating) args = c(list(gating = suppressMessages(readGatingStrategy(writeGatingStrategy(obj_react$obj, write_to = file.path(session_dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))), args)
       if(input$batch_report_save_type != "zip") {
         tmpfile = file.path(session_dir, basename(file))

@@ -66,7 +66,7 @@ Toggle3D <- function(inputId,
 }
 
 # Update a rgl toggle checkbox
-updateToggle3D <- function(session,
+updateToggle3D <- function(session = shiny::getDefaultReactiveDomain(),
                            inputId,
                            label = NULL,
                            value = NULL,
@@ -248,12 +248,11 @@ plot_axis3D <- function(obj3D, which = c("x", "y", "z"), box = TRUE,
 #' @param draw_ell whether to draw ellipses. Default is FALSE.
 #' @param draw_txt whether to draw text labels. Default is FALSE.
 #' @param useNULL whether to use the null graphics device. Default is TRUE.
-#' @param session the session object passed to function given to shinyServer. Default is shiny::getDefaultReactiveDomain().
 #' @param ... other arguments to be passed.
 #' @export
 plot_obj3D = function(obj3D, scaling = 1.7,
                       draw_axs = TRUE, draw_pts = TRUE, draw_ell = FALSE, draw_txt = FALSE,
-                      useNULL = TRUE, session = shiny::getDefaultReactiveDomain(), ...) {
+                      useNULL = TRUE, ...) {
   if(missing(obj3D)) stop("'obj3D' can't be missing")
   if(class(obj3D) != "obj3D") stop("'obj3D' is not of class 'obj3D'")
   
@@ -433,12 +432,10 @@ plot_obj3D = function(obj3D, scaling = 1.7,
 #' @param force_width force_width parameter of IFC::objectParam(). Default is FALSE.
 #' @param size size parameter of IFC::objectParam(). Default is c(0,0)
 #' @param write_to write_to parameter of IFC::objectParam(). Default is "image.png",
-#' @param session the session object passed to function given to shinyServer. Default is shiny::getDefaultReactiveDomain().
 #' @param ... other arguments to be passed to IFC::objectParam().
 #' @export
 plotly_obj3D <- function(obj3D, xlab, ylab, zlab, fileName = NULL,
-                         selection = 4, force_width = FALSE, size = c(0,0), write_to = "image.png",
-                         session = shiny::getDefaultReactiveDomain(), ...) {
+                         selection = 4, force_width = FALSE, size = c(0,0), write_to = "image.png", ...) {
   dots = list(...)
   dat = do.call(what = rbind, args = c(list(make.row.names = FALSE), lapply(names(obj3D$pts3d), FUN = function(pop) {
     p = obj3D$pts3d[[pop]]
@@ -462,8 +459,7 @@ plotly_obj3D <- function(obj3D, xlab, ylab, zlab, fileName = NULL,
     dat$meta = unlist(do.call(what = ExtractImages_toBase64,
                               args = c(dots, list(fileName = fileName, objects = as.integer(dat$id),
                                                   selection = selection, force_width = FALSE, size = c(0,0), write_to = "image.png",
-                                                  base64_att = "style='position:absolute; top:5px; left:5px; z-index:100;' class='IFC_displayed_cell'",
-                                                  session = session))))
+                                                  base64_att = "style='position:absolute; top:5px; left:5px; z-index:100;' class='IFC_displayed_cell'"))))
     plotly_args = c(plotly_args, list(meta = dat$meta))
   }
   fig <- do.call(what = plotly::plot_ly, args = plotly_args)

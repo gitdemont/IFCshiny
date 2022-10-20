@@ -82,7 +82,7 @@ observeEvent(input$compute_go, {
       })
     }
     # new features are added to obj_react$obj
-    obj_react$obj <- data_add_features(obj_react$obj, features = extra_feat, session = session)
+    obj_react$obj <- data_add_features(obj_react$obj, features = extra_feat)
     # we sort the features by name
     obj_react$obj$features <- structure(obj_react$obj$features[, order(names(obj_react$obj$features))], class = c("data.frame", "IFC_features"))
     obj_react$obj$features_def <- structure(obj_react$obj$features_def[order(names(obj_react$obj$features_def))], class = c("list", "IFC_features_def"))

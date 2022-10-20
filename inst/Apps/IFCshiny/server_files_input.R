@@ -87,14 +87,14 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
       dat = suppressMessages(suppressWarnings(readIFC(fileName = fileName, extract_features = TRUE, 
                                                       extract_images = FALSE, extract_stats = TRUE, 
                                                       extract_offsets = TRUE, recursive = TRUE, 
-                                                      display_progress = TRUE, session = session)))
+                                                      display_progress = TRUE)))
       # then we store images parameters from this 1st file
       Images = dat$description$Images
       if(nrow(Images) != 0) Images[, "gamma"] = apply(Images[, c("xmin", "xmax", "xmid", "ymid")], MARGIN = 1, computeGamma)
       # finally we try to extract info from other files if any were provided
       info = try(getInfo(fileName = fileName_image, from = "analysis",
                          verbose = FALSE, warn = FALSE, ntry = 1,
-                         cifdir = dirname(fileName), display_progress = TRUE, session = session),
+                         cifdir = dirname(fileName), display_progress = TRUE),
                  silent = TRUE)
       if(!("try-error" %in% class(info))) {
         if(any(daf_file) && any(c(cif_file, rif_file))) {
@@ -108,7 +108,7 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
       # here we use dedicated ExtractFromFCS to read FCS file
       info = try(stop(""), silent = TRUE)
       dat = try(ExtractFromFCS(fileName = fileName, 
-                               force_header = TRUE, session = session), silent = TRUE)
+                               force_header = TRUE), silent = TRUE)
       if(("try-error" %in% class(dat))) stop("fcs file does not seem to be well formatted:\n", attr(dat, "condition")$message)
     }
     # if info were obtained without error, it means that a rif or a cif was input
@@ -238,9 +238,9 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
   updateSelectInput(session, "sel_left", choices = sort(names(obj$features)), selected = names(obj$features))
   sel = tolower(obj$fileName)
   names(sel) = remove_ext(basename(sel))
-  update_pops(session = session, obj = obj, init = TRUE)
-  update_regions(session = session, obj = obj, init = TRUE)
-  update_features(session = session, obj = obj, init = TRUE)
+  update_pops(obj = obj, session = session, init = TRUE)
+  update_regions(obj = obj, session = session, init = TRUE)
+  update_features(obj = obj, session = session, init = TRUE)
   obj$haschanged_objects = character()
   if(length(obj$fileName) == 0) return(NULL)
   
@@ -404,7 +404,7 @@ observeEvent(input$file_tagged, {
       list(name = names(r_in)[i_col], type = "T", obj = obj)
     })
     already_pop = names(r_in)[names(r_in) %in% names(obj_react$obj$pops)]
-    obj_react$obj = data_add_pops(obj_react$obj, pops, display_progress = TRUE, session = session)
+    obj_react$obj = data_add_pops(obj_react$obj, pops, display_progress = TRUE)
     runjs("Shiny.onInputChange('pop_edit', null)")
     runjs("Shiny.onInputChange('pop_alt_click', null)")
     plot_react$shown = NULL
@@ -484,12 +484,12 @@ network_ok = observeEvent(input$import_ok, suspended = TRUE, {
   obj_back = obj_react$obj
   tryCatch({
     gs = readGatingStrategy(fileName = fileinfo$datapath)
-    obj_react$obj = applyGatingStrategy(obj = obj_react$obj, gating = gs, display_progress = TRUE, session = session)
+    obj_react$obj = applyGatingStrategy(obj = obj_react$obj, gating = gs, display_progress = TRUE)
   }, error = function(e) {
     obj_react$obj = obj_back
     mess_global(title = "population import", msg = unlist(strsplit(e$message, split = "\n")), type = "stop")
   }, finally = {
-    obj_react$obj = compare(obj_react$obj, obj_back, session = session)
+    obj_react$obj = compare(obj_react$obj, obj_back)
     runjs("Shiny.onInputChange('pop_edit', null)")
     runjs("Shiny.onInputChange('pop_alt_click', null)")
     plot_react$shown = NULL

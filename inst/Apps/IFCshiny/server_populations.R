@@ -255,7 +255,7 @@ obs_pop <- list(
         if(pops_react$revert$type == "C") new_pop$definition <- paste0(pops_react$def, collapse = "|")
         
         # we identify all graphs that will be impacted by population modification
-        toredraw = data_rm_pops(obj = obj_react$obj, pops = pops_react$revert$name, list_only = TRUE, session=session)
+        toredraw = data_rm_pops(obj = obj_react$obj, pops = pops_react$revert$name, list_only = TRUE)
         names(obj_react$obj$graphs)[toredraw$graphs] <- NA
         N = names(obj_react$obj$graphs)
         if(length(N) > 0) {
@@ -268,8 +268,7 @@ obs_pop <- list(
         # we apply the modification
         msg <- capture.output({obj_react$obj = data_modify_pops(obj = obj_react$obj,
                                                                 pops = structure(list(new_pop), names = pops_react$revert$name), 
-                                                                display_progress = TRUE,
-                                                                session = session)}, type = "message", split = FALSE)
+                                                                display_progress = TRUE)}, type = "message", split = FALSE)
         mess_global(title = "population modification", msg = msg, type = "info", duration = 10)
         
         # if edited population was used for the current graph we modify the graph styling
@@ -348,7 +347,7 @@ obs_pop <- list(
                                                                  lightModeColor = match_col(input$pop_color_light),
                                                                  style = style,
                                                                  definition = paste0(pops_react$def, collapse = "|"))),
-                                        display_progress = TRUE, session = session) 
+                                        display_progress = TRUE) 
           pops_react$new = FALSE
           runjs("Shiny.onInputChange('pop_edit', null)")
           runjs("Shiny.onInputChange('pop_manager_visible', false)")
@@ -361,7 +360,7 @@ obs_pop <- list(
                                                                  lightModeColor = match_col(input$pop_color_light),
                                                                  style = style,
                                                                  obj = pops_react$revert$obj,
-                                                                 display_progress = TRUE, session = session)))
+                                                                 display_progress = TRUE)))
         }
         pops_react$new = FALSE
         pops_react$revert = obj_react$obj$pops[[input$pop_def_name]]
@@ -392,7 +391,7 @@ obs_pop <- list(
     })
   }),
   observeEvent(input$pop_remove, suspended = TRUE,{
-    to_remove = data_rm_pops(obj = obj_react$obj, pops = input$pop_def_name, list_only = TRUE, session=session)
+    to_remove = data_rm_pops(obj = obj_react$obj, pops = input$pop_def_name, list_only = TRUE)
     if((length(to_remove$regions) > 0 ) || (length(to_remove$pops) > 1)) {
       to_remove_msg = list(tags$p("Removing population '", tags$b(input$pop_selection), "' will also induce the removal of"))
       if(length(to_remove$regions) > 1) to_remove_msg = c(to_remove_msg, list(tags$p("- region(s):"), tags$ul(lapply(to_remove$regions, FUN = function(x) tags$li(x)))))
@@ -414,7 +413,7 @@ obs_pop <- list(
   }),
   observeEvent(input$pop_confirm_removal,suspended = TRUE, {
     tryCatch({
-      toredraw = data_rm_pops(obj = obj_react$obj, pops = input$pop_def_name, list_only = TRUE, session=session)
+      toredraw = data_rm_pops(obj = obj_react$obj, pops = input$pop_def_name, list_only = TRUE)
       L = length(toredraw$graphs)
       if(L > 0) {
         lapply(1:L, FUN = function(i) {
@@ -422,7 +421,7 @@ obs_pop <- list(
         })
         names(obj_react$obj$graphs)[toredraw$graphs] <- NA
       }
-      obj_react$obj = data_rm_pops(obj = obj_react$obj, pops = input$pop_def_name, list_only = FALSE, session=session)
+      obj_react$obj = data_rm_pops(obj = obj_react$obj, pops = input$pop_def_name, list_only = FALSE)
       obj_react$obj = reinit_layout(obj_react$obj)
     },
     error = function(e) {

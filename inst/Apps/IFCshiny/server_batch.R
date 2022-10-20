@@ -173,9 +173,9 @@ obs_batch = list(
       gs_ML <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_dir, "batch_raw", "batch_gating_ML.xml"), overwrite = TRUE)))
       if(length(model_react$fit) != 0) {       # we need to remove "ML" from current obj because "ML" features may not be present in input files
         check = grep("^ML_", names(obj1$features), value = TRUE)
-        obj1 = suppressWarnings(data_rm_features(obj = obj1, features = check, list_only = FALSE, session=session))
+        obj1 = suppressWarnings(data_rm_features(obj = obj1, features = check, list_only = FALSE))
         check = grep("^ML_", names(obj1$pops), value = TRUE)
-        obj1 = suppressWarnings(data_rm_pops(obj = obj1, pops = check, list_only = FALSE, session=session))
+        obj1 = suppressWarnings(data_rm_pops(obj = obj1, pops = check, list_only = FALSE))
         gs <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))
         model_ = reactiveValuesToList(x = model_react)
         batch = lapply(1:length(new_names), FUN = function(i_file) {
@@ -183,19 +183,19 @@ obs_batch = list(
                                                            extract_images = FALSE, extract_stats = TRUE, 
                                                            extract_offsets = TRUE, recursive = TRUE, 
                                                            display_progress = TRUE, 
-                                                           force_header = TRUE, session = session)))
+                                                           force_header = TRUE)))
           to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
           if(input$apply_gating) {
-            obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE, session = session)
+            obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE)
             tryCatch({
               # apply ML in 'mode'="predict_norm"
               nv = apply.IFCml(model = model_, obj = obj, mode = "predict_norm", 
                                newdata = "all",
-                               session = session, verbose = FALSE)
+                               verbose = FALSE)
               # force to keep new tagged populations (included new ML_ ones)
               to_keep = names(nv$obj$pops)[sapply(nv$obj$pops, FUN = function(p) p$type == "T")]
               # apply the initial gating strategy with eventually ML_ features and pops 
-              obj <- applyGatingStrategy(nv$obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
+              obj <- applyGatingStrategy(nv$obj, gating = gs_ML, keep = to_keep, display_progress = TRUE)
             }, error = function(e) {
               mess_global(title = "file batch", msg = c(paste0("can't apply model on ",basename(obj$fileName)), e$message), type = "error")
               return(obj)
@@ -209,9 +209,9 @@ obs_batch = list(
                                                            extract_images = FALSE, extract_stats = TRUE, 
                                                            extract_offsets = TRUE, recursive = TRUE, 
                                                            display_progress = TRUE,
-                                                           force_header = TRUE, session = session)))
+                                                           force_header = TRUE)))
           to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
-          if(input$apply_gating) obj <- applyGatingStrategy(obj = obj, gating = gs_ML, keep = to_keep, display_progress = TRUE, session = session)
+          if(input$apply_gating) obj <- applyGatingStrategy(obj = obj, gating = gs_ML, keep = to_keep, display_progress = TRUE)
           obj
         })
       }
@@ -243,7 +243,7 @@ obs_batch = list(
     updateSelectInput(session=session, inputId="batch_grid", choices=character(), selected=NULL)
     new_main = strsplit(input$file_main, split = " _ ", fixed = TRUE)[[1]][1]
     obj_react$batch[[obj_react$curr]] <- obj_react$obj
-    obj_react$obj <- compare(reinit_app(obj_react$batch[[new_main]]), obj_react$obj, session=session) 
+    obj_react$obj <- compare(reinit_app(obj_react$batch[[new_main]]), obj_react$obj) 
     obj_react$back <- obj_react$obj
     obj_react$curr = new_main
     # modify current file_react
@@ -265,7 +265,7 @@ obs_batch = list(
     if(length(obj_react$batch) != 0) {
       N = unname(sapply(obj_react$batch, FUN = function(b) basename(b$fileName)))
       obj_react$curr = names(obj_react$batch)[1L]
-      obj_react$obj <- compare(reinit_app(obj_react$batch[[obj_react$curr]]), obj_react$obj, session=session)
+      obj_react$obj <- compare(reinit_app(obj_react$batch[[obj_react$curr]]), obj_react$obj)
       updateSelectInput(session=session, inputId = "file_main", choices = N, selected = N[1])
     } else { # should not happen since button is disabled when obj_react$batch length is <= 1
       updateSelectInput(session=session, inputId = "file_main", selected = c(), choices = list())

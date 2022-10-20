@@ -241,10 +241,10 @@ obs_ML <- list(
       check = grep("ML_subset", names(obj_react$obj$pops), fixed = TRUE, value = TRUE)
       if(length(check) != 0) {
         check = c(check, grep("^ML_meta_|^ML_pred_", names(obj_react$obj$pops), value = TRUE))
-        to_remove = data_rm_pops(obj = obj_react$obj, pops = check, list_only = TRUE, session=session, adjust_graph = FALSE)
+        to_remove = data_rm_pops(obj = obj_react$obj, pops = check, list_only = TRUE, adjust_graph = FALSE)
         check = grep("^ML_", names(obj_react$obj$features), value = TRUE)
         if(length(check) != 0) {
-          to_remove2 = data_rm_features(obj = obj_react$obj, features = check, list_only = TRUE, session=session, adjust_graph = FALSE)
+          to_remove2 = data_rm_features(obj = obj_react$obj, features = check, list_only = TRUE, adjust_graph = FALSE)
           to_remove = lapply(1:length(to_remove), FUN = function(i) unique(c(to_remove[[i]], to_remove2[[i]])))
           names(to_remove) = names(to_remove2)
         }
@@ -286,10 +286,10 @@ obs_ML <- list(
       check = grep("ML_subset", names(obj_react$obj$pops), fixed = TRUE, value = TRUE)
       if(length(check) != 0) {
         check = c(check, grep("^ML_meta_|^ML_pred_", names(obj_react$obj$pops), value = TRUE))
-        to_remove = data_rm_pops(obj = obj_react$obj, pops = check, list_only = TRUE, session=session, adjust_graph = FALSE)
+        to_remove = data_rm_pops(obj = obj_react$obj, pops = check, list_only = TRUE, adjust_graph = FALSE)
         check = grep("^ML_", names(obj_react$obj$features), value = TRUE)
         if(length(check) != 0) {
-          to_remove2 = data_rm_features(obj = obj_react$obj, features = check, list_only = TRUE, session=session, adjust_graph = FALSE)
+          to_remove2 = data_rm_features(obj = obj_react$obj, features = check, list_only = TRUE, adjust_graph = FALSE)
           to_remove = lapply(1:length(to_remove), FUN = function(i) unique(c(to_remove[[i]], to_remove2[[i]])))
           names(to_remove) = names(to_remove2)
         }
@@ -298,15 +298,15 @@ obs_ML <- list(
           tryCatch({
             if(length(to_remove$graphs) > 0) {
               obj_react$obj = data_rm_pops(obj = obj_react$obj, pops = grep("^ML_subset|^ML_meta_|^ML_pred_", names(obj_react$obj$pops), value = TRUE),
-                                           list_only = FALSE, adjust_graph = FALSE, session=session)
+                                           list_only = FALSE, adjust_graph = FALSE)
               check = grep("^ML_", names(obj_react$obj$features), value = TRUE)
-              obj_react$obj = data_rm_features(obj = obj_react$obj, features = check, list_only = FALSE, adjust_graph = FALSE, session=session)
+              obj_react$obj = data_rm_features(obj = obj_react$obj, features = check, list_only = FALSE, adjust_graph = FALSE)
               obj_react$obj = reinit_layout(obj_react$obj)
             } else {
               obj_react$obj = data_rm_pops(obj = obj_react$obj,pops = grep("^ML_subset|^ML_meta_|^ML_pred_", names(obj_react$obj$pops), value = TRUE),
-                                           list_only = FALSE, session=session)
+                                           list_only = FALSE)
               check = grep("^ML_", names(obj_react$obj$features), value = TRUE)
-              obj_react$obj = data_rm_features(obj = obj_react$obj, features = check, list_only = FALSE, session=session)
+              obj_react$obj = data_rm_features(obj = obj_react$obj, features = check, list_only = FALSE)
             }
           }, error = function(e) {
             obj_react$obj = obj_back
@@ -550,11 +550,11 @@ obs_ML <- list(
       if(method %in% c("pca")) ratio = 1
       if(method %in% c("tsne", "umap")) ratio = input$training_sampling_dimred / sum(!is.na(model_$data[,Q$is_clust,drop=TRUE]))
       # split data
-      model_ = splitdata.IFCml(model = model_, ratio = ratio, session = session)
+      model_ = splitdata.IFCml(model = model_, ratio = ratio)
       # retrieve fit parameters
       model_$param <- sapply(match_model(x = method), simplify = FALSE, USE.NAMES = TRUE, FUN = function(x) input[[x]])
       # fit data
-      model_ = fit.IFCml_set(model = model_, method = method, session = session)
+      model_ = fit.IFCml_set(model = model_, method = method)
       # set meta_args and apply model
       if(length(model_$config$pops) == 1) {
         meta_args <- list(centers = input$kmeans_centers,
@@ -568,7 +568,7 @@ obs_ML <- list(
       }
       nv = apply.IFCml(obj = obj_react$obj, model = model_, mode = "self", 
                        newdata = c("train","all","test")[newdata + 1L],
-                       self_split = FALSE, session = session, verbose = FALSE)
+                       self_split = FALSE, verbose = FALSE)
       # copy model
       for(i in names(nv$model)) model_react[[i]] <- nv$model[[i]]
       # copy obj
@@ -644,7 +644,7 @@ obs_ML <- list(
                         }
                         nv = apply.IFCml(obj = obj_react$obj, model = model_, mode = "self",
                                          newdata = c("train","all","test")[newdata + 1L],
-                                         self_split = FALSE, session = session, verbose = FALSE)
+                                         self_split = FALSE, verbose = FALSE)
                         # copy model
                         for(i in names(nv$model)) model_react[[i]] <- nv$model[[i]]
                         # copy obj
@@ -689,7 +689,7 @@ output$training_matrix <- renderPlot(expr = {
     return(NULL)
   } else {
     tryCatch({
-      model_ = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "test", session = session)
+      model_ = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "test")
       Q = checknames.IFCml(model_)
       sub_ = model_$sub
       y_test = model_$data[sub_, Q$is_clust, drop = TRUE]
@@ -741,7 +741,7 @@ output$training_plot <- renderPlot(expr = {
     }
     switch(model_react$method,
            "pca" = {
-             proj_all = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "all", session = session)$proj
+             proj_all = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "all")$proj
              dat = model_$proj
              ylab = "pca_2_extra"
              if(ncol(dat) == 1) {
@@ -776,7 +776,7 @@ output$training_plot <- renderPlot(expr = {
                     pt.cex = 1, bty = "o", box.lty = 0)
            },
            "umap" = {
-             proj_all = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "all", session = session)$proj
+             proj_all = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "all")$proj
              rasterplot(x = model_$proj[,1,drop=TRUE], y = model_$proj[,2,drop=TRUE], main = "UMAP dimension reduction",
                   xlim = range(proj_all[, 1,drop=TRUE], finite = TRUE),
                   ylim = range(proj_all[, 2,drop=TRUE], finite = TRUE),
@@ -789,7 +789,7 @@ output$training_plot <- renderPlot(expr = {
                     pt.cex = 1, bty = "o", box.lty = 0)
            },
            "som" = { 
-             proj_all = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "all", session = session)$proj
+             proj_all = predict.IFCml_fit(reactiveValuesToList(model_react), newdata = "all")$proj
              rasterplot(x = model_$proj[,1,drop=TRUE], y = model_$proj[,2,drop=TRUE], main = "SOM MST embedding",
                         xlim = range(proj_all[, 1,drop=TRUE], finite = TRUE),
                         ylim = range(proj_all[, 2,drop=TRUE], finite = TRUE),

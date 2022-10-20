@@ -541,9 +541,6 @@ preprocess = function(obj, pops = "All",
 #' @value an `IFCml` model of class `IFCml` and `IFCml_set`
 #' @keywords internal
 splitdata.IFCml <- function(model, ratio, ..., verbose = FALSE) {
-  dots = list(...)
-  session = dots$session
-  dots = dots[names(dots) != "session"]
   if(!missing(ratio)) model$ratio <- ratio
   Q = checknames.IFCml(model)
   if(verbose) cat("splitting data\n")
@@ -592,8 +589,6 @@ splitdata.IFCml <- function(model, ratio, ..., verbose = FALSE) {
 fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
   if(length(model$idx) == 0) return(model)
   dots = list(...)
-  session = dots$session
-  dots = dots[names(dots) != "session"]
   if(!missing(method)) model$method <- method
   Q = checknames.IFCml(model)
   if(length(model$idx) == 0) stop("can't find model$idx")
@@ -697,8 +692,6 @@ fit.IFCml_set <- function(model, method, ..., verbose = FALSE) {
 predict.IFCml_fit <- function(model, newdata="train", ..., verbose = FALSE) {
   if(length(model$fit) == 0) return(model)
   dots = list(...)
-  session = dots$session
-  dots = dots[names(dots) != "session"]
   assert(newdata, len = 1, alw = c("train","test","all"))
   Q = checknames.IFCml(model)
   
@@ -887,7 +880,6 @@ predict.IFCml_fit <- function(model, newdata="train", ..., verbose = FALSE) {
 #' @value an `IFCml` model
 #' @keywords internal
 preprocess.IFCml <- function(model, obj, mode = c("self","predict","predict_norm","full")[1], ...) {
-  dots = list(...)
   assert(obj, cla = "IFC_data")
   assert(mode, len = 1, alw = c("self","predict","predict_norm","full"))
   obj_count <- obj$description$ID$objcount
@@ -990,8 +982,6 @@ preprocess.IFCml <- function(model, obj, mode = c("self","predict","predict_norm
 #' @value an `IFCml` model
 #' @keywords internal
 apply.IFCml <- function(model, obj, mode = c("self", "predict", "predict_norm", "full")[1], newdata = "all", self_split = FALSE, ...) {
-  dots = list(...)
-  session = dots$session
   assert(obj, cla = "IFC_data")
   assert(mode, len = 1, alw = c("self","predict","predict_norm","full"))
   obj_count <- obj$description$ID$objcount
@@ -1048,9 +1038,9 @@ apply.IFCml <- function(model, obj, mode = c("self", "predict", "predict_norm", 
   # remove former ML features / pops
   feat_to_rm = grep(paste0("^ML_pca_|^ML_",n_model$method,"_"), names(obj$features), value = TRUE, invert = FALSE)
   n_obj = suppressWarnings(IFC::data_rm_features(obj, features = feat_to_rm,
-                                                 list_only = FALSE, session=session))
+                                                 list_only = FALSE))
   n_obj = suppressWarnings(IFC::data_rm_pops(n_obj, pops = grep("^ML_subset|^ML_meta|^ML_pred", names(n_obj$pops), value = TRUE), 
-                                             list_only = FALSE, adjust_graph = FALSE, session = session))
+                                             list_only = FALSE, adjust_graph = FALSE))
   
   lev = levels(n_model$data[, Q$is_clust, drop = TRUE])
   pred_NA = rep_len(NA, length.out = nrow(model$data))
@@ -1159,12 +1149,12 @@ apply.IFCml <- function(model, obj, mode = c("self", "predict", "predict_norm", 
   exported_feat = n_model$feat
   exported_feat = exported_feat[sapply(exported_feat, length) != 0]
   if(length(exported_feat) !=0) {
-    n_obj = IFC::data_add_features(n_obj, features = n_model$feat, session = session)
+    n_obj = IFC::data_add_features(n_obj, features = n_model$feat)
   }
   exported_pops = exported_pops[sapply(exported_pops, length) != 0]
   exported_pops = exported_pops[sapply(exported_pops, FUN = function(p) ifelse(p$type == "T", sum(p$obj), 1)) != 0]
   if(length(exported_pops) !=0) {
-    n_obj = IFC::data_add_pops(n_obj, pops = exported_pops, session = session)
+    n_obj = IFC::data_add_pops(n_obj, pops = exported_pops)
     # we set ML_ population as reserved population.
     for(i in exported_pops) { attr(n_obj$pops[[i$name]], "reserved") <- TRUE }
   }

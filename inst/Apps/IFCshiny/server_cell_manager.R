@@ -423,7 +423,7 @@ obs_cell <- list(
     # image extration
     sel = split(cell_react$objects[, 1], ceiling(seq_along(cell_react$objects[, 1])/20))
     L = length(sel)
-    # pb = newPB(title = "cells", label = "extracting images", session = session, min = 1, max = L)
+    # pb = newPB(title = "cells", label = "extracting images", min = 1, max = L)
     tryCatch({
       imgs = lapply(1:L, FUN=function(i) {
         # setPB(pb = pb, value = i)
@@ -558,7 +558,7 @@ obs_cell <- list(
     P[[1]]$obj = obj
     obj_back = obj_react$obj
     tryCatch({
-      obj_react$obj = data_modify_pops(obj_react$obj, pops = P, display_progress = TRUE, session = session)
+      obj_react$obj = data_modify_pops(obj_react$obj, pops = P, display_progress = TRUE)
     }, error = function(e) {
       obj_react$obj = obj_back
       mess_global(title = "modify tagged population", msg = e$message, 

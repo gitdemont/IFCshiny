@@ -32,9 +32,9 @@
 compare = function(obj1, obj2, session = getDefaultReactiveDomain()) {
   a = sort(names(obj1$pops))
   b = sort(names(obj2$pops))
-  if(!identical(sort(a), sort(b))) update_pops(session = session, obj = obj1)
-  if(!identical(sort(names(obj1$regions)), sort(names(obj2$regions)))) update_regions(session = session, obj = obj1)
-  if(!identical(sort(names(obj1$features)), sort(names(obj2$features)))) update_features(session = session, obj = obj1)
+  if(!identical(sort(a), sort(b))) update_pops(obj = obj1, session = session)
+  if(!identical(sort(names(obj1$regions)), sort(names(obj2$regions)))) update_regions(obj = obj1, session = session)
+  if(!identical(sort(names(obj1$features)), sort(names(obj2$features)))) update_features(obj = obj1, session = session)
   p_all = union(a, b)
   p_same = intersect(a, b)
   p_diff = setdiff(p_all, p_same)
@@ -45,57 +45,57 @@ compare = function(obj1, obj2, session = getDefaultReactiveDomain()) {
 
 # function to modify IFC_data object (remove / add / redefine names)
 # they are just wrapper of IFC functions but launch compare() before final return
-data_rm_pops <- function(obj, pops, list_only = TRUE, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
-  if(list_only) return(IFC::data_rm_pops(obj = obj, pops = pops, list_only = TRUE, session = session, ...))
-  ans = IFC::data_rm_pops(obj = obj, pops = pops, list_only = FALSE, session = session, ...)
+data_rm_pops <- function(obj, pops, list_only = TRUE, compare_with = obj, ...) {
+  if(list_only) return(IFC::data_rm_pops(obj = obj, pops = pops, list_only = TRUE, ...))
+  ans = IFC::data_rm_pops(obj = obj, pops = pops, list_only = FALSE, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_rm_regions <- function(obj, regions, list_only = TRUE, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
-  if(list_only) return(IFC::data_rm_regions(obj = obj, regions = regions, list_only = TRUE, session = session, ...))
-  ans = IFC::data_rm_regions(obj = obj, regions = regions, list_only = FALSE, session = session, ...)
+data_rm_regions <- function(obj, regions, list_only = TRUE, compare_with = obj, ...) {
+  if(list_only) return(IFC::data_rm_regions(obj = obj, regions = regions, list_only = TRUE, ...))
+  ans = IFC::data_rm_regions(obj = obj, regions = regions, list_only = FALSE, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_rm_features <- function(obj, features, list_only = TRUE, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
-  if(list_only) return(IFC::data_rm_features(obj = obj, features = features, list_only = TRUE, session = session, ...))
-  ans = IFC::data_rm_features(obj = obj, features = features, list_only = FALSE, session = session, ...)
+data_rm_features <- function(obj, features, list_only = TRUE, compare_with = obj, ...) {
+  if(list_only) return(IFC::data_rm_features(obj = obj, features = features, list_only = TRUE, ...))
+  ans = IFC::data_rm_features(obj = obj, features = features, list_only = FALSE, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_add_pop_sample <- function(obj, pop, size, new_name, random_seed = NULL, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
-  ans = getFromNamespace("data_add_pop_sample", "IFC")(obj = obj, pop = pop, size = size, new_name = new_name, random_seed = random_seed, session = session, ...)
+data_add_pop_sample <- function(obj, pop, size, new_name, random_seed = NULL, compare_with = obj, ...) {
+  ans = getFromNamespace("data_add_pop_sample", "IFC")(obj = obj, pop = pop, size = size, new_name = new_name, random_seed = random_seed, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)}
 
-data_add_pops <- function(obj, pops, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
-  ans = IFC::data_add_pops(obj = obj, pops = pops,  session = session, ...)
+data_add_pops <- function(obj, pops, compare_with = obj, ...) {
+  ans = IFC::data_add_pops(obj = obj, pops = pops, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_add_regions <- function(obj, regions, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
-  ans = IFC::data_add_regions(obj = obj, regions = regions, session = session, ...)
+data_add_regions <- function(obj, regions, compare_with = obj, ...) {
+  ans = IFC::data_add_regions(obj = obj, regions = regions, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_add_features <- function(obj, features, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
-  ans = IFC::data_add_features(obj = obj, features = features, session = session, ...)
+data_add_features <- function(obj, features, compare_with = obj, ...) {
+  ans = IFC::data_add_features(obj = obj, features = features, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_modify_regions <- function(obj, regions, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
+data_modify_regions <- function(obj, regions, compare_with = obj, ...) {
   f = getFromNamespace("data_modify_regions", "IFC")
-  ans = f(obj = obj, regions = regions, session = session, ...)
+  ans = f(obj = obj, regions = regions, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_modify_pops <- function(obj, pops, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
+data_modify_pops <- function(obj, pops, compare_with = obj, ...) {
   f = getFromNamespace("data_modify_pops", "IFC")
-  ans = f(obj = obj, pops = pops, session = session, ...)
+  ans = f(obj = obj, pops = pops, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
   compare(ans, compare_with)
 }
-data_redefine <- function(obj, new_feat_def, compare_with = obj, session = getDefaultReactiveDomain(), ...) {
+data_redefine <- function(obj, new_feat_def, compare_with = obj, ...) {
   attr(new_feat_def, "map") = list(initial = names(obj$features_def), to = names(new_feat_def$features_def))
   ans = redefine_obj(obj = obj, new_feat_def = new_feat_def, ...)
   if(!inherits(x = compare_with, what = "IFC_data")) return(ans)
@@ -260,7 +260,7 @@ reg_def = function(reg, reg_back, all_names, check = "both", session = getDefaul
 }
 
 # function to update all input containing population name
-update_pops <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
+update_pops <- function(obj, session = getDefaultReactiveDomain(), init = FALSE, ...) {
   if(length(session) != 0) {
   N = names(obj$pops); 
   TAGGED = N[sapply(obj$pops, FUN = function(p) p$type == "T")]
@@ -312,7 +312,7 @@ return(invisible(NULL))
 }
 
 # function to update all input containing regions name
-update_regions <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
+update_regions <- function(obj, session = getDefaultReactiveDomain(), init = FALSE, ...) {
   if(length(session) != 0) {
   N = names(obj$regions); if(length(N) == 0) N = list()
   if(!init && (length(session$input$reg_selection) !=0) && all(session$input$reg_selection %in% N)) {
@@ -325,7 +325,7 @@ return(invisible(NULL))
 }
 
 # function to update all input containing features name
-update_features <- function(session = getDefaultReactiveDomain(), obj, init = FALSE, ...) {
+update_features <- function(obj, session = getDefaultReactiveDomain(), init = FALSE, ...) {
   if(length(session) != 0) {
   N = names(obj$features); if(length(N) == 0) N = list()
   session$output$features_infos <- renderText({

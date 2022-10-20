@@ -40,7 +40,7 @@ insertUI(selector = "label[for=plot_type_3D_option03]", immediate = TRUE, multip
                      style="display:inline-block; float:right;",
                      "NA"))
 
-reinit_plot_3D <- function(session) {
+reinit_plot_3D <- function(session = getDefaultReactiveDomain()) {
   updateToggle3D(session = session, inputId = "plot_3D_draw_axes", value = TRUE)
   updateToggle3D(session = session, inputId = "plot_3D_draw_pts", value = TRUE)
   updateToggle3D(session = session, inputId = "plot_3D_draw_ell", value = FALSE)
@@ -216,7 +216,7 @@ obs_plot <- list(
       reg_back$cy = signif(reg_back$cy, digits = 3)
       reg_back$x = signif(reg_back$x, digits = 3)
       reg_back$y = signif(reg_back$y, digits = 3)
-      if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain()))) {
+      if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = names(obj_react$obj$regions), check = "both"))) {
         showModal(modalDialog(tags$p("Are you sure you want to discard applied changes in region '", tags$b(regions_react$pre$name), "' ?"),
                               size = "s",
                               easyClose = FALSE,
@@ -239,7 +239,7 @@ obs_plot <- list(
       updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
       regions_react$pre = reg
       regions_react$pre$name = input$reg_selection
-      reg_def(reg = regions_react$pre, reg_back = reg, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain())
+      reg_def(reg = regions_react$pre, reg_back = reg, all_names = names(obj_react$obj$regions), check = "both")
     } else {
       regions_react$back = FALSE
     }
@@ -256,8 +256,8 @@ obs_plot <- list(
     reg_back$cy = signif(reg_back$cy, digits = 3)
     reg_back$x = signif(reg_back$x, digits = 3)
     reg_back$y = signif(reg_back$y, digits = 3)
-    if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both", session = getDefaultReactiveDomain()))) {
-      toredraw = data_rm_regions(obj = obj_react$obj, regions = R, list_only = TRUE, session=session)
+    if(!all(reg_def(reg = regions_react$pre, reg_back = reg_back, all_names = N, check = "both"))) {
+      toredraw = data_rm_regions(obj = obj_react$obj, regions = R, list_only = TRUE)
       names(obj_react$obj$graphs)[toredraw$graphs] <- NA
       N = names(obj_react$obj$graphs)
       if(length(N) > 0) {
@@ -269,8 +269,7 @@ obs_plot <- list(
       obj_react$obj = data_modify_regions(obj = obj_react$obj,
                                           regions = structure(list(regions_react$pre), names = R),
                                           display_progress = TRUE,
-                                          title = "recomputing populations",
-                                          session = session)
+                                          title = "recomputing populations")
       if(any(reg_back$label %in% input$plot_regions)) {
         plot_react$allowed_regions[plot_react$allowed_regions == reg_back$label] <- regions_react$pre$label
         plot_react$allowed_regions = sort(unique(unname(plot_react$allowed_regions, force = TRUE)))
@@ -1000,7 +999,7 @@ obs_plot <- list(
         colourpicker::updateColourInput(session = session, inputId = "reg_color_light", value = tolower(reg$lightcolor))
         colourpicker::updateColourInput(session = session, inputId = "reg_color_dark", value = tolower(reg$color))
         updateTextInput(session = session, inputId = "reg_def_label", value = reg$label)
-        reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "both", session = getDefaultReactiveDomain())
+        reg_def(reg = regions_react$pre, all_names = names(obj_react$obj$regions), check = "both")
         runjs(sprintf("Shiny.onInputChange('plot_sel_init', %i)", ifelse(length(input$plot_sel_init) == 0, 0, input$plot_sel_init + 1L)))
         # shinyjs::click("plot_sel_init")
       }
@@ -1105,8 +1104,8 @@ obs_plot <- list(
                         color = reg$color, lightModeColor = reg$lightcolor, 
                         region = reg$label, fx = input$plot_x_feature, fy = fy)
       })
-      obj_react$obj = data_add_regions(obj_react$obj, regions = list(reg), session = session)
-      obj_react$obj = data_add_pops(obj_react$obj, pops = pop, display_progress = TRUE, session = session)
+      obj_react$obj = data_add_regions(obj_react$obj, regions = list(reg))
+      obj_react$obj = data_add_pops(obj_react$obj, pops = pop, display_progress = TRUE)
       allowed_regions = sort(unique(unname(c(plot_react$allowed_regions, reg$label), force = TRUE)))
       plot_react$allowed_regions = allowed_regions
       updateSelectInput(session=session, inputId = "plot_regions", choices = allowed_regions, 
@@ -1593,7 +1592,7 @@ obs_plot <- list(
                        do.call(what = buildPopulation, args = args)
                      })
                      tryCatch({
-                       obj_react$obj = data_add_pops(obj = obj_react$obj, pops = pop, display_progress = FALSE, session=session)
+                       obj_react$obj = data_add_pops(obj = obj_react$obj, pops = pop, display_progress = FALSE)
                        mess_global(title = paste0("plot_", input$plot_type),
                                    msg = c(ifelse(length(pop) == 1, "new population has been created:", "new populations have been created:"),
                                            sapply(pop, FUN = function(p) paste0("-", p$name))),
