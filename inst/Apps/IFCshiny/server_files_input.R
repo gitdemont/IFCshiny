@@ -27,6 +27,8 @@
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
 
+if(.access_fs) shinyFiles::shinyFileChoose(input, "local_file", roots = .app_volumes, session = getDefaultReactiveDomain())
+
 newfileinput <- function(files, session = getDefaultReactiveDomain()) {
   # reinit values
   reinit_default(TRUE)
@@ -350,7 +352,7 @@ reinit_app <- function(obj, session = getDefaultReactiveDomain()) {
 observeEvent(list(input$use_example, input$example_file), ignoreInit = TRUE, {
   # by default example files are disabled
   disable("example_file")
-  enable(selector = ".btn-file")
+  enable(id = "file_input_ctn")
   hideElement("example_save")
   runjs(code = sprintf("Shiny.onInputChange('file', %s)", toJSON(NULL)))
   # check if IFCdata package is installed
@@ -362,7 +364,7 @@ observeEvent(list(input$use_example, input$example_file), ignoreInit = TRUE, {
   } else { # if IFCdata pkg is installed
     if(input$use_example) { # if use_example switch is TRUE
       # we allow example_file selection and disable input$file upload
-      disable(selector = ".btn-file")
+      disable(id = "file_input_ctn")
       enable("example_file")
       showElement("example_save")
       # we look at files selected by user and use IFCdata selected files as input path for input$file
@@ -372,6 +374,14 @@ observeEvent(list(input$use_example, input$example_file), ignoreInit = TRUE, {
       runjs(code = sprintf("Shiny.onInputChange('file', %s)", toJSON(fileinfo)))
     }
   }
+})
+
+observeEvent(input$local_file, ignoreNULL = TRUE, ignoreInit = TRUE, {
+  if(inherits(input$local_file, "shinyActionButtonValue")) return(NULL)
+  if(length(input$local_file) == 0) return(NULL)
+  fileinfo = shinyFiles::parseFilePaths(.app_volumes, input$local_file)
+  fileinfo = sapply(fileinfo, simplify = FALSE, USE.NAMES = TRUE, FUN = function(x) unname(x, force = TRUE))
+  runjs(code = sprintf("Shiny.onInputChange('file', %s)", toJSON(fileinfo)))
 })
 
 observeEvent(input$file, ignoreNULL = FALSE, ignoreInit = FALSE, {

@@ -76,6 +76,14 @@ if(!exists(".path_to_db") || !exists(".passphrase") || (.passphrase == "") || (.
 # IFCshiny::runIFCshinyApp no authentification will be required
 if(any(.libPaths() %in% dirname(dirname(dirname(.rundir))))) .passphrase = ""
 
+# check if app is run locally or so as to allow local file browsing
+if(!exists(".access_fs")) {
+  .access_fs = as.logical(Sys.getenv("ACCESS_FS", FALSE))
+}
+.app_volumes=c("Running Dir." = .rundir, shinyFiles::getVolumes()())
+if(requireNamespace("IFCdata", quietly = TRUE)) .app_volumes = c("IFCdata" = system.file(package = "IFCdata", "extdata"), .app_volumes)
+if(Sys.getenv('SHINY_PORT') != "" || !.access_fs) .app_volumes = function() { return(structure(.rundir, names = "IFCshiny")) }
+
 # For python
 Sys.setenv("RETICULATE_MINICONDA_ENABLED" = FALSE) # prevent reticulate from trying to install miniconda
 if(!exists(".path_to_python")) {

@@ -31,8 +31,9 @@
 # this is done be showing / hiding input + resuming / suspending observers
 observeEvent(input$navbar,{
   reinit_managers(c("reg","pop","img","graph"))
-  enable(selector = ".btn-file")
-  hideElement("file")
+  enable(id = "file_input_ctn")
+  hideElement("local_file_ctn")
+  hideElement("browser_file_ctn")
   hideElement("cells")
   hideElement("example")
   hideElement("network")
@@ -78,12 +79,16 @@ observeEvent(input$navbar,{
   switch(input$navbar,
          "tab0" = {
            add_log("infos")
-           if(input$use_example) disable(selector = ".btn-file")
+           if(input$use_example) disable(id = "file_input_ctn")
            if(input$use_example) showElement("example_save")
            showElement("info")
-           showElement("file")
            showElement("example")
            hideElement("population")
+           if(.access_fs) {
+             showElement("local_file_ctn")
+           } else {
+             showElement("browser_file_ctn")
+           }
            if(length(obj_react$back$info$in_use) != 0) showElement("infos_save")
          } ,"tab1" = {
            add_log("cells")
@@ -137,6 +142,11 @@ observeEvent(input$navbar,{
            runjs(sprintf("Shiny.onInputChange('report_draw', %i)", input$report_draw + 1L))
          }, "tab7" = {
            add_log("batch")
+           if(.access_fs) {
+             showElement("local_file_batch_ctn")
+           } else {
+             showElement("browser_file_batch_ctn")
+           }
            lapply(obs_batch, FUN = function(x) x$resume())
            N = unname(sapply(obj_react$batch, FUN = function(b) basename(b$fileName)))
            if(length(N) == 0) N = list()

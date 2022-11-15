@@ -27,6 +27,7 @@
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
 
+if(.access_fs) shinyFiles::shinyFileChoose(input, "local_file_batch",  roots = .app_volumes, session = getDefaultReactiveDomain())
 
 observeEvent(obj_react$obj$haschanged_objects, {
   # observer to sync obj_react$batch with current obj_react$obj modification, always on
@@ -149,12 +150,20 @@ obs_batch = list(
       obj_react$syncbatch <- FALSE
     }
   }),
+  observeEvent(input$local_file_batch, ignoreNULL = TRUE, ignoreInit = TRUE, {
+    if(inherits(input$local_file_batch, "shinyActionButtonValue")) return(NULL)
+    if(length(input$local_file_batch) == 0) return(NULL)
+    fileinfo = shinyFiles::parseFilePaths(.app_volumes, input$local_file_batch)
+    fileinfo = sapply(fileinfo, simplify = FALSE, USE.NAMES = TRUE, FUN = function(x) unname(x, force = TRUE))
+    runjs(code = sprintf("Shiny.onInputChange('file_batch', %s)", toJSON(fileinfo)))
+    # runjs(code = sprintf("Shiny.onInputChange('file_batch', %s)", toJSON(x = as.data.frame(shinyFiles::parseFilePaths(.app_volumes, input$local_file_batch), data.frame = "columns"))))
+  }),
   observeEvent(input$file_batch, {
     if(length(input$file_batch) == 0) return(NULL)
     # creates unique random names, this allows to navigate between batch files
     L = length(obj_react$batch)
-    NN = unlist(input$file_batch$name)
-    ids = c()
+    NN = unlist(input$file_batch$name, recursive = TRUE, use.names = FALSE)
+    ids = character()
     while(length(ids) != length(NN)) ids = c(ids, random_name(special = NULL, forbidden = ids))
     file_b <- paste0(ids, " _ ",  NN)
     mess_busy(id = "msg_busy", ctn = "msg_busy_ctn", msg = "Batching files", reset = FALSE)
@@ -163,8 +172,13 @@ obs_batch = list(
       dir.create(file.path(session_dir, "batch_raw"), showWarnings = FALSE)
       # define new names
       new_names = file.path(session_dir, "batch_raw", file_b)
-      # rename input$file_batch
-      file.rename(from = input$file_batch$datapath, to = new_names)
+      shell.exec(file.path(session_dir, "batch_raw"))
+      # rename or copy input$file_batch
+      if(.access_fs) {
+        file.copy(from = unlist(input$file_batch$datapath, recursive = TRUE, use.names = FALSE), to = new_names)
+      } else {
+        file.rename(from = unlist(input$file_batch$datapath, recursive = TRUE, use.names = FALSE), to = new_names) 
+      }
       
       # retrieve current gating strategy
       # TODO extract gs without writing a file

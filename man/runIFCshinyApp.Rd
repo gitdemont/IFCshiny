@@ -9,6 +9,7 @@ runIFCshinyApp(
   host = "127.0.0.1",
   launch.browser = NULL,
   local = TRUE,
+  .access_fs = FALSE,
   ...
 )
 }
@@ -23,6 +24,8 @@ If set to TRUE, the app will be run and the default system browser will be launc
 If set to FALSE, the app will be run but no browser will be launched.\cr}
 
 \item{local}{TRUE, FALSE or an environment, determining where the application files should be sourced. Default is TRUE.}
+
+\item{.access_fs}{whether filesystem could be accessed or not. Default is FALSE.}
 
 \item{...}{Other arguments to be passed. 
 Arguments will be first passed to runApp function.\cr

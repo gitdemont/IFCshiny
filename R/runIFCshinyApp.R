@@ -37,6 +37,7 @@
 #' If set to TRUE, the app will be run and the default system browser will be launched.\cr
 #' If set to FALSE, the app will be run but no browser will be launched.\cr
 #' @param local TRUE, FALSE or an environment, determining where the application files should be sourced. Default is TRUE.
+#' @param .access_fs whether filesystem could be accessed or not. Default is FALSE.
 #' @param ... Other arguments to be passed. 
 #' Arguments will be first passed to runApp function.\cr
 #' Then, remaining named arguments will be passed as global variable to 'app'.
@@ -45,7 +46,7 @@
 #' @details it will source application files in environment set by `local` and then use shiny::shinyApp
 #' @return it invisibly returns an object representing the app. See ?shiny::shinyApp.
 #' @export
-runIFCshinyApp <- function(app="IFCshiny", host="127.0.0.1", launch.browser=NULL, local=TRUE,  ...) {
+runIFCshinyApp <- function(app="IFCshiny", host="127.0.0.1", launch.browser=NULL, local=TRUE, .access_fs = FALSE, ...) {
   dots <- list(...)
   
   tmp <- names(dots) %in% setdiff(methods::formalArgs(runIFCshinyApp), "appDir")
