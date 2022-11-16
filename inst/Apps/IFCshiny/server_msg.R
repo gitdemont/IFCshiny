@@ -54,12 +54,11 @@ showLog = function(dir = session_dir, id = session_id) {
 }
 
 # download logs on app error
-options(shiny.error = function(dir = session_dir, id = session_id) {
-  add_log(c("<<<<<<<< shiny.error beg >>>>>>>>", 
-            "error:", geterrmessage(),
-            "trace:",
-            unlist(traceback(3)),
-            "<<<<<<<< shiny.error end >>>>>>>>"))
+options(shiny.error = function(dir = session_dir, id = session_id, session = getDefaultReactiveDomain()) {
+  add_log(c("<<<<<<<< shiny uncaught error beg >>>>>>>>", 
+            paste0("error: ", geterrmessage()),
+            capture.output(shiny:::printStackTrace(get("e", parent.frame()), full = TRUE), type = "message", split = FALSE),
+            "<<<<<<<< shiny uncaught error end >>>>>>>>"))
   uri = paste0("data:text/plain;base64,",
                cpp_base64_encode(charToRaw(paste0(readLines(file.path(dir, "LOGS.txt"), warn = FALSE, n = -1L, skipNul = TRUE), collapse="\n"))))
   runjs(code = sprintf("$('#get_logs').attr('href', '%s')", uri))
