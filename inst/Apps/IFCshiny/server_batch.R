@@ -172,7 +172,6 @@ obs_batch = list(
       dir.create(file.path(session_dir, "batch_raw"), showWarnings = FALSE)
       # define new names
       new_names = file.path(session_dir, "batch_raw", file_b)
-      shell.exec(file.path(session_dir, "batch_raw"))
       # rename or copy input$file_batch
       if(.access_fs) {
         file.copy(from = unlist(input$file_batch$datapath, recursive = TRUE, use.names = FALSE), to = new_names)
