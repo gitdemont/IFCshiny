@@ -109,8 +109,12 @@ newfileinput <- function(files, session = getDefaultReactiveDomain()) {
     } else {
       # here we use dedicated ExtractFromFCS to read FCS file
       info = try(stop(""), silent = TRUE)
-      dat = try(ExtractFromFCS(fileName = fileName, 
-                               force_header = TRUE), silent = TRUE)
+      dat = try(withCallingHandlers(ExtractFromFCS(fileName = fileName, text_check = TRUE, force_header = TRUE),
+                                    warning = function(w) {
+                                      mess_global(title = "FCS file reading", msg = w$message, type = "warning", duration = 10)
+                                      invokeRestart("muffleWarning")
+                                    }),
+                silent = TRUE)
       if(("try-error" %in% class(dat))) stop("fcs file does not seem to be well formatted:\n", attr(dat, "condition")$message)
     }
     # if info were obtained without error, it means that a rif or a cif was input

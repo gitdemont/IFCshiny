@@ -192,11 +192,17 @@ obs_batch = list(
         gs <- suppressMessages(readGatingStrategy(writeGatingStrategy(obj1, write_to = file.path(session_dir, "batch_raw", "batch_gating.xml"), overwrite = TRUE)))
         model_ = reactiveValuesToList(x = model_react)
         batch = lapply(1:length(new_names), FUN = function(i_file) {
-          obj <- suppressMessages(suppressWarnings(readIFC(new_names[i_file], extract_features = TRUE, 
-                                                           extract_images = FALSE, extract_stats = TRUE, 
-                                                           extract_offsets = TRUE, recursive = TRUE, 
-                                                           display_progress = TRUE, 
-                                                           force_header = TRUE)))
+          obj <- withCallingHandlers(readIFC(new_names[i_file],
+                                             extract_features = TRUE, 
+                                             extract_images = FALSE, extract_stats = TRUE, 
+                                             extract_offsets = TRUE, recursive = TRUE, 
+                                             display_progress = TRUE, 
+                                             text_check = TRUE,
+                                             force_header = TRUE),
+                                     warning = function(w) {
+                                       mess_global(title = "batch file import", msg = w$message, type = "warning", duration = 10)
+                                       invokeRestart("muffleWarning")
+                                     })
           to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
           if(input$apply_gating) {
             obj <- applyGatingStrategy(obj = obj, gating = gs, keep = to_keep, display_progress = TRUE)
@@ -218,11 +224,17 @@ obs_batch = list(
         })
       } else {
         batch = lapply(1:length(new_names), FUN = function(i_file) {
-          obj <- suppressMessages(suppressWarnings(readIFC(new_names[i_file], extract_features = TRUE, 
-                                                           extract_images = FALSE, extract_stats = TRUE, 
-                                                           extract_offsets = TRUE, recursive = TRUE, 
-                                                           display_progress = TRUE,
-                                                           force_header = TRUE)))
+          obj <- withCallingHandlers(readIFC(new_names[i_file],
+                                             extract_features = TRUE, 
+                                             extract_images = FALSE, extract_stats = TRUE, 
+                                             extract_offsets = TRUE, recursive = TRUE, 
+                                             display_progress = TRUE, 
+                                             text_check = TRUE,
+                                             force_header = TRUE),
+                                     warning = function(w) {
+                                       mess_global(title = "batch file import", msg = w$message, type = "warning", duration = 10)
+                                       invokeRestart("muffleWarning")
+                                     })
           to_keep = names(obj$pops)[sapply(obj$pops, FUN = function(p) p$type == "T")]
           if(input$apply_gating) obj <- applyGatingStrategy(obj = obj, gating = gs_ML, keep = to_keep, display_progress = TRUE)
           obj

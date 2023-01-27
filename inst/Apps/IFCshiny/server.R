@@ -522,12 +522,12 @@ server <- function(input, output, session) {
         # dev_check_plot <<- dev_check_plot + 1
         g = plot_react$g
         output$graph_saved_msg <- renderText({NULL})
+        withCallingHandlers({
           if(input$plot_unlock) {
             plot_react$plot = plotGraph(obj = obj_react$obj, graph = g, viewport = ifelse(plot_react$zoomed, "ideas", "max"), precision = "full", draw = FALSE, stats_print = FALSE)
           } else {
             plot_react$plot = plotGraph(obj = obj_react$obj, graph = g, viewport = "ideas", precision = "full", draw = FALSE, stats_print = FALSE)
           }
-          
           if(nrow(plot_react$plot$input$data) == 0) {
             disable("graph_save_btn")
             disable(selector = ".plot_sel_tools")
@@ -538,10 +538,12 @@ server <- function(input, output, session) {
           }
           # draw plot
           plot_raster(plot_react$plot)
+        }, warning = function(w) {
+          mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
+          invokeRestart("muffleWarning")
+        })
       }, error = function(e) {
         mess_global(title = paste0("plot_", input$plot_type), msg = e$message, type = "error", duration = 10)
-      }, warning = function(w) {
-        mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
       },
       finally = runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';"))
     })

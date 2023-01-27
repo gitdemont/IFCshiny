@@ -1545,104 +1545,102 @@ obs_plot <- list(
                    }
                  }
                  tryCatch({
-                   g = do.call(what = buildGraph, args = args)
-                 # level/density
-                   if(input$plot_type_2D_option01 == "level") {
-                     g$BasePop[[1]]$densitylevel = paste(ifelse(input$plot_level_fill,"true","false"),
-                                                         ifelse(input$plot_level_lines,"true","false"),
-                                                         input$plot_level_nlevels,input$plot_level_lowest,sep="|")
-                 }
-                 if(g$type == "density") {
-                   # if(!plot_react$param_ready) {
-                   if(length(plot_react$g$BasePop[[1]]$densitycolorslightmode) == 0) {
-                     plot_react$g$BasePop[[1]]$densitycolorslightmode <- "-16776961|-13447886|-256|-23296|-65536|"
-                   }
-                   plot_react$densitycolorslightmode <- plot_react$g$BasePop[[1]]$densitycolorslightmode
-                   plot_react$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
-                   plot_react$densitycolorslightmode_selected = "initial"
-                   plot_react$densitytrans_selected = "initial"
-                   isolate({if(input$plot_dens_order %% 2) runjs(sprintf("Shiny.onInputChange('plot_dens_order', %i)", ifelse(length(input$plot_dens_order) == 0, 0, input$plot_dens_order + 1L)))})
-                   g$BasePop[[1]]$densitycolorslightmode <- plot_react$g$BasePop[[1]]$densitycolorslightmode
-                   if(input$plot_type_2D_option01 != "level") g$BasePop[[1]]$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
-                 }
-                 # treat region
-                 g$GraphRegion = list()
-                 R = obj_react$obj$regions[input$plot_regions[input$plot_regions %in% allowed_regions]]
-                 for(i_reg in seq_along(R)) {
-                   defined = sapply(g$GraphRegion, FUN = function(r) r$name) %in% R[[i_reg]]$label
-                   if(any(defined)) {
-                     defined = which(defined)
-                     g$GraphRegion[defined] = lapply(defined, FUN = function(i) list("name" = R[[i_reg]]$label, def = c(g$GraphRegion[[i]]$def, names(R)[i_reg])))
-                   } else {
-                     g$GraphRegion = c(g$GraphRegion, list(list("name" = R[[i_reg]]$label, def = names(R)[i_reg])))
-                   }
-                 }
-                 if(length(g$GraphRegion) > 0) {
-                   tocheck = expand.grid(base = input$plot_base, region = input$plot_regions[input$plot_regions %in% allowed_regions], stringsAsFactors = FALSE)
-                   alreadyexist = apply(tocheck, 1, FUN = function(x) any(sapply(obj_react$obj$pops, FUN = function(p) { p$base == x["base"] && p$region == x["region"] })))
-                   tocreate = tocheck[!alreadyexist, ]
-                   if(nrow(tocreate) > 0) {
-                     pop = lapply(1:nrow(tocreate), FUN = function(i_row) {
-                       args = list(name = paste(tocreate[i_row, "base"], tocreate[i_row, "region"], sep=" & "),
-                                   base = tocreate[i_row, "base"], type = "G",
-                                   color = obj_react$obj$regions[[tocreate[i_row, "region"]]]$color,
-                                   lightModeColor = obj_react$obj$regions[[tocreate[i_row, "region"]]]$lightcolor,
-                                   region = tocreate[i_row, "region"], fx = plot_react$x_feat)
-                       if(input$plot_type == "2D") args = c(args, list(fy = plot_react$y_feat))
-                       do.call(what = buildPopulation, args = args)
-                     })
-                     tryCatch({
-                       obj_react$obj = data_add_pops(obj = obj_react$obj, pops = pop, display_progress = FALSE)
-                       mess_global(title = paste0("plot_", input$plot_type),
-                                   msg = c(ifelse(length(pop) == 1, "new population has been created:", "new populations have been created:"),
-                                           sapply(pop, FUN = function(p) paste0("-", p$name))),
-                                   type = "info", duration = 10)
-                     }, error = function(e) {
-                       mess_global(title = paste0("plot_", input$plot_type),
-                                   msg = c(paste0("error while trying to create new population",ifelse(length(pop) == 1, ":", "s:")),
-                                           sapply(pop, FUN = function(p) paste0("-", p$name)),
-                                           e$message),
-                                   type = "error", duration = 10)
-                     })
-                   }
-                 }
-                 # aesthetics & zooming
-                 for(i in c("graphtitlefontsize", "title",
-                            "axislabelsfontsize", "axistickmarklabelsfontsize",
-                            "regionlabelsfontsize", "xlabel", "ylabel",
-                            "xmin", "ymin",
-                            "xmax", "ymax")) {
-                   if((length(plot_react[[i]]) != 0) && (plot_react[[i]] != "")) g[[i]] <- plot_react[[i]]
-                 }
-                 # maxpoints
-                 input$plot_type_2D_main_option01 # allows to trigger resampling
-                 g$maxpoints <- as.numeric(input$plot_type_2D_main_option03)/100
-                 if(#ifelse(g$type == "histogram", all("1D" %in% input$plot_type), all(g$type %in% input$plot_type_2D_option01)) &&
-                   all(g$order %in% plot_react$g$order) &&
-                   all(g$xstatsorder %in% plot_react$g$xstatsorder) &&
-                   all(sapply(g$BasePop, FUN = function(x) x$name) %in% sapply(plot_react$g$BasePop, FUN = function(x) x$name)) &&
-                   ifelse(length(g$GraphRegion) == 0, TRUE, (all(sapply(g$GraphRegion, FUN = function(x) x$name) %in% sapply(plot_react$g$GraphRegion, FUN = function(x) x$name)))) &&
-                   ifelse(length(g$ShownPop) == 0, TRUE, (all(sapply(g$ShownPop, FUN = function(x) x$name) %in% sapply(plot_react$g$ShownPop, FUN = function(x) x$name)))) &&
-                   all(g$f1 %in% plot_react$g$f1) &&
-                   ifelse(g$type == "histogram", TRUE, all(g$f2 %in% plot_react$g$f2))) {
-                   plot_react$param_ready = TRUE
-                   plot_react$g = g
-                   isolate({
-                     now = 1000*as.numeric(Sys.time())
-                       delay(50, { plot_react$id = now } )
+                   withCallingHandlers({
+                     g = do.call(what = buildGraph, args = args)
+                     # level/density
+                     if(input$plot_type_2D_option01 == "level") {
+                       g$BasePop[[1]]$densitylevel = paste(ifelse(input$plot_level_fill,"true","false"),
+                                                           ifelse(input$plot_level_lines,"true","false"),
+                                                           input$plot_level_nlevels,input$plot_level_lowest,sep="|")
+                     }
+                     if(g$type == "density") {
+                       # if(!plot_react$param_ready) {
+                       if(length(plot_react$g$BasePop[[1]]$densitycolorslightmode) == 0) {
+                         plot_react$g$BasePop[[1]]$densitycolorslightmode <- "-16776961|-13447886|-256|-23296|-65536|"
+                       }
+                       plot_react$densitycolorslightmode <- plot_react$g$BasePop[[1]]$densitycolorslightmode
+                       plot_react$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
+                       plot_react$densitycolorslightmode_selected = "initial"
+                       plot_react$densitytrans_selected = "initial"
+                       isolate({if(input$plot_dens_order %% 2) runjs(sprintf("Shiny.onInputChange('plot_dens_order', %i)", ifelse(length(input$plot_dens_order) == 0, 0, input$plot_dens_order + 1L)))})
+                       g$BasePop[[1]]$densitycolorslightmode <- plot_react$g$BasePop[[1]]$densitycolorslightmode
+                       if(input$plot_type_2D_option01 != "level") g$BasePop[[1]]$densitytrans <- plot_react$g$BasePop[[1]]$densitytrans
+                     }
+                     # treat region
+                     g$GraphRegion = list()
+                     R = obj_react$obj$regions[input$plot_regions[input$plot_regions %in% allowed_regions]]
+                     for(i_reg in seq_along(R)) {
+                       defined = sapply(g$GraphRegion, FUN = function(r) r$name) %in% R[[i_reg]]$label
+                       if(any(defined)) {
+                         defined = which(defined)
+                         g$GraphRegion[defined] = lapply(defined, FUN = function(i) list("name" = R[[i_reg]]$label, def = c(g$GraphRegion[[i]]$def, names(R)[i_reg])))
+                       } else {
+                         g$GraphRegion = c(g$GraphRegion, list(list("name" = R[[i_reg]]$label, def = names(R)[i_reg])))
+                       }
+                     }
+                     if(length(g$GraphRegion) > 0) {
+                       tocheck = expand.grid(base = input$plot_base, region = input$plot_regions[input$plot_regions %in% allowed_regions], stringsAsFactors = FALSE)
+                       alreadyexist = apply(tocheck, 1, FUN = function(x) any(sapply(obj_react$obj$pops, FUN = function(p) { p$base == x["base"] && p$region == x["region"] })))
+                       tocreate = tocheck[!alreadyexist, ]
+                       if(nrow(tocreate) > 0) {
+                         pop = lapply(1:nrow(tocreate), FUN = function(i_row) {
+                           args = list(name = paste(tocreate[i_row, "base"], tocreate[i_row, "region"], sep=" & "),
+                                       base = tocreate[i_row, "base"], type = "G",
+                                       color = obj_react$obj$regions[[tocreate[i_row, "region"]]]$color,
+                                       lightModeColor = obj_react$obj$regions[[tocreate[i_row, "region"]]]$lightcolor,
+                                       region = tocreate[i_row, "region"], fx = plot_react$x_feat)
+                           if(input$plot_type == "2D") args = c(args, list(fy = plot_react$y_feat))
+                           do.call(what = buildPopulation, args = args)
+                         })
+                         tryCatch({
+                           obj_react$obj = data_add_pops(obj = obj_react$obj, pops = pop, display_progress = FALSE)
+                           mess_global(title = paste0("plot_", input$plot_type),
+                                       msg = c(ifelse(length(pop) == 1, "new population has been created:", "new populations have been created:"),
+                                               sapply(pop, FUN = function(p) paste0("-", p$name))),
+                                       type = "info", duration = 10)
+                         }, error = function(e) {
+                           mess_global(title = paste0("plot_", input$plot_type),
+                                       msg = c(paste0("error while trying to create new population",ifelse(length(pop) == 1, ":", "s:")),
+                                               sapply(pop, FUN = function(p) paste0("-", p$name)),
+                                               e$message),
+                                       type = "error", duration = 10)
+                         })
+                       }
+                     }
+                     # aesthetics & zooming
+                     for(i in c("graphtitlefontsize", "title",
+                                "axislabelsfontsize", "axistickmarklabelsfontsize",
+                                "regionlabelsfontsize", "xlabel", "ylabel",
+                                "xmin", "ymin",
+                                "xmax", "ymax")) {
+                       if((length(plot_react[[i]]) != 0) && (plot_react[[i]] != "")) g[[i]] <- plot_react[[i]]
+                     }
+                     # maxpoints
+                     input$plot_type_2D_main_option01 # allows to trigger resampling
+                     g$maxpoints <- as.numeric(input$plot_type_2D_main_option03)/100
+                     if(#ifelse(g$type == "histogram", all("1D" %in% input$plot_type), all(g$type %in% input$plot_type_2D_option01)) &&
+                       all(g$order %in% plot_react$g$order) &&
+                       all(g$xstatsorder %in% plot_react$g$xstatsorder) &&
+                       all(sapply(g$BasePop, FUN = function(x) x$name) %in% sapply(plot_react$g$BasePop, FUN = function(x) x$name)) &&
+                       ifelse(length(g$GraphRegion) == 0, TRUE, (all(sapply(g$GraphRegion, FUN = function(x) x$name) %in% sapply(plot_react$g$GraphRegion, FUN = function(x) x$name)))) &&
+                       ifelse(length(g$ShownPop) == 0, TRUE, (all(sapply(g$ShownPop, FUN = function(x) x$name) %in% sapply(plot_react$g$ShownPop, FUN = function(x) x$name)))) &&
+                       all(g$f1 %in% plot_react$g$f1) &&
+                       ifelse(g$type == "histogram", TRUE, all(g$f2 %in% plot_react$g$f2))) {
+                       plot_react$param_ready = TRUE
+                       plot_react$g = g
+                       isolate({
+                         now = 1000*as.numeric(Sys.time())
+                         delay(50, { plot_react$id = now } )
+                       })
+                       # print(paste0("build done: ",dev_check_plot))
+                     } 
+                     plot_react$g = g
+                   }, warning = function(w) {
+                     mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
+                     invokeRestart("muffleWarning")
                    })
-                   # print(paste0("build done: ",dev_check_plot))
-                 } 
-                 plot_react$g = g
                  }, error = function(e) {
                    mess_global(title = paste0("plot_", input$plot_type), msg = e$message, type = "error", duration = 10)
-                   runjs(sprintf("Shiny.onInputChange('plot_reset', %i)", ifelse(length(input$plot_reset) == 0, 0, input$plot_reset + 1L)))
-                   # shinyjs::click("plot_reset")
-                   plot_react$id = 1000*as.numeric(Sys.time())
-                   runjs("document.getElementById('msg_busy_ctn2').style.display = 'none';")
-                   return(NULL)
-                 },warning = function(w) {
-                   mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
                    runjs(sprintf("Shiny.onInputChange('plot_reset', %i)", ifelse(length(input$plot_reset) == 0, 0, input$plot_reset + 1L)))
                    # shinyjs::click("plot_reset")
                    plot_react$id = 1000*as.numeric(Sys.time())

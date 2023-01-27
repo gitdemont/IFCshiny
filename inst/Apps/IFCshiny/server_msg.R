@@ -73,7 +73,7 @@ mess_busy <- function(id, ctn = paste0(id, "_ctn"), msg = "Please wait", type = 
     session$output[[id]] <- html(id = id, add = FALSE) 
     hideElement(id = ctn, anim = FALSE, animType = "fade", time = 0)
   } else {
-    add_log(sprintf("busy_msg: %s", msg))
+    add_log(sprintf("%s [busy]", msg))
     deco = switch(type,
                   "busy1" = c(icon = "fa fa-spinner fa-pulse fa-3x fa-fw", color = "black", verify_fa=FALSE),
                   "busy2" = c(icon = "fa fa-spinner fa-spin fa-3x fa-fw", color = "black", verify_fa=FALSE),
@@ -99,7 +99,7 @@ mess_global <- function(title = NULL, msg = "", type = "warning", duration = 10,
   if(type %in% c("error", "stop" )) type = "error"
   if(type %in% c("info", "message", "comment", "busy")) type = "info"
   msg = sapply(msg, FUN =function(x) strsplit(x, split = "\n", fixed = TRUE)[[1]])
-  add_log(sprintf("global_msg: [%s] %s", title, msg))
+  add_log(sprintf("%s [%s] %s", title, type, msg))
   showToast(type = type,
             message = paste("<br>", msg),
             title = title,
