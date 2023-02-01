@@ -537,7 +537,7 @@ server <- function(input, output, session) {
             enable("graph_save_btn")
           }
           # draw plot
-          plot_raster(plot_react$plot)
+          plot_raster(plot_react$plot, NA)
         }, warning = function(w) {
           mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
           invokeRestart("muffleWarning")
