@@ -510,9 +510,10 @@ obs_plot <- list(
                  dx = diff(plot_react$plot$input$xlim)
                  dy = diff(plot_react$plot$input$ylim)
                  idx = which.min(((D$x2 - input$plot_click$x)/dx)^2)
-                 if((length(plot_react$click) != 0) && (plot_react$click == idx)) return(NULL)
-                 plot_react$click = idx
                  idx = interval[idx]
+                 obj = D[interval == idx, "Object Number", drop = TRUE]
+                 if(identical(plot_react$click, obj)) return(NULL)
+                 plot_react$click = obj
                  coord1 = map_coord_to_css(coord = c(br[idx], plot_react$plot$input$ylim[2]), map = input$plot_click)
                  coord2 = map_coord_to_css(coord = c(br[idx + 1], 0), map = input$plot_click)
                  width = (coord2$coords_css$x -  coord1$coords_css$x) * 2
@@ -525,7 +526,6 @@ obs_plot <- list(
                                                                                        height,
                                                                                        width)),
                           where = "beforeEnd", immediate = TRUE, session = session)
-                 idx = interval == idx
                } else {
                  if((length(plot_react$closest) != 1) || (plot_react$closest %in% plot_react$click)) return(NULL)
                  plot_react$click = plot_react$closest
