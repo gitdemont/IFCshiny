@@ -527,13 +527,10 @@ obs_plot <- list(
                           where = "beforeEnd", immediate = TRUE, session = session)
                  idx = interval == idx
                } else {
-                 D = D[plot_react$plot$input$subset, , drop = FALSE]
-                 dx = diff(plot_react$plot$input$xlim)
-                 dy = diff(plot_react$plot$input$ylim)
-                 idx = which.min(((D$x2-input$plot_click$x)/dx)^2 + ((D$y2-input$plot_click$y)/dy)^2)
-                 if((length(plot_react$click) != 0) && (plot_react$click == idx)) return(NULL)
-                 plot_react$click = idx
-                 coord1 = map_coord_to_css(coord = c(D[idx,"x2"], D[idx,"y2"]), map = input$plot_click)
+                 if((length(plot_react$closest) != 1) || (plot_react$closest %in% plot_react$click)) return(NULL)
+                 plot_react$click = plot_react$closest
+                 D = plot_react$plot$input$data[which(plot_react$plot$input$data$`Object Number` == plot_react$closest), c("x2", "y2"), drop = FALSE]
+                 coord1 = map_coord_to_css(coord = c(D[1,"x2"], D[1,"y2"]), map = input$plot_click)
                  removeUI(selector = sprintf("%s>.click_point", plot_react$current), immediate = TRUE)
                  insertUI(selector = plot_react$current, ui = tags$div(class = "click_point ifcshiny_click_div", 
                                                                        style = sprintf("top: %spx; left: %spx;",
@@ -548,7 +545,7 @@ obs_plot <- list(
                }
                tryCatch({
                  dat = ExportToGallery(param = param_react$param, extract_max = 10,
-                                       objects = D[idx,"Object Number"],
+                                       objects = plot_react$click,
                                        offsets = obj_react$back$offsets, export = "base64", image_type = "img",
                                        add_channels = TRUE, add_ids = 1, display_progress = FALSE)
                  html("plot_image_placeholder", dat)
@@ -699,20 +696,22 @@ obs_plot <- list(
       dx = diff(plot_react$plot$input$xlim)
       dy = diff(plot_react$plot$input$ylim)
       
-      # FIXME clip region is not working
-      if((input$plot_hover$x <= input$plot_hover$domain$left) |
-         (input$plot_hover$x >= input$plot_hover$domain$right) |
-         (input$plot_hover$y <= input$plot_hover$domain$bottom) |
+      if((input$plot_hover$x <= input$plot_hover$domain$left) ||
+         (input$plot_hover$x >= input$plot_hover$domain$right) ||
+         (input$plot_hover$y <= input$plot_hover$domain$bottom) ||
          (input$plot_hover$y >= input$plot_hover$domain$top)) return(NULL)
-      
-      #D = plot_react$plot$input$data[plot_react$plot$input$subset, , drop = FALSE]
-      idx = which.min(((plot_react$plot$input$data[plot_react$plot$input$subset,"x2"]-input$plot_hover$x)/dx)^2 +
-                        ((plot_react$plot$input$data[plot_react$plot$input$subset,"y2"]-input$plot_hover$y)/dy)^2)
+      SUB = plot_react$plot$input$subset &
+        (plot_react$plot$input$data[, "x2"] >= plot_react$plot$input$xlim[1]) &
+        (plot_react$plot$input$data[, "x2"] <= plot_react$plot$input$xlim[2]) &
+        (plot_react$plot$input$data[, "y2"] >= plot_react$plot$input$ylim[1]) &
+        (plot_react$plot$input$data[, "y2"] <= plot_react$plot$input$ylim[2])
+      idx = which.min((((plot_react$plot$input$data[SUB,"x2"]-input$plot_hover$x)/dx)^2 +
+                        ((plot_react$plot$input$data[SUB,"y2"]-input$plot_hover$y)/dy)^2))
       
       if(length(idx) == 0) {
         return(NULL)
       } else {
-        foo = plot_react$plot$input$data[plot_react$plot$input$subset,c("x2","y2","Object Number"),drop=FALSE][idx,]
+        foo = plot_react$plot$input$data[SUB,c("x2","y2","Object Number"),drop=FALSE][idx,]
       }
       if((length(plot_react$closest) != 0) && (plot_react$closest == foo[[3]])) return(NULL)
       plot_react$closest = foo[[3]]
