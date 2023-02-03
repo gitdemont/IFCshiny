@@ -26,6 +26,8 @@
 # You should have received a copy of the GNU General Public License            #
 # along with IFCshiny. If not, see <http://www.gnu.org/licenses/>.             #
 ################################################################################
+if((packageVersion("shinyjs") < package_version("2.1.0.9000")) &
+   (packageVersion("shiny") >= package_version("1.7.1.9001"))) stop("Please update `shinyjs` package with version >= '2.1.0.9000'\nSee, https://github.com/daattali/shinyjs/issues/252", call. = FALSE)
 
 ## define cleanup to recover options and environment
 .cleanup = list(ls = setdiff(ls(all.names = TRUE),"..."), env = environment(), back_env = new.env(), options = options(), sysenv = Sys.getenv())
