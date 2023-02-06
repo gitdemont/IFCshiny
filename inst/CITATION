@@ -1,14 +1,14 @@
 citHeader("To cite 'IFCshiny' in publications, please use:")
 
 
-citEntry(entry = "manual",
+bibentry(bibtype = "Manual",
          title = "{IFCshiny}: {A}n {R} {I}nteractive {S}hiny {A}pplication for the {A}nalysis of {I}maging and {C}onventional {F}low {C}ytometry",
-         author = personList(person(given="Yohann", family="Demont"),
-                             person(given="Jean-Pierre", family="Marolleau"),
-                             person(given="Loïc", family = "Garçon")),
+         author = c(person(given="Yohann", family="Demont"),
+                    person(given="Jean-Pierre", family="Marolleau"),
+                    person(given="Loïc", family = "Garçon")),
 organization = "CHU Amiens",
 address = "Amiens, France",
-note = "version 0.1.4.126",
+note = "version 0.1.4.127",
 year = "2023",
 url = "http://github.com/gitdemont/IFCshiny",
 textVersion = paste("Demont Y., Marolleau JP., Garçon L. (2023).",
