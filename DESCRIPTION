@@ -2,8 +2,8 @@ Package: IFCshiny
 Encoding: UTF-8
 Type: Package
 Title: Graphical User Interface for Imaging and Conventional Flow Cytometry Through Shiny
-Version: 0.1.4.127
-Date: 2023-02-06
+Version: 0.1.4.128
+Date: 2023-08-04
 Maintainer: Yohann Demont <git.demont@gmail.com>
 Authors@R: c(person(given = 'Yohann', family = 'Demont', email = 'git.demont@gmail.com', role = c('aut', 'cre')), person(given = 'Jean-Pierre', family = 'Marolleau', role = 'ldr'), person(given = 'Loïc', family = 'Garçon', role = 'ldr'))
 BugReports: http://github.com/gitdemont/IFCshiny/issues
