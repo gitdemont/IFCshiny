@@ -209,7 +209,8 @@ plot_axis3D <- function(obj3D, which = c("x", "y", "z"), box = TRUE,
     tck = axis3d(edge = axe, pos = pos, col = tick_color, lit = FALSE)
     args = list(x = lim$x[1], y = lim$y[1], z = lim$z[1], col = line_color, lit = FALSE)
     args[[axe]] = c(args[[axe]], lim[[axe]][2])
-    line_in = do.call(what = rgl.lines, args = args)
+    # line_in = do.call(what = rgl.lines, args = args)
+    line_in = do.call(what = segments3d, args = args)
     edges = list(c(2,2,2),
                  c(1,2,2),
                  c(2,1,2),
@@ -220,7 +221,8 @@ plot_axis3D <- function(obj3D, which = c("x", "y", "z"), box = TRUE,
                     y = lim$y[edg[2]],
                     z = lim$z[edg[3]], col = line_color, lit = FALSE)
         args[[axe]] = lim[[axe]]
-        return(do.call(what = rgl.lines, args = args))
+        # return(do.call(what = rgl.lines, args = args))
+        return(do.call(what = segments3d, args = args))
       })
     } else {
       line_out = list()
@@ -267,7 +269,8 @@ plot_obj3D = function(obj3D, scaling = 1.7,
   }
   if(length(dev) == 0) open3d(useNULL = useNULL)
   dev = dev[length(dev)]
-  rgl.set(dev, silent = TRUE)
+  # rgl.set(dev, silent = TRUE)
+  rgl::set3d(dev, silent = TRUE)
   clear3d()
   
   # create almost invisible spheres at each vertex of the 3D plot

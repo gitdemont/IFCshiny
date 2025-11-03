@@ -520,13 +520,12 @@ server <- function(input, output, session) {
         add_log(isolate(paste0("plot_",ifelse(plot_react$g$type=="histogram","histogram",input$plot_type_2D_option01))))
         # print(paste0("output: ",dev_check_plot))
         # dev_check_plot <<- dev_check_plot + 1
-        g = plot_react$g
         output$graph_saved_msg <- renderText({NULL})
         withCallingHandlers({
           if(input$plot_unlock) {
-            plot_react$plot = plotGraph(obj = obj_react$obj, graph = g, viewport = ifelse(plot_react$zoomed, "ideas", "max"), precision = "full", draw = FALSE, stats_print = FALSE)
+            plot_react$plot = plotGraph(obj = obj_react$obj, graph = do.call(buildGraph, plot_react$g), viewport = ifelse(plot_react$zoomed, "ideas", "max"), precision = "full", draw = FALSE, stats_print = FALSE)
           } else {
-            plot_react$plot = plotGraph(obj = obj_react$obj, graph = g, viewport = "ideas", precision = "full", draw = FALSE, stats_print = FALSE)
+            plot_react$plot = plotGraph(obj = obj_react$obj, graph = do.call(buildGraph, plot_react$g), viewport = "ideas", precision = "full", draw = FALSE, stats_print = FALSE)
           }
           if(nrow(plot_react$plot$input$data) == 0) {
             disable("graph_save_btn")
@@ -611,7 +610,7 @@ server <- function(input, output, session) {
       
       my_clear3d()
       # maybe this part can be removed and IFC shiny can depend on rgl >= 0.104.16
-      if((packageVersion("rgl") < 0.104) && (nrow(dat) >= 160)) {
+      if((packageVersion("rgl") < '0.104') && (nrow(dat) >= 160)) {
         shared = rbind(dat[1:159, c("tx_feat","ty_feat","tz_feat","Object Number")],
                        dat[     , c("tx_feat","ty_feat","tz_feat","Object Number")])
         key = as.character(shared[, "Object Number"])

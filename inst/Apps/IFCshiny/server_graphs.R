@@ -545,7 +545,7 @@ obs_plot <- list(
                }
                tryCatch({
                  dat = ExportToGallery(param = param_react$param, extract_max = 10,
-                                       objects = plot_react$click,
+                                       objects = plot_react$click, write_to = "%s_gallery_Obj[%o].bmp",
                                        offsets = obj_react$back$offsets, export = "base64", image_type = "img",
                                        add_channels = TRUE, add_ids = 1, display_progress = FALSE)
                  html("plot_image_placeholder", dat)
@@ -1626,14 +1626,14 @@ obs_plot <- list(
                        all(g$f1 %in% plot_react$g$f1) &&
                        ifelse(g$type == "histogram", TRUE, all(g$f2 %in% plot_react$g$f2))) {
                        plot_react$param_ready = TRUE
-                       plot_react$g = g
+                       plot_react$g = do.call(buildGraph, g)
                        isolate({
                          now = 1000*as.numeric(Sys.time())
                          delay(50, { plot_react$id = now } )
                        })
                        # print(paste0("build done: ",dev_check_plot))
                      } 
-                     plot_react$g = g
+                     plot_react$g = do.call(buildGraph, g)
                    }, warning = function(w) {
                      mess_global(title = paste0("plot_", input$plot_type), msg = w$message, type = "warning", duration = 10)
                      invokeRestart("muffleWarning")
@@ -1740,7 +1740,7 @@ obs_plot <- list(
     set_tool("zoomin")
   }),
   observeEvent(input$plot_sel_zoomreset, suspended = TRUE, {
-    foo = plotGraph(obj_react$obj, g, viewport = "max", draw = FALSE)
+    foo = plotGraph(obj_react$obj, plot_react$g, viewport = "max", draw = FALSE)
     plot_react$g$xmin = foo$input$Xlim[1]
     plot_react$g$xmin = foo$input$Xlim[2]
     plot_react$g$ymin = foo$input$Ylim[1]

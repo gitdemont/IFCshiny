@@ -264,7 +264,7 @@ observeEvent(input$report_graph_dblclick, {
     g = plot_react$g
   } else {
     g = obj_react$obj$graphs[[g]] 
-    plot_react$g <- g
+    plot_react$g <- do.call(buildGraph, g)
   }
   plot_react$xmin <- g$xmin
   plot_react$xmax <- g$xmax
